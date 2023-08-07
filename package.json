@@ -1,8 +1,11 @@
 {
   "name": "linkwarden-extention",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
+  "author": "Jordan Higuera Higuera <jordan_higuera@hotmail.com>",
   "type": "module",
+  "license": "AGPL-3.0",
+  "description": "LinkWarden browser extension",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
