@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Linkwarden extention",
+  "description": "A linkwarden extention",
+  "version": "0.0.1",
+  "action": {
+    "default_popup": "./index.html",
+    "default_icon": "./vite.svg"
+  },
+  "icons": {
+    "16": "./vite.svg",
+    "48": "./vite.svg",
+    "128": "./vite.svg"
+  },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://linkwarden.com/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "https://linkwarden.com/*"
+      ],
+      "matches": [
+        "https://linkwarden.com/*"
+      ]
+    }
+  ],
+  "background": {
+    "service_worker": "./background.js"
+  }
+}
