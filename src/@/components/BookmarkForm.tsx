@@ -27,9 +27,10 @@ const BookmarkForm = () => {
 
   const { handleSubmit, control } = form;
 
+
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onSubmit)} className='space-y-2'>
+      <form onSubmit={handleSubmit(onSubmit)} className='space-y-3 py-1'>
         <FormField control={control} name='address' render={({ field }) => (
           <FormItem>
             <FormLabel>Address</FormLabel>

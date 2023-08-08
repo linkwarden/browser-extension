@@ -2,11 +2,18 @@
   "manifest_version": 3,
   "name": "Linkwarden extension",
   "description": "A linkwarden extension",
+  "homepage_url": "https://github.com/crkos/linkwarden-extention",
   "version": "0.0.1",
   "action": {
     "default_popup": "./index.html",
-    "default_icon": "./favicon-16x16.png",
-    "default_title": "Linkwarden extension"
+    "default_icon": {
+      "16": "./favicon-16x16.png",
+      "32": "./favicon-32x32.png"
+    },
+    "default_title": "Add a bookmark to linkwarden"
+  },
+  "options_ui": {
+    "page": "./src/pages/Options/options.html"
   },
   "icons": {
     "16": "./favicon-16x16.png",
