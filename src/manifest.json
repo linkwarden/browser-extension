@@ -41,5 +41,13 @@
   "background": {
     "service_worker": "./background.js",
     "type": "module"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+K",
+        "mac": "MacCtrl+Shift+K"
+      }
+    }
   }
 }
