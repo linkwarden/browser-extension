@@ -4,6 +4,9 @@ Extension for [Linkwarden](https://github.com/linkwarden/linkwarden), a self-hos
 manager to
 collect, organize and archive webpages.
 
+(Important note: This is a work in progress, so expect bugs and missing features. If you find any issues, please report
+them, at this point not usable with linkwarden still, soon enough).
+
 **Features**
 
 - Add new links to linkwarden with a single click
