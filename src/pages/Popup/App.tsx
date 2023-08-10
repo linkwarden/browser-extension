@@ -4,8 +4,21 @@ import WholeContainer from '../../@/components/WholeContainer.tsx';
 import { Separator } from '../../@/components/ui/Separator.tsx';
 import BookmarkForm from '../../@/components/BookmarkForm.tsx';
 import { openOptions } from '../../@/lib/utils.ts';
+import { useEffect, useState } from 'react';
+import { isConfigured } from '../../@/lib/config.ts';
+import Modal from '../../@/components/Modal.tsx';
 
 function App() {
+  const [isAllConfigured, setIsAllConfigured] = useState<boolean>();
+
+  useEffect(() => {
+    (async () => {
+      const cachedOptions = await isConfigured();
+      setIsAllConfigured(cachedOptions);
+    })();
+  }, []);
+
+
   return (
     <WholeContainer>
       <Container>
@@ -15,6 +28,7 @@ function App() {
         </div>
         <Separator />
         <BookmarkForm />
+        <Modal open={!isAllConfigured} />
       </Container>
     </WholeContainer>
   );
