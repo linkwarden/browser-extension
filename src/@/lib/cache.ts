@@ -3,6 +3,7 @@ import { DefaultConfig } from './config.ts';
 
 const OPTIONS_METADATA_KEY = 'lw_options_metadata_cache';
 
+// TODO: Implement caching for tabs metadata maybe?
 export async function getCachedOptionsMetadata(): Promise<DefaultConfig> {
   const cache = await getStorageItem(OPTIONS_METADATA_KEY);
   return cache ? JSON.parse(cache) : {};
