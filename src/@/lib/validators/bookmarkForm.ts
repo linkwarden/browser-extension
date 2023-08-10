@@ -1,9 +1,12 @@
 import { z } from 'zod';
 
 export const bookmarkFormSchema = z.object({
-  address: z.string().url('This has to be a URL'),
-  collection: z.string().nullish(),
+  url: z.string().url('This has to be a URL'),
+  collection: z.object({
+    name: z.string(),
+  }),
   tags: z.array(z.string()).nullish(),
+  name: z.string(),
   description: z.string(),
 });
 

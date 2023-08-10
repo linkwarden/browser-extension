@@ -10,7 +10,7 @@ export interface TabInfo {
   title: string;
 }
 
-export async function getCurrentTabInfo() {
+export async function getCurrentTabInfo(): Promise<TabInfo> {
   const tabs = await getBrowser().tabs.query({ active: true, currentWindow: true });
   const { url, title } = tabs[0];
   return { url, title };
