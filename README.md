@@ -1,27 +1,40 @@
-# React + TypeScript + Vite
+# Linkwarden extension
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Extension for [Linkwarden](https://github.com/linkwarden/linkwarden), a self-hosted, open-source collaborative bookmark
+manager to
+collect, organize and archive webpages.
 
-Currently, two official plugins are available:
+**Features**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Add new links to linkwarden with a single click
+- Keyboard shortcut to quickly add links<kbd>Alt + Shift + K</kbd>
 
-## Expanding the ESLint configuration
+Currently works on Chrome and Firefox. (Safari to be tested)
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+**Images**
 
-- Configure the top-level `parserOptions` property like this:
+![Image](./src/assets/linwarden-extension.png)
+![Image](./src/assets/options-linkwarden.png)
 
-```js
-   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-   },
+## Manual Installation (Only for now and development)
+
+### Requirements
+
+(Could work with older versions, but not tested, let me know if you have any issues)
+
+- LTS NodeJS 18.x.x
+- NPM Version 9.x.x
+- bash
+
+### Build
+
+Make sure you are able to run the build script included in repository.
+
+```
+chmod +x ./build.sh
+./build.sh
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+Then take the dist folder and load it as an unpacked extension in your browser.
+Now it should be working!.
+
