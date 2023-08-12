@@ -89,7 +89,6 @@ const OptionsForm = () => {
       };
 
       const session = await getSession(values.baseUrl);
-      console.log(session);
       HAD_PREVIOUS_SESSION = !!session;
 
       await performLoginOrLogout(url, data);
