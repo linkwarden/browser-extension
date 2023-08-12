@@ -10,7 +10,14 @@ import { TagInput } from './TagInput.tsx';
 import { Textarea } from './ui/Textarea.tsx';
 import { getCurrentTabInfo } from '../lib/utils.ts';
 import { useEffect } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { getCsrfToken, getSession, performLoginOrLogout } from '../lib/auth/auth.ts';
+import { getConfig } from '../lib/config.ts';
+import { postLink } from '../lib/actions/links.ts';
+import { AxiosError } from 'axios';
+import { toast } from '../../hooks/use-toast.ts';
 
+let HAD_PREVIOUS_SESSION = false;
 const BookmarkForm = () => {
 
   const form = useForm<bookmarkFormValues>({
@@ -26,9 +33,66 @@ const BookmarkForm = () => {
     },
   });
 
-  function onSubmit(values: bookmarkFormValues) {
-    console.log(values);
-  }
+  const { mutate: onSubmit, isLoading } = useMutation({
+    mutationFn: async (values: bookmarkFormValues) => {
+
+      const config = await getConfig();
+      const csrfToken = await getCsrfToken(config.baseUrl);
+      const session = await getSession(config.baseUrl);
+
+      HAD_PREVIOUS_SESSION = !!session;
+
+      if (!HAD_PREVIOUS_SESSION) {
+        await performLoginOrLogout(`${config.baseUrl}/api/auth/callback/credentials`, {
+          username: config.username,
+          password: config.password,
+          redirect: false,
+          csrfToken,
+          callbackUrl: `${config.baseUrl}/login`,
+          json: true,
+        });
+      }
+
+      await postLink(config.baseUrl, values);
+
+      if (!HAD_PREVIOUS_SESSION) {
+        const url = `${config.baseUrl}/api/auth/signout`;
+        await performLoginOrLogout(url, {
+          username: config.username,
+          password: config.password,
+          redirect: false,
+          csrfToken,
+          callbackUrl: `${config.baseUrl}/login`,
+          json: true,
+        });
+      }
+
+      return;
+    },
+    onError: (error) => {
+      if ((error as AxiosError)?.response?.status === 401) {
+        toast({
+          title: 'Error',
+          description: 'You are not logged in. Please try again.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: 'There was an error while trying to save the link. Please try again.',
+          variant: 'destructive',
+        });
+      }
+      return;
+    },
+    onSuccess: async () => {
+      toast({
+        title: 'Success',
+        description: 'Link saved successfully!',
+      });
+      return;
+    },
+  });
 
   const { handleSubmit, control } = form;
 
@@ -42,7 +106,7 @@ const BookmarkForm = () => {
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onSubmit)} className='space-y-3 py-1'>
+      <form onSubmit={handleSubmit(e => onSubmit(e))} className='space-y-3 py-1'>
         <FormField control={control} name='url' render={({ field }) => (
           <FormItem>
             <FormLabel>URL</FormLabel>
@@ -97,7 +161,7 @@ const BookmarkForm = () => {
         )} />
         <Separator />
         <div className='flex justify-end'>
-          <Button type='submit'>Save bookmark</Button>
+          <Button disabled={isLoading} type='submit'>Save bookmark</Button>
         </div>
       </form>
     </Form>
