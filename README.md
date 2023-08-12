@@ -5,7 +5,7 @@ manager to
 collect, organize and archive webpages.
 
 (Important note: This is a work in progress, so expect bugs and missing features. If you find any issues, please report
-them, at this point not usable with linkwarden still, soon enough).
+them, Working with linkwarden with basic functionality now!).
 
 **Features**
 
@@ -17,7 +17,7 @@ Currently works on Chrome and Firefox. (Safari to be tested)
 **Images**
 
 ![Image](./src/assets/linwarden-extension.png)
-![Image](./src/assets/options-linkwarden.png)
+![Image](./src/assets/linkwarden-options.png)
 
 ## Manual Installation (Only for now and development)
 
