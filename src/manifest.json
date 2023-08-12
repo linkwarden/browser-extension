@@ -28,16 +28,6 @@
   "host_permissions": [
     "*://*/*"
   ],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "https://linkwarden.com/*"
-      ],
-      "matches": [
-        "https://linkwarden.com/*"
-      ]
-    }
-  ],
   "background": {
     "service_worker": "./background.js",
     "type": "module"
