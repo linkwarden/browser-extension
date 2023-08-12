@@ -1,2 +1,2 @@
-console.log('This is the background page.');
-console.log('Put the background scripts here.');
+// Keeping this, maybe it will be needed somewhere in the future...
+console.log('Background script running...');

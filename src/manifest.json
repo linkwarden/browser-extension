@@ -2,11 +2,18 @@
   "manifest_version": 3,
   "name": "Linkwarden extension",
   "description": "A linkwarden extension",
+  "homepage_url": "https://github.com/crkos/linkwarden-extension",
   "version": "0.0.1",
   "action": {
     "default_popup": "./index.html",
-    "default_icon": "./favicon-16x16.png",
-    "default_title": "Linkwarden extension"
+    "default_icon": {
+      "16": "./favicon-16x16.png",
+      "32": "./favicon-32x32.png"
+    },
+    "default_title": "Add a bookmark to linkwarden"
+  },
+  "options_ui": {
+    "page": "./src/pages/Options/options.html"
   },
   "icons": {
     "16": "./favicon-16x16.png",
@@ -19,19 +26,18 @@
     "tabs"
   ],
   "host_permissions": [
-    "https://linkwarden.com/*"
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "https://linkwarden.com/*"
-      ],
-      "matches": [
-        "https://linkwarden.com/*"
-      ]
-    }
+    "*://*/*"
   ],
   "background": {
-    "service_worker": "./background.js"
+    "service_worker": "./background.js",
+    "type": "module"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+K",
+        "mac": "MacCtrl+Shift+K"
+      }
+    }
   }
 }
