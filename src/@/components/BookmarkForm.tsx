@@ -8,14 +8,19 @@ import { Separator } from './ui/Separator.tsx';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/Select.tsx';
 import { TagInput } from './TagInput.tsx';
 import { Textarea } from './ui/Textarea.tsx';
+import { getCurrentTabInfo } from '../lib/utils.ts';
+import { useEffect } from 'react';
 
 const BookmarkForm = () => {
 
   const form = useForm<bookmarkFormValues>({
     resolver: zodResolver(bookmarkFormSchema),
     defaultValues: {
-      address: '',
-      collection: 'Unnamed Collection',
+      url: '',
+      name: '',
+      collection: {
+        name: 'Unnamed Collection',
+      },
       tags: [],
       description: '',
     },
@@ -27,12 +32,20 @@ const BookmarkForm = () => {
 
   const { handleSubmit, control } = form;
 
+  useEffect(() => {
+    getCurrentTabInfo().then((tabInfo) => {
+      form.setValue('url', tabInfo.url);
+      form.setValue('name', tabInfo.title);
+    });
+  }, [form]);
+
+
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onSubmit)} className='space-y-2'>
-        <FormField control={control} name='address' render={({ field }) => (
+      <form onSubmit={handleSubmit(onSubmit)} className='space-y-3 py-1'>
+        <FormField control={control} name='url' render={({ field }) => (
           <FormItem>
-            <FormLabel>Address</FormLabel>
+            <FormLabel>URL</FormLabel>
             <FormControl>
               <Input placeholder='https://www.gooogle.com' {...field} />
             </FormControl>
@@ -45,7 +58,7 @@ const BookmarkForm = () => {
             <Select onValueChange={field.onChange}>
               <FormControl>
                 <SelectTrigger>
-                  <SelectValue placeholder='Unnamed Collection' defaultValue={field.value ?? ''} />
+                  <SelectValue placeholder='Unnamed Collection' defaultValue={field.value.name ?? ''} />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
@@ -60,6 +73,15 @@ const BookmarkForm = () => {
             <FormLabel>Tags</FormLabel>
             <FormControl>
               <TagInput onChange={field.onChange} value={field.value ?? []} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={control} name='name' render={({ field }) => (
+          <FormItem>
+            <FormLabel>Name</FormLabel>
+            <FormControl>
+              <Input placeholder='Google...' {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
