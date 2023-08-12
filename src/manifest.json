@@ -35,7 +35,7 @@
   "commands": {
     "_execute_action": {
       "suggested_key": {
-        "default": "Ctrl+Shift+K",
+        "default": "Alt+Shift+K",
         "mac": "MacCtrl+Shift+K"
       }
     }
