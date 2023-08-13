@@ -5,7 +5,9 @@ export const bookmarkFormSchema = z.object({
   collection: z.object({
     name: z.string(),
   }),
-  tags: z.array(z.string()).nullish(),
+  tags: z.array(z.object({
+    name: z.string(),
+  })).nullish(),
   name: z.string(),
   description: z.string(),
 });

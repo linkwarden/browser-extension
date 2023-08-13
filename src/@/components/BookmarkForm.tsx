@@ -16,6 +16,7 @@ import { getConfig } from '../lib/config.ts';
 import { postLink } from '../lib/actions/links.ts';
 import { AxiosError } from 'axios';
 import { toast } from '../../hooks/use-toast.ts';
+import { Toaster } from './ui/Toaster.tsx';
 
 let HAD_PREVIOUS_SESSION = false;
 const BookmarkForm = () => {
@@ -86,11 +87,10 @@ const BookmarkForm = () => {
       return;
     },
     onSuccess: async () => {
-      toast({
+      return toast({
         title: 'Success',
         description: 'Link saved successfully!',
       });
-      return;
     },
   });
 
@@ -105,66 +105,69 @@ const BookmarkForm = () => {
 
 
   return (
-    <Form {...form}>
-      <form onSubmit={handleSubmit(e => onSubmit(e))} className='space-y-3 py-1'>
-        <FormField control={control} name='url' render={({ field }) => (
-          <FormItem>
-            <FormLabel>URL</FormLabel>
-            <FormControl>
-              <Input placeholder='https://www.gooogle.com' {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-        <FormField control={control} name='collection' render={({ field }) => (
-          <FormItem>
-            <FormLabel>Collection</FormLabel>
-            <Select onValueChange={field.onChange}>
+    <div>
+      <Form {...form}>
+        <form onSubmit={handleSubmit(e => onSubmit(e))} className='space-y-3 py-1'>
+          <FormField control={control} name='url' render={({ field }) => (
+            <FormItem>
+              <FormLabel>URL</FormLabel>
               <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder='Unnamed Collection' defaultValue={field.value.name ?? ''} />
-                </SelectTrigger>
+                <Input placeholder='https://www.gooogle.com' {...field} />
               </FormControl>
-              <SelectContent>
-                <SelectItem value='LOL'>LOL</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )} />
-        <FormField control={control} name='tags' render={({ field }) => (
-          <FormItem>
-            <FormLabel>Tags</FormLabel>
-            <FormControl>
-              <TagInput onChange={field.onChange} value={field.value ?? []} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-        <FormField control={control} name='name' render={({ field }) => (
-          <FormItem>
-            <FormLabel>Name</FormLabel>
-            <FormControl>
-              <Input placeholder='Google...' {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-        <FormField control={control} name='description' render={({ field }) => (
-          <FormItem>
-            <FormLabel>Description</FormLabel>
-            <FormControl>
-              <Textarea placeholder='Description...' {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-        <Separator />
-        <div className='flex justify-end'>
-          <Button disabled={isLoading} type='submit'>Save bookmark</Button>
-        </div>
-      </form>
-    </Form>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={control} name='collection' render={({ field }) => (
+            <FormItem>
+              <FormLabel>Collection</FormLabel>
+              <Select onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder='Unnamed Collection' defaultValue={field.value.name ?? ''} />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value='LOL'>LOL</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={control} name='tags' render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tags</FormLabel>
+              <FormControl>
+                <TagInput onChange={field.onChange} value={field.value ?? []} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={control} name='name' render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input placeholder='Google...' {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={control} name='description' render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea placeholder='Description...' {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <Separator />
+          <div className='flex justify-end'>
+            <Button disabled={isLoading} type='submit'>Save bookmark</Button>
+          </div>
+        </form>
+      </Form>
+      <Toaster />
+    </div>
   );
 };
 
