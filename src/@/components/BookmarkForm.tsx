@@ -10,15 +10,17 @@ import { TagInput } from './TagInput.tsx';
 import { Textarea } from './ui/Textarea.tsx';
 import { getCurrentTabInfo } from '../lib/utils.ts';
 import { useEffect } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { getCsrfToken, getSession, performLoginOrLogout } from '../lib/auth/auth.ts';
-import { getConfig } from '../lib/config.ts';
+import { getConfig, isConfigured } from '../lib/config.ts';
 import { postLink } from '../lib/actions/links.ts';
 import { AxiosError } from 'axios';
 import { toast } from '../../hooks/use-toast.ts';
 import { Toaster } from './ui/Toaster.tsx';
+import { getCollections } from '../lib/actions/collections.ts';
 
 let HAD_PREVIOUS_SESSION = false;
+let configured = false;
 const BookmarkForm = () => {
 
   const form = useForm<bookmarkFormValues>({
@@ -101,8 +103,53 @@ const BookmarkForm = () => {
       form.setValue('url', tabInfo.url);
       form.setValue('name', tabInfo.title);
     });
+    const getConfig = async () => {
+      const config = await isConfigured();
+      configured = config;
+    };
+    getConfig();
   }, [form]);
 
+
+  const { isLoading: loadingCollections, data: collections } = useQuery({
+    queryKey: ['collections'],
+    queryFn: async () => {
+      const config = await getConfig();
+
+      const csrfToken = await getCsrfToken(config.baseUrl);
+      const session = await getSession(config.baseUrl);
+
+      HAD_PREVIOUS_SESSION = !!session;
+
+      if (!HAD_PREVIOUS_SESSION) {
+        await performLoginOrLogout(`${config.baseUrl}/api/auth/callback/credentials`, {
+          username: config.username,
+          password: config.password,
+          redirect: false,
+          csrfToken,
+          callbackUrl: `${config.baseUrl}/login`,
+          json: true,
+        });
+      }
+
+      const data = await getCollections(config.baseUrl);
+
+      if (!HAD_PREVIOUS_SESSION) {
+        const url = `${config.baseUrl}/api/auth/signout`;
+        await performLoginOrLogout(url, {
+          username: config.username,
+          password: config.password,
+          redirect: false,
+          csrfToken,
+          callbackUrl: `${config.baseUrl}/login`,
+          json: true,
+        });
+      }
+
+      return data.data;
+    },
+    enabled: configured,
+  });
 
   return (
     <div>
@@ -120,14 +167,33 @@ const BookmarkForm = () => {
           <FormField control={control} name='collection' render={({ field }) => (
             <FormItem>
               <FormLabel>Collection</FormLabel>
-              <Select onValueChange={field.onChange}>
+              <Select onValueChange={(value) => field.onChange({ name: value })}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder='Unnamed Collection' defaultValue={field.value.name ?? ''} />
+                    {loadingCollections ? (
+                      <SelectValue>Loading collections...</SelectValue>
+                    ) : (
+                      <SelectValue>{field.value.name}</SelectValue>
+                    )}
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value='LOL'>LOL</SelectItem>
+                  {loadingCollections ? (
+                    <SelectItem value='Unnamed Collection'>Loading collections...</SelectItem>
+                  ) : (
+                    <>
+                      {collections.response.map((collection: {
+                        id: number;
+                        name: string
+                      }) => (
+                        <SelectItem key={collection.id} value={collection.name}>
+                          {collection.name}
+                        </SelectItem>
+                      ))}
+                      <Input placeholder='Enter your own collection'
+                             onChange={(event) => field.onChange({ name: event.target.value })} />
+                    </>
+                  )}
                 </SelectContent>
               </Select>
               <FormMessage />
