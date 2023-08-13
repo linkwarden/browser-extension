@@ -2,27 +2,28 @@ import { FC, useState } from 'react';
 import { Input } from './ui/Input.tsx';
 import { Button } from './ui/Button.tsx';
 
+
 interface TagInputProps {
-  onChange: (tags: string[]) => void,
-  value: string[]
+  onChange: (tags: { name: string }[]) => void,
+  value: { name: string }[]
 }
 
 export const TagInput: FC<TagInputProps> = ({ onChange, value }) => {
-  const [tags, setTags] = useState<string[]>(value);
+  const [tags, setTags] = useState<{ name: string }[]>(value);
   const [inputValue, setInputValue] = useState('');
 
   function handleAddTag() {
-    if (inputValue && tags.includes(inputValue)) return;
+    if (inputValue && tags.some(tagObj => tagObj.name === inputValue)) return;
     if (inputValue) {
-      const newTags = [...tags, inputValue];
+      const newTags = [...tags, { name: inputValue }];
       setTags(newTags);
       setInputValue('');
       onChange(newTags);
     }
   }
 
-  function handleRemoveTag(tag: string) {
-    const newTags = tags.filter(t => t !== tag);
+  function handleRemoveTag(tagName: string) {
+    const newTags = tags.filter(tagObj => tagObj.name !== tagName);
     setTags(newTags);
     onChange(newTags);
   }
@@ -34,16 +35,16 @@ export const TagInput: FC<TagInputProps> = ({ onChange, value }) => {
         <Button type='button' onClick={handleAddTag} onKeyDown={handleAddTag}>Add</Button>
       </div>
       <div className='flex flex-wrap mt-2'>
-        {tags.map(tag => (
+        {tags.map(tagObj => (
           <span
-            key={tag}
+            key={tagObj.name}
             className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2 mb-2'
           >
-            {tag}
+            {tagObj.name}
             <button
               type='button'
               className='flex-shrink-0 ml-1.5 h-4 w-4 rounded-full inline-flex items-center justify-center text-blue-400 hover:bg-blue-200 hover:text-blue-500 focus:outline-none focus:bg-blue-500 focus:text-white'
-              onClick={() => handleRemoveTag(tag)}
+              onClick={() => handleRemoveTag(tagObj.name)}
             >
               <span className='sr-only'>Remove tag</span>
               <svg className='h-2 w-2' stroke='currentColor' fill='none' viewBox='0 0 8 8'>
