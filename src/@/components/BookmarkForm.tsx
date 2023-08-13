@@ -86,11 +86,10 @@ const BookmarkForm = () => {
       return;
     },
     onSuccess: async () => {
-      toast({
+      return toast({
         title: 'Success',
         description: 'Link saved successfully!',
       });
-      return;
     },
   });
 
