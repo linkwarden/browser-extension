@@ -104,14 +104,13 @@ const BookmarkForm = () => {
       form.setValue('name', tabInfo.title);
     });
     const getConfig = async () => {
-      const config = await isConfigured();
-      configured = config;
+      configured = await isConfigured();
     };
     getConfig();
   }, [form]);
 
 
-  const { isLoading: loadingCollections, data: collections } = useQuery({
+  const { isLoading: loadingCollections, data: collections, error } = useQuery({
     queryKey: ['collections'],
     queryFn: async () => {
       const config = await getConfig();
@@ -155,6 +154,7 @@ const BookmarkForm = () => {
     <div>
       <Form {...form}>
         <form onSubmit={handleSubmit(e => onSubmit(e))} className='space-y-3 py-1'>
+          {error ? <p className='text-red-600'>There was an error make sure the site is available!.</p> : null}
           <FormField control={control} name='url' render={({ field }) => (
             <FormItem>
               <FormLabel>URL</FormLabel>
@@ -177,16 +177,17 @@ const BookmarkForm = () => {
                     )}
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent>
+                <SelectContent className='max-h-[200px] overflow-y-auto'>
                   {loadingCollections ? (
                     <SelectItem value='Unnamed Collection'>Loading collections...</SelectItem>
                   ) : (
                     <>
-                      {collections.response.map((collection: {
+                      {collections?.response?.map((collection: {
                         id: number;
                         name: string
                       }) => (
-                        <SelectItem key={collection.id} value={collection.name}>
+                        <SelectItem key={collection.id} value={collection.name}
+                                    className='overflow-hidden whitespace-nowrap overflow-ellipsis'>
                           {collection.name}
                         </SelectItem>
                       ))}
