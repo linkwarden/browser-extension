@@ -242,12 +242,15 @@ const BookmarkForm = () => {
               <FormMessage />
             </FormItem>
           )} />
+          {tagsError ? <p>There was an error...</p> : null}
           <FormField control={control} name='tags' render={({ field }) => (
             <FormItem>
               <FormLabel>Tags</FormLabel>
-              {loadingTags ? <p>Loading tags...</p> :
-                <TagInput onChange={field.onChange} value={field.value ?? []} tags={tags.response} />}
-              {tagsError ? <p>There was an error...</p> : null}
+              {loadingTags ? <TagInput onChange={field.onChange} value={[{ name: 'Getting tags...' }]}
+                                       tags={[{ id: 1, name: 'Getting tags...' }]} /> :
+                tagsError ? <TagInput onChange={field.onChange} value={[{ name: 'Not found' }]}
+                                      tags={[{ id: 1, name: 'Not found' }]} /> :
+                  <TagInput onChange={field.onChange} value={field.value ?? []} tags={tags.response} />}
               <FormMessage />
             </FormItem>
           )} />
