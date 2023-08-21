@@ -18,6 +18,7 @@ import { AxiosError } from 'axios';
 import { toast } from '../../hooks/use-toast.ts';
 import { Toaster } from './ui/Toaster.tsx';
 import { getCollections } from '../lib/actions/collections.ts';
+import { getTags } from '../lib/actions/tags.ts';
 
 let HAD_PREVIOUS_SESSION = false;
 let configured = false;
@@ -88,7 +89,7 @@ const BookmarkForm = () => {
       }
       return;
     },
-    onSuccess: async () => {
+    onSuccess: () => {
       return toast({
         title: 'Success',
         description: 'Link saved successfully!',
@@ -110,7 +111,7 @@ const BookmarkForm = () => {
   }, [form]);
 
 
-  const { isLoading: loadingCollections, data: collections, error } = useQuery({
+  const { isLoading: loadingCollections, data: collections, error: collectionError } = useQuery({
     queryKey: ['collections'],
     queryFn: async () => {
       const config = await getConfig();
@@ -150,11 +151,52 @@ const BookmarkForm = () => {
     enabled: configured,
   });
 
+  const { isLoading: loadingTags, data: tags, error: tagsError } = useQuery({
+    queryKey: ['tags'],
+    queryFn: async () => {
+      const config = await getConfig();
+
+      const csrfToken = await getCsrfToken(config.baseUrl);
+      const session = await getSession(config.baseUrl);
+
+      HAD_PREVIOUS_SESSION = !!session;
+
+      if (!HAD_PREVIOUS_SESSION) {
+        await performLoginOrLogout(`${config.baseUrl}/api/auth/callback/credentials`, {
+          username: config.username,
+          password: config.password,
+          redirect: false,
+          csrfToken,
+          callbackUrl: `${config.baseUrl}/login`,
+          json: true,
+        });
+      }
+
+      const data = await getTags(config.baseUrl);
+
+      if (!HAD_PREVIOUS_SESSION) {
+        const url = `${config.baseUrl}/api/auth/signout`;
+        await performLoginOrLogout(url, {
+          username: config.username,
+          password: config.password,
+          redirect: false,
+          csrfToken,
+          callbackUrl: `${config.baseUrl}/login`,
+          json: true,
+        });
+      }
+
+      return data.data;
+    },
+    enabled: configured,
+  });
+
   return (
     <div>
       <Form {...form}>
         <form onSubmit={handleSubmit(e => onSubmit(e))} className='space-y-3 py-1'>
-          {error ? <p className='text-red-600'>There was an error make sure the site is available!.</p> : null}
+          {collectionError ?
+            <p className='text-red-600'>There was an error make sure the site is available!.</p> : null}
           <FormField control={control} name='url' render={({ field }) => (
             <FormItem>
               <FormLabel>URL</FormLabel>
@@ -200,12 +242,15 @@ const BookmarkForm = () => {
               <FormMessage />
             </FormItem>
           )} />
+          {tagsError ? <p>There was an error...</p> : null}
           <FormField control={control} name='tags' render={({ field }) => (
             <FormItem>
               <FormLabel>Tags</FormLabel>
-              <FormControl>
-                <TagInput onChange={field.onChange} value={field.value ?? []} />
-              </FormControl>
+              {loadingTags ? <TagInput onChange={field.onChange} value={[{ name: 'Getting tags...' }]}
+                                       tags={[{ id: 1, name: 'Getting tags...' }]} /> :
+                tagsError ? <TagInput onChange={field.onChange} value={[{ name: 'Not found' }]}
+                                      tags={[{ id: 1, name: 'Not found' }]} /> :
+                  <TagInput onChange={field.onChange} value={field.value ?? []} tags={tags.response} />}
               <FormMessage />
             </FormItem>
           )} />
