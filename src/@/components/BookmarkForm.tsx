@@ -1,17 +1,37 @@
 import { useForm } from 'react-hook-form';
-import { bookmarkFormSchema, bookmarkFormValues } from '../lib/validators/bookmarkForm.ts';
+import {
+  bookmarkFormSchema,
+  bookmarkFormValues,
+} from '../lib/validators/bookmarkForm.ts';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from './ui/Form.tsx';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from './ui/Form.tsx';
 import { Input } from './ui/Input.tsx';
 import { Button } from './ui/Button.tsx';
 import { Separator } from './ui/Separator.tsx';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/Select.tsx';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/Select.tsx';
 import { TagInput } from './TagInput.tsx';
 import { Textarea } from './ui/Textarea.tsx';
 import { getCurrentTabInfo } from '../lib/utils.ts';
 import { useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { getCsrfToken, getSession, performLoginOrLogout } from '../lib/auth/auth.ts';
+import {
+  getCsrfToken,
+  getSession,
+  performLoginOrLogout,
+} from '../lib/auth/auth.ts';
 import { getConfig, isConfigured } from '../lib/config.ts';
 import { postLink } from '../lib/actions/links.ts';
 import { AxiosError } from 'axios';
@@ -23,7 +43,6 @@ import { getTags } from '../lib/actions/tags.ts';
 let HAD_PREVIOUS_SESSION = false;
 let configured = false;
 const BookmarkForm = () => {
-
   const form = useForm<bookmarkFormValues>({
     resolver: zodResolver(bookmarkFormSchema),
     defaultValues: {
@@ -39,7 +58,6 @@ const BookmarkForm = () => {
 
   const { mutate: onSubmit, isLoading } = useMutation({
     mutationFn: async (values: bookmarkFormValues) => {
-
       const config = await getConfig();
       const csrfToken = await getCsrfToken(config.baseUrl);
       const session = await getSession(config.baseUrl);
@@ -47,14 +65,17 @@ const BookmarkForm = () => {
       HAD_PREVIOUS_SESSION = !!session;
 
       if (!HAD_PREVIOUS_SESSION) {
-        await performLoginOrLogout(`${config.baseUrl}/api/auth/callback/credentials`, {
-          username: config.username,
-          password: config.password,
-          redirect: false,
-          csrfToken,
-          callbackUrl: `${config.baseUrl}/login`,
-          json: true,
-        });
+        await performLoginOrLogout(
+          `${config.baseUrl}/api/auth/callback/credentials`,
+          {
+            username: config.username,
+            password: config.password,
+            redirect: false,
+            csrfToken,
+            callbackUrl: `${config.baseUrl}/login`,
+            json: true,
+          }
+        );
       }
 
       await postLink(config.baseUrl, values);
@@ -83,7 +104,8 @@ const BookmarkForm = () => {
       } else {
         toast({
           title: 'Error',
-          description: 'There was an error while trying to save the link. Please try again.',
+          description:
+            'There was an error while trying to save the link. Please try again.',
           variant: 'destructive',
         });
       }
@@ -110,8 +132,11 @@ const BookmarkForm = () => {
     getConfig();
   }, [form]);
 
-
-  const { isLoading: loadingCollections, data: collections, error: collectionError } = useQuery({
+  const {
+    isLoading: loadingCollections,
+    data: collections,
+    error: collectionError,
+  } = useQuery({
     queryKey: ['collections'],
     queryFn: async () => {
       const config = await getConfig();
@@ -122,14 +147,17 @@ const BookmarkForm = () => {
       HAD_PREVIOUS_SESSION = !!session;
 
       if (!HAD_PREVIOUS_SESSION) {
-        await performLoginOrLogout(`${config.baseUrl}/api/auth/callback/credentials`, {
-          username: config.username,
-          password: config.password,
-          redirect: false,
-          csrfToken,
-          callbackUrl: `${config.baseUrl}/login`,
-          json: true,
-        });
+        await performLoginOrLogout(
+          `${config.baseUrl}/api/auth/callback/credentials`,
+          {
+            username: config.username,
+            password: config.password,
+            redirect: false,
+            csrfToken,
+            callbackUrl: `${config.baseUrl}/login`,
+            json: true,
+          }
+        );
       }
 
       const data = await getCollections(config.baseUrl);
@@ -151,7 +179,11 @@ const BookmarkForm = () => {
     enabled: configured,
   });
 
-  const { isLoading: loadingTags, data: tags, error: tagsError } = useQuery({
+  const {
+    isLoading: loadingTags,
+    data: tags,
+    error: tagsError,
+  } = useQuery({
     queryKey: ['tags'],
     queryFn: async () => {
       const config = await getConfig();
@@ -162,14 +194,17 @@ const BookmarkForm = () => {
       HAD_PREVIOUS_SESSION = !!session;
 
       if (!HAD_PREVIOUS_SESSION) {
-        await performLoginOrLogout(`${config.baseUrl}/api/auth/callback/credentials`, {
-          username: config.username,
-          password: config.password,
-          redirect: false,
-          csrfToken,
-          callbackUrl: `${config.baseUrl}/login`,
-          json: true,
-        });
+        await performLoginOrLogout(
+          `${config.baseUrl}/api/auth/callback/credentials`,
+          {
+            username: config.username,
+            password: config.password,
+            redirect: false,
+            csrfToken,
+            callbackUrl: `${config.baseUrl}/login`,
+            json: true,
+          }
+        );
       }
 
       const data = await getTags(config.baseUrl);
@@ -194,87 +229,139 @@ const BookmarkForm = () => {
   return (
     <div>
       <Form {...form}>
-        <form onSubmit={handleSubmit(e => onSubmit(e))} className='space-y-3 py-1'>
-          {collectionError ?
-            <p className='text-red-600'>There was an error make sure the site is available!.</p> : null}
-          <FormField control={control} name='url' render={({ field }) => (
-            <FormItem>
-              <FormLabel>URL</FormLabel>
-              <FormControl>
-                <Input placeholder='https://www.gooogle.com' {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={control} name='collection' render={({ field }) => (
-            <FormItem>
-              <FormLabel>Collection</FormLabel>
-              <Select onValueChange={(value) => field.onChange({ name: value })}>
+        <form
+          onSubmit={handleSubmit((e) => onSubmit(e))}
+          className="space-y-3 py-1"
+        >
+          {collectionError ? (
+            <p className="text-red-600">
+              There was an error, please make sure the website is available.
+            </p>
+          ) : null}
+          <FormField
+            control={control}
+            name="url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>URL</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    {loadingCollections ? (
-                      <SelectValue>Loading collections...</SelectValue>
-                    ) : (
-                      <SelectValue>{field.value.name}</SelectValue>
-                    )}
-                  </SelectTrigger>
+                  <Input placeholder="https://www.gooogle.com" {...field} />
                 </FormControl>
-                <SelectContent className='max-h-[200px] overflow-y-auto'>
-                  {loadingCollections ? (
-                    <SelectItem value='Unnamed Collection'>Loading collections...</SelectItem>
-                  ) : (
-                    <>
-                      {collections?.response?.map((collection: {
-                        id: number;
-                        name: string
-                      }) => (
-                        <SelectItem key={collection.id} value={collection.name}
-                                    className='overflow-hidden whitespace-nowrap overflow-ellipsis'>
-                          {collection.name}
-                        </SelectItem>
-                      ))}
-                      <Input placeholder='Enter your own collection'
-                             onChange={(event) => field.onChange({ name: event.target.value })} />
-                    </>
-                  )}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )} />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="collection"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Collection</FormLabel>
+                <Select
+                  onValueChange={(value) => field.onChange({ name: value })}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      {loadingCollections ? (
+                        <SelectValue>Loading collections...</SelectValue>
+                      ) : (
+                        <SelectValue>{field.value.name}</SelectValue>
+                      )}
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="max-h-[200px] overflow-y-auto">
+                    {loadingCollections ? (
+                      <SelectItem value="Unnamed Collection">
+                        Loading collections...
+                      </SelectItem>
+                    ) : (
+                      <>
+                        {collections?.response?.map(
+                          (collection: { id: number; name: string }) => (
+                            <SelectItem
+                              key={collection.id}
+                              value={collection.name}
+                              className="overflow-hidden whitespace-nowrap overflow-ellipsis"
+                            >
+                              {collection.name}
+                            </SelectItem>
+                          )
+                        )}
+                        <Input
+                          placeholder="Enter your own collection"
+                          onChange={(event) =>
+                            field.onChange({ name: event.target.value })
+                          }
+                        />
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           {tagsError ? <p>There was an error...</p> : null}
-          <FormField control={control} name='tags' render={({ field }) => (
-            <FormItem>
-              <FormLabel>Tags</FormLabel>
-              {loadingTags ? <TagInput onChange={field.onChange} value={[{ name: 'Getting tags...' }]}
-                                       tags={[{ id: 1, name: 'Getting tags...' }]} /> :
-                tagsError ? <TagInput onChange={field.onChange} value={[{ name: 'Not found' }]}
-                                      tags={[{ id: 1, name: 'Not found' }]} /> :
-                  <TagInput onChange={field.onChange} value={field.value ?? []} tags={tags.response} />}
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={control} name='name' render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input placeholder='Google...' {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={control} name='description' render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea placeholder='Description...' {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
+          <FormField
+            control={control}
+            name="tags"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tags</FormLabel>
+                {loadingTags ? (
+                  <TagInput
+                    onChange={field.onChange}
+                    value={[{ name: 'Getting tags...' }]}
+                    tags={[{ id: 1, name: 'Getting tags...' }]}
+                  />
+                ) : tagsError ? (
+                  <TagInput
+                    onChange={field.onChange}
+                    value={[{ name: 'Not found' }]}
+                    tags={[{ id: 1, name: 'Not found' }]}
+                  />
+                ) : (
+                  <TagInput
+                    onChange={field.onChange}
+                    value={field.value ?? []}
+                    tags={tags.response}
+                  />
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Google..." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Description..." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <Separator />
-          <div className='flex justify-end'>
-            <Button disabled={isLoading} type='submit'>Save bookmark</Button>
+          <div className="flex justify-end">
+            <Button disabled={isLoading} type="submit">
+              Save
+            </Button>
           </div>
         </form>
       </Form>
@@ -282,6 +369,5 @@ const BookmarkForm = () => {
     </div>
   );
 };
-
 
 export default BookmarkForm;
