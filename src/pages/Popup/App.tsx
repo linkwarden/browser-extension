@@ -18,13 +18,18 @@ function App() {
     })();
   }, []);
 
-
   return (
     <WholeContainer>
       <Container>
-        <div className='flex justify-between w-full p-4 items-center'>
-          <h1 className='text-lg'>Add a bookmark</h1>
-          <Button variant='link' className='text-blue-500' onClick={openOptions}>Options</Button>
+        <div className="flex justify-between w-full p-4 items-center">
+          <h1 className="text-lg">Add Bookmark</h1>
+          <Button
+            variant="link"
+            className="text-blue-500"
+            onClick={openOptions}
+          >
+            Config
+          </Button>
         </div>
         <Separator />
         <BookmarkForm />
