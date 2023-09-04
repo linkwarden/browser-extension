@@ -19,9 +19,7 @@ export const TagInput: FC<TagInputProps> = ({ value, onChange, tags }) => {
   function handleAddTag() {
     if (inputValue && value.some((tagObj) => tagObj.name === inputValue)) return;
     if (inputValue) {
-      console.log(inputValue);
       const newTags = [...value, { name: inputValue }];
-      console.log(newTags);
       setInputValue('');
       onChange(newTags);
     }
@@ -33,7 +31,7 @@ export const TagInput: FC<TagInputProps> = ({ value, onChange, tags }) => {
   }
 
   return (
-    <div>
+    <div className='min-w-full inset-x-0'>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -48,51 +46,55 @@ export const TagInput: FC<TagInputProps> = ({ value, onChange, tags }) => {
             <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className='w-full p-0 overflow-y-auto max-h-[200px]'>
-          <Command className='w-full'>
-            <CommandInput
-              placeholder='Search tag or add tag (Enter)'
-              value={inputValue}
-              onValueChange={setInputValue}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleAddTag();
-                }
-              }}
-            />
-            <CommandEmpty>No tag found.</CommandEmpty>
-            {Array.isArray(tags) && (
-              <CommandGroup className='w-full'>
-                {tags.map((tag: { name: string }) => (
-                  <CommandItem
-                    key={tag.name}
-                    onSelect={() => {
-                      if (Array.isArray(value)) {
-                        if (value.some((v) => v.name === tag.name)) {
-                          handleRemoveTag(tag.name);
-                        } else {
-                          onChange([...value, tag]);
+        <div className='min-w-full inset-x-0'>
+          <PopoverContent className='min-w-full p-0 overflow-y-auto max-h-[200px]'>
+            <Command className='flex-grow min-w-full'>
+              <CommandInput
+                className='min-w-[280px]'
+                placeholder='Search tag or add tag (Enter)'
+                value={inputValue}
+                onValueChange={setInputValue}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleAddTag();
+                  }
+                }}
+              />
+              <CommandEmpty>No tag found.</CommandEmpty>
+              {Array.isArray(tags) && (
+                <CommandGroup className='w-full'>
+                  {tags.map((tag: { name: string }) => (
+                    <CommandItem
+                      className='w-full'
+                      key={tag.name}
+                      onSelect={() => {
+                        if (Array.isArray(value)) {
+                          if (value.some((v) => v.name === tag.name)) {
+                            handleRemoveTag(tag.name);
+                          } else {
+                            onChange([...value, tag]);
+                          }
                         }
-                      }
-                      setOpen(false);
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        'mr-2 h-4 w-4',
-                        Array.isArray(value) &&
-                        value.some((v) => v.name === tag.name)
-                          ? 'opacity-100'
-                          : 'opacity-0',
-                      )}
-                    />
-                    {tag.name}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
-          </Command>
-        </PopoverContent>
+                        setOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          'mr-2 h-4 w-4',
+                          Array.isArray(value) &&
+                          value.some((v) => v.name === tag.name)
+                            ? 'opacity-100'
+                            : 'opacity-0',
+                        )}
+                      />
+                      {tag.name}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+            </Command>
+          </PopoverContent>
+        </div>
       </Popover>
     </div>
   );
