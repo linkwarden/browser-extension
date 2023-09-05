@@ -1,21 +1,41 @@
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from './ui/Form.tsx';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from './ui/Form.tsx';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { optionsFormSchema, optionsFormValues } from '../lib/validators/optionsForm.ts';
+import {
+  optionsFormSchema,
+  optionsFormValues,
+} from '../lib/validators/optionsForm.ts';
 import { Input } from './ui/Input.tsx';
 import { Button } from './ui/Button.tsx';
 import { useMutation } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { clearConfig, getConfig, isConfigured, saveConfig } from '../lib/config.ts';
+import {
+  clearConfig,
+  getConfig,
+  isConfigured,
+  saveConfig,
+} from '../lib/config.ts';
 import { Toaster } from './ui/Toaster.tsx';
 import { toast } from '../../hooks/use-toast.ts';
 import { AxiosError } from 'axios';
-import { DataLogin, DataLogout, getCsrfToken, getSession, performLoginOrLogout } from '../lib/auth/auth.ts';
-
+import {
+  DataLogin,
+  DataLogout,
+  getCsrfToken,
+  getSession,
+  performLoginOrLogout,
+} from '../lib/auth/auth.ts';
 
 let HAD_PREVIOUS_SESSION = false;
 const OptionsForm = () => {
-
   const form = useForm<optionsFormValues>({
     resolver: zodResolver(optionsFormSchema),
     defaultValues: {
@@ -27,7 +47,6 @@ const OptionsForm = () => {
 
   const { mutate: onReset, isLoading: resetLoading } = useMutation({
     mutationFn: async () => {
-
       // For some reason (IDK how browser works!) cookies are shared across all tabs in the same browser
       // session is shared with the extension. This means that if you log out of
       // the extension, you will also be logged out of the website. This is not
@@ -48,12 +67,12 @@ const OptionsForm = () => {
       }
 
       return;
-
     },
     onError: () => {
       toast({
         title: 'Error',
-        description: 'Either you didn\'t configure the extension or there was an error while trying to log out. Please try again.',
+        description:
+          "Either you didn't configure the extension or there was an error while trying to log out. Please try again.",
         variant: 'destructive',
       });
       return;
@@ -70,10 +89,8 @@ const OptionsForm = () => {
     },
   });
 
-
   const { mutate: onSubmit, isLoading } = useMutation({
     mutationFn: async (values: optionsFormValues) => {
-
       // Do API call to test the connection and save the values
       const { username, password } = values;
       const csrfToken = await getCsrfToken(values.baseUrl);
@@ -135,10 +152,10 @@ const OptionsForm = () => {
       }
       toast({
         title: 'Saved',
-        description: 'Your settings have been saved',
+        description:
+          'Your settings have been saved, you can now close this tab.',
         variant: 'default',
       });
-
     },
   });
 
@@ -152,59 +169,83 @@ const OptionsForm = () => {
     })();
   }, [form]);
 
-
   const { handleSubmit, control } = form;
 
   return (
     <div>
       <Form {...form}>
-        <form onSubmit={handleSubmit(e => onSubmit(e))} className='space-y-3 p-1'>
-          <FormField control={control} name='baseUrl' render={({ field }) => (
-            <FormItem>
-              <FormLabel>URL</FormLabel>
-              <FormControl>
-                <Input placeholder='https://www.gooogle.com' {...field} />
-              </FormControl>
-              <FormDescription>
-                The address of your linkwarden installation. (Without trailing slash)
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={control} name='username' render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username/Email</FormLabel>
-              <FormControl>
-                <Input placeholder='Username...' {...field} />
-              </FormControl>
-              <FormDescription>
-                Username for your linkwarden installation.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={control} name='password' render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input placeholder='Password' {...field} type='password' />
-              </FormControl>
-              <FormDescription>
-                Password for your linkwarden installation.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <div className='flex justify-between'>
+        <form
+          onSubmit={handleSubmit((e) => onSubmit(e))}
+          className="space-y-3 p-2"
+        >
+          <FormField
+            control={control}
+            name="baseUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>URL</FormLabel>
+                <FormDescription>
+                  The address of your Linkwarden instance. (Without trailing
+                  slash)
+                </FormDescription>
+                <FormControl>
+                  <Input
+                    placeholder="https://cloud.linkwarden.app"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Username/Email</FormLabel>
+                <FormDescription>
+                  Username for your Linkwarden account.
+                </FormDescription>
+                <FormControl>
+                  <Input placeholder="Username..." {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormDescription>
+                  Password for your Linkwarden account.
+                </FormDescription>
+                <FormControl>
+                  <Input placeholder="Password" {...field} type="password" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="flex justify-between">
             <div>
               {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
-              {  /*@ts-ignore*/}
-              <Button type='button' className='mb-2' onClick={onReset} disabled={resetLoading}>Reset</Button>
-              <p className='text-muted-foreground text-xs w-[40%]'>Click to reset config, otherwise it won't if you just
-                delete
-                them</p>
+              {/*@ts-ignore*/}
+              <Button
+                type="button"
+                className="mb-2"
+                onClick={onReset as any}
+                disabled={resetLoading}
+              >
+                Reset
+              </Button>
             </div>
-            <Button disabled={isLoading} type='submit'>Save</Button>
+            <Button disabled={isLoading} type="submit">
+              Save
+            </Button>
           </div>
         </form>
       </Form>
