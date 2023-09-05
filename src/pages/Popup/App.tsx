@@ -1,7 +1,6 @@
 import { Button } from '../../@/components/ui/Button.tsx';
 import Container from '../../@/components/Container.tsx';
 import WholeContainer from '../../@/components/WholeContainer.tsx';
-import { Separator } from '../../@/components/ui/Separator.tsx';
 import BookmarkForm from '../../@/components/BookmarkForm.tsx';
 import { openOptions } from '../../@/lib/utils.ts';
 import { useEffect, useState } from 'react';
@@ -21,7 +20,7 @@ function App() {
   return (
     <WholeContainer>
       <Container>
-        <div className="flex justify-between w-full p-4 items-center">
+        <div className="flex justify-between w-full items-center">
           <h1 className="text-lg">Add Bookmark</h1>
           <Button
             variant="link"
@@ -31,7 +30,6 @@ function App() {
             Config
           </Button>
         </div>
-        <Separator />
         <BookmarkForm />
         <Modal open={!isAllConfigured} />
       </Container>
