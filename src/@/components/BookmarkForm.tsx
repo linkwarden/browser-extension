@@ -23,8 +23,8 @@ import {
 } from './ui/Select.tsx';
 import { TagInput } from './TagInput.tsx';
 import { Textarea } from './ui/Textarea.tsx';
-import { getCurrentTabInfo } from '../lib/utils.ts';
-import { useEffect } from 'react';
+import { cn, getCurrentTabInfo } from '../lib/utils.ts';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   getCsrfToken,
@@ -42,6 +42,7 @@ import { getTags } from '../lib/actions/tags.ts';
 let HAD_PREVIOUS_SESSION = false;
 let configured = false;
 const BookmarkForm = () => {
+  const [openOptions, setOpenOptions] = useState<boolean>(false);
   const form = useForm<bookmarkFormValues>({
     resolver: zodResolver(bookmarkFormSchema),
     defaultValues: {
@@ -111,7 +112,11 @@ const BookmarkForm = () => {
       return;
     },
     onSuccess: () => {
-      return toast({
+      setTimeout(() => {
+        window.close();
+        // I want to show some confirmation before it's closed...
+      }, 1000);
+      toast({
         title: 'Success',
         description: 'Link saved successfully!',
       });
@@ -255,7 +260,7 @@ const BookmarkForm = () => {
                       )}
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="max-h-[200px] overflow-y-auto">
+                  <SelectContent className={cn("max-h-[200px] overflow-y-auto", !openOptions ? "max-h-[100px]" : " ")}>
                     {loadingCollections ? (
                       <SelectItem value="Unorganized">
                         Loading collections...
@@ -287,6 +292,14 @@ const BookmarkForm = () => {
               </FormItem>
             )}
           />
+          <details className='details list-none space-y-3 py-1 '>
+            <summary
+              className='inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background
+               transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+               focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
+               hover:bg-accent hover:text-accent-foreground hover:cursor-pointer p-2' onClick={() => setOpenOptions(prevState => !prevState)}>
+              More Options
+            </summary>
           {tagsError ? <p>There was an error...</p> : null}
           <FormField
             control={control}
@@ -343,6 +356,7 @@ const BookmarkForm = () => {
               </FormItem>
             )}
           />
+        </details>
           <div className="flex justify-end">
             <Button disabled={isLoading} type="submit">
               Save
