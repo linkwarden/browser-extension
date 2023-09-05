@@ -235,7 +235,7 @@ const BookmarkForm = () => {
       <Form {...form}>
         <form
           onSubmit={handleSubmit((e) => onSubmit(e))}
-          className="space-y-3 py-1"
+          className="space-y-5 py-1"
         >
           {collectionError ? (
             <p className="text-red-600">
@@ -263,7 +263,7 @@ const BookmarkForm = () => {
                   <SelectContent
                     className={cn(
                       'max-h-[200px] overflow-y-auto',
-                      !openOptions ? 'max-h-[100px]' : ' '
+                      !openOptions ? 'max-h-[60px]' : ' '
                     )}
                   >
                     {loadingCollections ? (
@@ -297,8 +297,69 @@ const BookmarkForm = () => {
               </FormItem>
             )}
           />
-          <details className="details list-none space-y-3 py-1 ">
-            <summary
+          {openOptions ? (
+            <div className="details list-none space-y-5 py-1 ">
+              <hr />
+              {tagsError ? <p>There was an error...</p> : null}
+              <FormField
+                control={control}
+                name="tags"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tags</FormLabel>
+                    {loadingTags ? (
+                      <TagInput
+                        onChange={field.onChange}
+                        value={[{ name: 'Getting tags...' }]}
+                        tags={[{ id: 1, name: 'Getting tags...' }]}
+                      />
+                    ) : tagsError ? (
+                      <TagInput
+                        onChange={field.onChange}
+                        value={[{ name: 'Not found' }]}
+                        tags={[{ id: 1, name: 'Not found' }]}
+                      />
+                    ) : (
+                      <TagInput
+                        onChange={field.onChange}
+                        value={field.value ?? []}
+                        tags={tags.response}
+                      />
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Google..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Description..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          ) : undefined}
+          <div className="flex justify-between items-center">
+            <div
               className="inline-flex select-none items-center justify-center rounded-md text-sm font-medium ring-offset-background
                transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
                focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
@@ -306,65 +367,7 @@ const BookmarkForm = () => {
               onClick={() => setOpenOptions((prevState) => !prevState)}
             >
               {openOptions ? 'Hide' : 'More'} Options
-            </summary>
-            {tagsError ? <p>There was an error...</p> : null}
-            <FormField
-              control={control}
-              name="tags"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tags</FormLabel>
-                  {loadingTags ? (
-                    <TagInput
-                      onChange={field.onChange}
-                      value={[{ name: 'Getting tags...' }]}
-                      tags={[{ id: 1, name: 'Getting tags...' }]}
-                    />
-                  ) : tagsError ? (
-                    <TagInput
-                      onChange={field.onChange}
-                      value={[{ name: 'Not found' }]}
-                      tags={[{ id: 1, name: 'Not found' }]}
-                    />
-                  ) : (
-                    <TagInput
-                      onChange={field.onChange}
-                      value={field.value ?? []}
-                      tags={tags.response}
-                    />
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Google..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Description..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </details>
-          <div className="flex justify-end">
+            </div>
             <Button disabled={isLoading} type="submit">
               Save
             </Button>
