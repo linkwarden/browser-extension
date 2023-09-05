@@ -14,6 +14,7 @@ import {
 } from './ui/Form.tsx';
 import { Input } from './ui/Input.tsx';
 import { Button } from './ui/Button.tsx';
+import { Separator } from './ui/Separator.tsx';
 import {
   Select,
   SelectContent,
@@ -48,7 +49,7 @@ const BookmarkForm = () => {
       url: '',
       name: '',
       collection: {
-        name: 'Unorganized',
+        name: 'Unnamed Collection',
       },
       tags: [],
       description: '',
@@ -73,7 +74,7 @@ const BookmarkForm = () => {
             csrfToken,
             callbackUrl: `${config.baseUrl}/login`,
             json: true,
-          }
+          },
         );
       }
 
@@ -111,7 +112,11 @@ const BookmarkForm = () => {
       return;
     },
     onSuccess: () => {
-      return toast({
+      setTimeout(() => {
+        window.close();
+        // I want to show some confirmation before it's closed...
+      }, 1000);
+      toast({
         title: 'Success',
         description: 'Link saved successfully!',
       });
@@ -123,7 +128,7 @@ const BookmarkForm = () => {
   useEffect(() => {
     getCurrentTabInfo().then((tabInfo) => {
       form.setValue('url', tabInfo.url);
-      form.setValue('description', tabInfo.title);
+      form.setValue('name', tabInfo.title);
     });
     const getConfig = async () => {
       configured = await isConfigured();
@@ -155,7 +160,7 @@ const BookmarkForm = () => {
             csrfToken,
             callbackUrl: `${config.baseUrl}/login`,
             json: true,
-          }
+          },
         );
       }
 
@@ -202,7 +207,7 @@ const BookmarkForm = () => {
             csrfToken,
             callbackUrl: `${config.baseUrl}/login`,
             json: true,
-          }
+          },
         );
       }
 
@@ -230,16 +235,29 @@ const BookmarkForm = () => {
       <Form {...form}>
         <form
           onSubmit={handleSubmit((e) => onSubmit(e))}
-          className="space-y-3 py-1"
+          className='space-y-3 py-1'
         >
           {collectionError ? (
-            <p className="text-red-600">
+            <p className='text-red-600'>
               There was an error, please make sure the website is available.
             </p>
           ) : null}
           <FormField
             control={control}
-            name="collection"
+            name='url'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>URL</FormLabel>
+                <FormControl>
+                  <Input placeholder='https://www.gooogle.com' {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name='collection'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Collection</FormLabel>
@@ -255,9 +273,9 @@ const BookmarkForm = () => {
                       )}
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="max-h-[200px] overflow-y-auto">
+                  <SelectContent className='max-h-[200px] overflow-y-auto'>
                     {loadingCollections ? (
-                      <SelectItem value="Unorganized">
+                      <SelectItem value='Unnamed Collection'>
                         Loading collections...
                       </SelectItem>
                     ) : (
@@ -267,18 +285,18 @@ const BookmarkForm = () => {
                             <SelectItem
                               key={collection.id}
                               value={collection.name}
-                              className="overflow-hidden whitespace-nowrap overflow-ellipsis"
+                              className='overflow-hidden whitespace-nowrap overflow-ellipsis'
                             >
                               {collection.name}
                             </SelectItem>
-                          )
+                          ),
                         )}
-                        {/* <Input
-                          placeholder="Enter your own collection"
+                        <Input
+                          placeholder='Enter your own collection'
                           onChange={(event) =>
                             field.onChange({ name: event.target.value })
                           }
-                        /> */}
+                        />
                       </>
                     )}
                   </SelectContent>
@@ -287,64 +305,74 @@ const BookmarkForm = () => {
               </FormItem>
             )}
           />
-          {tagsError ? <p>There was an error...</p> : null}
-          <FormField
-            control={control}
-            name="tags"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tags</FormLabel>
-                {loadingTags ? (
-                  <TagInput
-                    onChange={field.onChange}
-                    value={[{ name: 'Getting tags...' }]}
-                    tags={[{ id: 1, name: 'Getting tags...' }]}
-                  />
-                ) : tagsError ? (
-                  <TagInput
-                    onChange={field.onChange}
-                    value={[{ name: 'Not found' }]}
-                    tags={[{ id: 1, name: 'Not found' }]}
-                  />
-                ) : (
-                  <TagInput
-                    onChange={field.onChange}
-                    value={field.value ?? []}
-                    tags={tags.response}
-                  />
-                )}
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Google..." {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="Description..." {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="flex justify-end">
-            <Button disabled={isLoading} type="submit">
+          <details className='details list-none space-y-3 py-1 '>
+            <summary
+              className='inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background
+               transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+               focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
+               hover:bg-accent hover:text-accent-foreground hover:cursor-pointer p-2'>
+              More Options
+            </summary>
+            {tagsError ? <p>There was an error...</p> : null}
+            <FormField
+              control={control}
+              name='tags'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tags</FormLabel>
+                  {loadingTags ? (
+                    <TagInput
+                      onChange={field.onChange}
+                      value={[{ name: 'Getting tags...' }]}
+                      tags={[{ id: 1, name: 'Getting tags...' }]}
+                    />
+                  ) : tagsError ? (
+                    <TagInput
+                      onChange={field.onChange}
+                      value={[{ name: 'Not found' }]}
+                      tags={[{ id: 1, name: 'Not found' }]}
+                    />
+                  ) : (
+                    <TagInput
+                      onChange={field.onChange}
+                      value={field.value ?? []}
+                      tags={tags.response}
+                    />
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={control}
+              name='name'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder='Google...' {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={control}
+              name='description'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder='Description...' {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Separator />
+          </details>
+          <div className='flex justify-end'>
+            <Button disabled={isLoading} type='submit'>
               Save
             </Button>
           </div>
