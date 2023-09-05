@@ -18,7 +18,7 @@ const Modal: FC<ModalProps> = ({ open }) => {
           <h2 className='text-xl text-zinc-700'>Initial Config</h2>
           <Separator />
           <p className='text-base text-zinc-700'>This extension is supposed to be work with the linkwarden app,
-            use it if you already have an installation or you are just a regular use of it</p>
+            use it if you already have an installation or you are making a regular use of it</p>
           <div className='flex justify-center items-center'>
             <Button onClick={() => openOptions()} className='max-w-[50%]'>Configure</Button>
           </div>
