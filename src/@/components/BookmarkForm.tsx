@@ -14,7 +14,6 @@ import {
 } from './ui/Form.tsx';
 import { Input } from './ui/Input.tsx';
 import { Button } from './ui/Button.tsx';
-import { Separator } from './ui/Separator.tsx';
 import {
   Select,
   SelectContent,
@@ -49,7 +48,7 @@ const BookmarkForm = () => {
       url: '',
       name: '',
       collection: {
-        name: 'Unnamed Collection',
+        name: 'Unorganized',
       },
       tags: [],
       description: '',
@@ -124,7 +123,7 @@ const BookmarkForm = () => {
   useEffect(() => {
     getCurrentTabInfo().then((tabInfo) => {
       form.setValue('url', tabInfo.url);
-      form.setValue('name', tabInfo.title);
+      form.setValue('description', tabInfo.title);
     });
     const getConfig = async () => {
       configured = await isConfigured();
@@ -240,19 +239,6 @@ const BookmarkForm = () => {
           ) : null}
           <FormField
             control={control}
-            name="url"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>URL</FormLabel>
-                <FormControl>
-                  <Input placeholder="https://www.gooogle.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={control}
             name="collection"
             render={({ field }) => (
               <FormItem>
@@ -271,7 +257,7 @@ const BookmarkForm = () => {
                   </FormControl>
                   <SelectContent className="max-h-[200px] overflow-y-auto">
                     {loadingCollections ? (
-                      <SelectItem value="Unnamed Collection">
+                      <SelectItem value="Unorganized">
                         Loading collections...
                       </SelectItem>
                     ) : (
@@ -287,12 +273,12 @@ const BookmarkForm = () => {
                             </SelectItem>
                           )
                         )}
-                        <Input
+                        {/* <Input
                           placeholder="Enter your own collection"
                           onChange={(event) =>
                             field.onChange({ name: event.target.value })
                           }
-                        />
+                        /> */}
                       </>
                     )}
                   </SelectContent>
@@ -357,7 +343,6 @@ const BookmarkForm = () => {
               </FormItem>
             )}
           />
-          <Separator />
           <div className="flex justify-end">
             <Button disabled={isLoading} type="submit">
               Save
