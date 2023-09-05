@@ -260,7 +260,12 @@ const BookmarkForm = () => {
                       )}
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className={cn("max-h-[200px] overflow-y-auto", !openOptions ? "max-h-[100px]" : " ")}>
+                  <SelectContent
+                    className={cn(
+                      'max-h-[200px] overflow-y-auto',
+                      !openOptions ? 'max-h-[100px]' : ' '
+                    )}
+                  >
                     {loadingCollections ? (
                       <SelectItem value="Unorganized">
                         Loading collections...
@@ -292,71 +297,73 @@ const BookmarkForm = () => {
               </FormItem>
             )}
           />
-          <details className='details list-none space-y-3 py-1 '>
+          <details className="details list-none space-y-3 py-1 ">
             <summary
-              className='inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background
+              className="inline-flex select-none items-center justify-center rounded-md text-sm font-medium ring-offset-background
                transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
                focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
-               hover:bg-accent hover:text-accent-foreground hover:cursor-pointer p-2' onClick={() => setOpenOptions(prevState => !prevState)}>
-              More Options
+               hover:bg-accent hover:text-accent-foreground hover:cursor-pointer p-2"
+              onClick={() => setOpenOptions((prevState) => !prevState)}
+            >
+              {openOptions ? 'Hide' : 'More'} Options
             </summary>
-          {tagsError ? <p>There was an error...</p> : null}
-          <FormField
-            control={control}
-            name="tags"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Tags</FormLabel>
-                {loadingTags ? (
-                  <TagInput
-                    onChange={field.onChange}
-                    value={[{ name: 'Getting tags...' }]}
-                    tags={[{ id: 1, name: 'Getting tags...' }]}
-                  />
-                ) : tagsError ? (
-                  <TagInput
-                    onChange={field.onChange}
-                    value={[{ name: 'Not found' }]}
-                    tags={[{ id: 1, name: 'Not found' }]}
-                  />
-                ) : (
-                  <TagInput
-                    onChange={field.onChange}
-                    value={field.value ?? []}
-                    tags={tags.response}
-                  />
-                )}
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Google..." {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="Description..." {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </details>
+            {tagsError ? <p>There was an error...</p> : null}
+            <FormField
+              control={control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tags</FormLabel>
+                  {loadingTags ? (
+                    <TagInput
+                      onChange={field.onChange}
+                      value={[{ name: 'Getting tags...' }]}
+                      tags={[{ id: 1, name: 'Getting tags...' }]}
+                    />
+                  ) : tagsError ? (
+                    <TagInput
+                      onChange={field.onChange}
+                      value={[{ name: 'Not found' }]}
+                      tags={[{ id: 1, name: 'Not found' }]}
+                    />
+                  ) : (
+                    <TagInput
+                      onChange={field.onChange}
+                      value={field.value ?? []}
+                      tags={tags.response}
+                    />
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Google..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Description..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </details>
           <div className="flex justify-end">
             <Button disabled={isLoading} type="submit">
               Save
