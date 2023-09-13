@@ -33,7 +33,8 @@
     "gecko": {
       "id": "jordanlinkwarden@gmail.com",
       "strict_min_version": "109.0"
-    },
+    }
+  },
     "host_permissions": [
       "*://*/*"
     ],
