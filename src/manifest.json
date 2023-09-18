@@ -3,7 +3,7 @@
   "name": "Linkwarden",
   "description": "The browser extension for Linkwarden.",
   "homepage_url": "https://linkwarden.app/",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "action": {
     "default_popup": "./index.html",
     "default_icon": {
@@ -15,7 +15,8 @@
     "default_title": "Linkwarden"
   },
   "options_ui": {
-    "page": "./src/pages/Options/options.html"
+    "page": "./src/pages/Options/options.html",
+    "browser_style": false
   },
   "icons": {
     "16": "./16.png",
@@ -26,15 +27,8 @@
   "permissions": [
     "storage",
     "activeTab",
-    "scripting",
     "tabs"
   ],
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "jordanlinkwarden@gmail.com",
-      "strict_min_version": "109.0"
-    }
-  },
     "host_permissions": [
       "*://*/*"
     ],
