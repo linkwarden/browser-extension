@@ -2,37 +2,43 @@
   "manifest_version": 3,
   "name": "Linkwarden",
   "description": "The browser extension for Linkwarden.",
-  "homepage_url": "https://github.com/linkwarden/linkwarden-extension",
-  "version": "1.0.0",
+  "homepage_url": "https://linkwarden.app/",
+  "version": "1.0.1",
   "action": {
     "default_popup": "./index.html",
     "default_icon": {
-      "16": "./favicon-16x16.png",
-      "32": "./favicon-32x32.png",
-      "48": "./favicon-48x48.png"
+      "16": "./16.png",
+      "32": "./32.png",
+      "48": "./48.png",
+      "128": "./128.png"
     },
     "default_title": "Linkwarden"
   },
   "options_ui": {
-    "page": "./src/pages/Options/options.html"
+    "page": "./src/pages/Options/options.html",
+    "browser_style": false
   },
   "icons": {
-    "16": "./favicon-16x16.png",
-    "32": "./favicon-32x32.png",
-    "48": "./favicon-48x48.png"
+    "16": "./16.png",
+    "32": "./32.png",
+    "48": "./48.png",
+    "128": "./128.png"
   },
-  "permissions": ["storage", "activeTab", "scripting", "tabs"],
-  "host_permissions": ["*://*/*"],
-  "background": {
-    "service_worker": "./background.js",
-    "type": "module"
-  },
-  "commands": {
-    "_execute_action": {
-      "suggested_key": {
-        "default": "Alt+Shift+K",
-        "mac": "MacCtrl+Shift+K"
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs"
+  ],
+    "host_permissions": [
+      "*://*/*"
+    ],
+    "commands": {
+      "_execute_action": {
+        "suggested_key": {
+          "default": "Alt+Shift+K",
+          "mac": "MacCtrl+Shift+K"
+        }
       }
     }
-  }
 }
+
