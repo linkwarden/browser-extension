@@ -1,10 +1,10 @@
 {
-  "manifest_version": 3,
+  "manifest_version": 2,
   "name": "Linkwarden",
   "description": "The browser extension for Linkwarden.",
   "homepage_url": "https://linkwarden.app/",
-  "version": "1.0.1",
-  "action": {
+  "version": "1.0.3",
+  "browser_action": {
     "default_popup": "./index.html",
     "default_icon": {
       "16": "./16.png",
@@ -25,20 +25,23 @@
     "128": "./128.png"
   },
   "permissions": [
-    "storage",
-    "activeTab",
-    "tabs"
+    "tabs",
+    "http://*/*",
+    "https://*/*"
   ],
-    "host_permissions": [
-      "*://*/*"
-    ],
-    "commands": {
-      "_execute_action": {
-        "suggested_key": {
-          "default": "Alt+Shift+K",
-          "mac": "MacCtrl+Shift+K"
-        }
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+K",
+        "mac": "MacCtrl+Shift+K"
       }
     }
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "jordanlinkwarden@gmail.com",
+      "strict_min_version": "109.0"
+    }
+  }
 }
 
