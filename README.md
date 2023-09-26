@@ -32,4 +32,4 @@ Run the following in your terminal.
 user@bash:~$ chmod +x ./build.sh && ./build.sh
 ```
 
-After the above command use the `/dist` folder as an unpacked extension in your browser.
+After the above command, use the `/dist` folder as an unpacked extension in your browser.
