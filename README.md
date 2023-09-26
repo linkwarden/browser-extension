@@ -22,7 +22,7 @@ Firefox is under development.
 
 - LTS NodeJS 18.x.x
 - NPM Version 9.x.x
-- Bash (Linux/MacOS)
+- Bash
 
 ### Build
 
