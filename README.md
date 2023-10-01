@@ -1,35 +1,43 @@
-# Linkwarden Browser Extension
+# Linkwarden extension
 
 Extension for [Linkwarden](https://github.com/linkwarden/linkwarden), a self-hosted, open-source collaborative bookmark
 manager to
 collect, organize and archive webpages.
 
+(Important note: This is a work in progress, so expect bugs and missing features. If you find any issues, please report
+them, Working with linkwarden with basic functionality now!).
+
 **Features**
 
-- Add and organize new links to Linkwarden with a single click.
+- Add new links to linkwarden with a single click
+- Keyboard shortcut to quickly add links<kbd>Alt + Shift + K</kbd>
 
-![Image](/assets/linkwarden-extension.png)
+Currently works on Chrome and Firefox. (Safari to be tested)
 
-## Installation
+**Images**
 
-For Chrome, Brave and other Chromium based browsers you can get this extension from the [Chrome Web Store](https://chrome.google.com/webstore/detail/linkwarden/pnidmkljnhbjfffciajlcpeldoljnidn).
+![Image](./src/assets/linwarden-extension.png)
+![Image](./src/assets/linkwarden-options.png)
 
-Firefox is under development.
-
-## Build From Source
+## Manual Installation (Only for now and development)
 
 ### Requirements
 
+(Could work with older versions, but not tested, let me know if you have any issues)
+
 - LTS NodeJS 18.x.x
 - NPM Version 9.x.x
-- Bash
+- bash
 
 ### Build
 
-Run the following in your terminal.
+Make sure you are able to run the build script included in repository.
 
-```console
-user@bash:~$ chmod +x ./build.sh && ./build.sh
+```
+chmod +x ./build.sh
+./build.sh
 ```
 
-After the above command, use the `/dist` folder as an unpacked extension in your browser.
+Then take the dist folder and load it as an unpacked extension in your browser.
+Now it should be working!.
+
