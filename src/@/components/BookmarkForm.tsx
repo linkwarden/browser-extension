@@ -252,6 +252,7 @@ const BookmarkForm = () => {
                         <Button
                           variant="outline"
                           role="combobox"
+                          aria-expanded={openCollections}
                           className={cn(
                             "w-full justify-between",
                             !field.value.name && "text-muted-foreground"
@@ -278,7 +279,8 @@ const BookmarkForm = () => {
                               value="Getting collections..."
                               key="Getting collections..."
                               onSelect={() => {
-                                form.setValue('collection', {name: "Unorganized"});
+                                form.setValue('collection', {name: "Unorganized"})
+                                setOpenCollections(false);
                               }}
                             >
                               Unorganized
@@ -288,6 +290,7 @@ const BookmarkForm = () => {
                                 key={collection.id}
                                 onSelect={() => {
                                   form.setValue('collection', {name: collection.name});
+                                  setOpenCollections(false)
                                 }}
                               >
                                 {collection.name}
