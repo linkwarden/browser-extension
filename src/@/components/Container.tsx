@@ -5,7 +5,7 @@ interface ContainerProps {
 }
 
 const Container: FC<ContainerProps> = ({ children }) => {
-  return <div className="flex flex-col w-[386px] px-6 py-3">{children}</div>;
+  return <div className="flex flex-col w-[386px] h-full px-6 py-3 overflow-y-hidden">{children}</div>;
 };
 
 export default Container;

@@ -6,7 +6,7 @@ interface WholeContainerProps {
 
 const WholeContainer: FC<WholeContainerProps> = ({ children }) => {
   return (
-    <div className='inset-0 w-full flex justify-center h-full'>
+    <div className='inset-0 w-full flex justify-center max-h-[600px] overflow-y-hidden'>
       {children}
     </div>
   );
