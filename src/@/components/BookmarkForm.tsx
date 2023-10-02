@@ -289,6 +289,7 @@ const BookmarkForm = () => {
                                 key={collection.id}
                                 onSelect={() => {
                                   form.setValue('collection', {name: collection.name});
+                                  setOpenCollections(false);
                                 }}
                               >
                                 {collection.name}
