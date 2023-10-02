@@ -12,9 +12,9 @@ collect, organize and archive webpages.
 
 ## Installation
 
-For Chrome, Brave and other Chromium based browsers you can get this extension from the [Chrome Web Store](https://chrome.google.com/webstore/detail/linkwarden/pnidmkljnhbjfffciajlcpeldoljnidn).
+Chrome, Brave and other Chromium based browsers: [Chrome Web Store](https://chrome.google.com/webstore/detail/linkwarden/pnidmkljnhbjfffciajlcpeldoljnidn)
 
-Firefox is under development.
+Firefox: [Mozilla Addon Store](https://addons.mozilla.org/en-US/firefox/addon/linkwarden)
 
 ## Build From Source
 
@@ -23,13 +23,28 @@ Firefox is under development.
 - LTS NodeJS 18.x.x
 - NPM Version 9.x.x
 - Bash
+- Git
 
-### Build
+### Step 1: Clone this repo
 
-Run the following in your terminal.
+Clone this repository by running the following in your terminal:
 
-```console
-user@bash:~$ chmod +x ./build.sh && ./build.sh
+```
+git clone https://github.com/linkwarden/browser-extension.git
+```
+
+### Step 2: Build
+
+Head to the generated folder:
+
+```
+cd browser-extension
+```
+
+And run:
+
+```
+chmod +x ./build.sh && ./build.sh
 ```
 
 After the above command, use the `/dist` folder as an unpacked extension in your browser.
