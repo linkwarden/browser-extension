@@ -16,7 +16,7 @@ export interface DataLogout {
 }
 
 export async function getCsrfToken(url: string): Promise<string> {
-  const token = await axios.get(`${url}/api/auth/csrf`);
+  const token = await axios.get(`${url}/api/v1/auth/csrf`);
   const { csrfToken } = token.data;
   return csrfToken;
 
@@ -35,6 +35,6 @@ export async function performLoginOrLogout(url: string, data: DataLogin | DataLo
 }
 
 export async function getSession(url: string) {
-  const session = await axios.get(`${url}/api/auth/session`);
+  const session = await axios.get(`${url}/api/v1/auth/session`);
   return session.data.user;
 }
