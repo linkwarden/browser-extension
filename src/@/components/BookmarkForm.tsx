@@ -14,7 +14,6 @@ import {
 } from './ui/Form.tsx';
 import { Input } from './ui/Input.tsx';
 import { Button } from './ui/Button.tsx';
-
 import { TagInput } from './TagInput.tsx';
 import { Textarea } from './ui/Textarea.tsx';
 import { cn, getCurrentTabInfo } from '../lib/utils.ts';
@@ -34,7 +33,13 @@ import { getCollections } from '../lib/actions/collections.ts';
 import { getTags } from '../lib/actions/tags.ts';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/Popover.tsx';
 import { CaretSortIcon } from '@radix-ui/react-icons';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from './ui/Command.tsx';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from './ui/Command.tsx';
 
 let HAD_PREVIOUS_SESSION = false;
 let configured = false;
@@ -231,10 +236,7 @@ const BookmarkForm = () => {
   return (
     <div>
       <Form {...form}>
-        <form
-          onSubmit={handleSubmit((e) => onSubmit(e))}
-          className="space-y-5 py-1"
-        >
+        <form onSubmit={handleSubmit((e) => onSubmit(e))} className="py-1">
           {collectionError ? (
             <p className="text-red-600">
               There was an error, please make sure the website is available.
@@ -244,57 +246,80 @@ const BookmarkForm = () => {
             control={control}
             name="collection"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className={`mt-2 ${!openOptions ? 'mb-5' : ''}`}>
                 <FormLabel>Collection</FormLabel>
-                <div className='min-w-full inset-x-0 h-[75px]'>
-                  <Popover open={openCollections} onOpenChange={setOpenCollections}>
+                <div className="min-w-full inset-x-0 h-[75px]">
+                  <Popover
+                    open={openCollections}
+                    onOpenChange={setOpenCollections}
+                  >
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
                           variant="outline"
                           role="combobox"
+                          aria-expanded={openCollections}
                           className={cn(
-                            "w-full justify-between",
-                            !field.value.name && "text-muted-foreground"
+                            'w-full justify-between',
+                            !field.value.name && 'text-muted-foreground'
                           )}
                         >
-                          {loadingCollections ? "Loading" : field.value.name
-                            ? collections.response?.find(
-                              (collection: {name: any}) => collection.name === field.value.name
-                            )?.name
-                            : "Select a collection..."}
+                          {loadingCollections
+                            ? 'Loading'
+                            : field.value.name
+                              ? collections.response?.find(
+                              (collection: { name: any }) =>
+                                collection.name === field.value.name
+                            )?.name || 'Unorganized'
+                              : 'Select a collection...'}
                           <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className='min-w-full p-0 overflow-y-auto max-h-[100px]'>
-                      <Command className='flex-grow min-w-full dropdown-content'>
+                    <PopoverContent
+                      className={`min-w-full p-0 overflow-y-auto ${
+                        !openOptions ? 'max-h-[100px]' : ''
+                      }`}
+                    >
+                      <Command className="flex-grow min-w-full dropdown-content">
                         <CommandInput
-                          className='min-w-[280px]'
-                          placeholder="Search collection..." />
+                          className="min-w-[280px]"
+                          placeholder="Search collection..."
+                        />
                         <CommandEmpty>No Collection found.</CommandEmpty>
                         {Array.isArray(collections?.response) && (
                           <CommandGroup className="w-full">
-                            {isLoading ? <CommandItem
-                              value="Getting collections..."
-                              key="Getting collections..."
-                              onSelect={() => {
-                                form.setValue('collection', {name: "Unorganized"});
-                              }}
-                            >
-                              Unorganized
-                            </CommandItem> : collections.response?.map((collection: {name: string, id: number}) => (
+                            {isLoading ? (
                               <CommandItem
-                                value={collection.name}
-                                key={collection.id}
+                                value="Getting collections..."
+                                key="Getting collections..."
                                 onSelect={() => {
-                                  form.setValue('collection', {name: collection.name});
+                                  form.setValue('collection', {
+                                    name: 'Unorganized',
+                                  });
                                   setOpenCollections(false);
                                 }}
                               >
-                                {collection.name}
+                                Unorganized
                               </CommandItem>
-                            ))}
+                            ) : (
+                              collections.response?.map(
+                                (collection: { name: string; id: number }) => (
+                                  <CommandItem
+                                    value={collection.name}
+                                    key={collection.id}
+                                    onSelect={() => {
+                                      form.setValue('collection', {
+                                        name: collection.name,
+                                      });
+                                      setOpenCollections(false);
+                                    }}
+                                  >
+                                    {collection.name}
+                                  </CommandItem>
+                                )
+                              )
+                            )}
                           </CommandGroup>
                         )}
                       </Command>
@@ -365,7 +390,6 @@ const BookmarkForm = () => {
                 )}
               />
             </div>
-
           ) : undefined}
           <div className="flex justify-between items-center">
             <div
