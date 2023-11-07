@@ -95,7 +95,7 @@ const OptionsForm = () => {
       const { username, password } = values;
       const csrfToken = await getCsrfToken(values.baseUrl);
 
-      const url = `${values.baseUrl}/api/auth/callback/credentials`;
+      const url = `${values.baseUrl}/api/v1/auth/callback/credentials`;
       const data: DataLogin = {
         username: username,
         password: password,
@@ -140,7 +140,7 @@ const OptionsForm = () => {
       await saveConfig(values);
 
       if (!HAD_PREVIOUS_SESSION) {
-        const url = `${values.baseUrl}/api/auth/signout`;
+        const url = `${values.baseUrl}/api/v1/auth/signout`;
 
         const data: DataLogout = {
           csrfToken: await getCsrfToken(values.baseUrl),
