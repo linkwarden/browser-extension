@@ -69,7 +69,7 @@ const BookmarkForm = () => {
 
       if (!HAD_PREVIOUS_SESSION) {
         await performLoginOrLogout(
-          `${config.baseUrl}/api/auth/callback/credentials`,
+          `${config.baseUrl}/api/v1/auth/callback/credentials`,
           {
             username: config.username,
             password: config.password,
@@ -84,7 +84,7 @@ const BookmarkForm = () => {
       await postLink(config.baseUrl, values);
 
       if (!HAD_PREVIOUS_SESSION) {
-        const url = `${config.baseUrl}/api/auth/signout`;
+        const url = `${config.baseUrl}/api/v1/auth/signout`;
         await performLoginOrLogout(url, {
           username: config.username,
           password: config.password,
@@ -155,7 +155,7 @@ const BookmarkForm = () => {
 
       if (!HAD_PREVIOUS_SESSION) {
         await performLoginOrLogout(
-          `${config.baseUrl}/api/auth/callback/credentials`,
+          `${config.baseUrl}/api/v1/auth/callback/credentials`,
           {
             username: config.username,
             password: config.password,
@@ -170,7 +170,7 @@ const BookmarkForm = () => {
       const data = await getCollections(config.baseUrl);
 
       if (!HAD_PREVIOUS_SESSION) {
-        const url = `${config.baseUrl}/api/auth/signout`;
+        const url = `${config.baseUrl}/api/v1/auth/signout`;
         await performLoginOrLogout(url, {
           username: config.username,
           password: config.password,
@@ -202,7 +202,7 @@ const BookmarkForm = () => {
 
       if (!HAD_PREVIOUS_SESSION) {
         await performLoginOrLogout(
-          `${config.baseUrl}/api/auth/callback/credentials`,
+          `${config.baseUrl}/api/v1/auth/callback/credentials`,
           {
             username: config.username,
             password: config.password,
@@ -217,7 +217,7 @@ const BookmarkForm = () => {
       const data = await getTags(config.baseUrl);
 
       if (!HAD_PREVIOUS_SESSION) {
-        const url = `${config.baseUrl}/api/auth/signout`;
+        const url = `${config.baseUrl}/api/v1/auth/signout`;
         await performLoginOrLogout(url, {
           username: config.username,
           password: config.password,
