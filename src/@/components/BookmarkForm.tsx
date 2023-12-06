@@ -98,10 +98,12 @@ const BookmarkForm = () => {
       return;
     },
     onError: (error) => {
-      if ((error as AxiosError)?.response?.status === 401) {
+      if (error as AxiosError) {
         toast({
           title: 'Error',
-          description: 'You are not logged in. Please try again.',
+          description:
+            (error as any).response.data.response ||
+            'There was an error while trying to save the link. Please try again.',
           variant: 'destructive',
         });
       } else {
@@ -278,7 +280,7 @@ const BookmarkForm = () => {
                     </PopoverTrigger>
                     <PopoverContent
                       className={`min-w-full p-0 overflow-y-auto ${
-                        !openOptions ? 'max-h-[100px]' : ''
+                        !openOptions ? 'max-h-[100px]' : 'max-h-[200px]'
                       }`}
                     >
                       <Command className="flex-grow min-w-full dropdown-content">
@@ -304,12 +306,18 @@ const BookmarkForm = () => {
                               </CommandItem>
                             ) : (
                               collections.response?.map(
-                                (collection: { name: string; id: number }) => (
+                                (collection: {
+                                  name: string;
+                                  id: number;
+                                  ownerId: number;
+                                }) => (
                                   <CommandItem
                                     value={collection.name}
                                     key={collection.id}
                                     onSelect={() => {
                                       form.setValue('collection', {
+                                        ownerId: collection.ownerId,
+                                        id: collection.id,
                                         name: collection.name,
                                       });
                                       setOpenCollections(false);
