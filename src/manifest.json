@@ -3,7 +3,7 @@
   "name": "Linkwarden",
   "description": "The browser extension for Linkwarden.",
   "homepage_url": "https://linkwarden.app/",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "action": {
     "default_popup": "./index.html",
     "default_icon": {
@@ -24,14 +24,8 @@
     "48": "./48.png",
     "128": "./128.png"
   },
-  "permissions": [
-    "storage",
-    "activeTab",
-    "tabs"
-  ],
-  "host_permissions": [
-    "*://*/*"
-  ],
+  "permissions": ["storage", "activeTab", "tabs"],
+  "host_permissions": ["*://*/*"],
   "commands": {
     "_execute_action": {
       "suggested_key": {
