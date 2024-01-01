@@ -31,6 +31,7 @@ import { toast } from '../../hooks/use-toast.ts';
 import { Toaster } from './ui/Toaster.tsx';
 import { getCollections } from '../lib/actions/collections.ts';
 import { getTags } from '../lib/actions/tags.ts';
+import { X } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/Popover.tsx';
 import { CaretSortIcon } from '@radix-ui/react-icons';
 import {
@@ -248,9 +249,9 @@ const BookmarkForm = () => {
             control={control}
             name="collection"
             render={({ field }) => (
-              <FormItem className={`mt-2 ${!openOptions ? 'mb-5' : ''}`}>
+              <FormItem className={`my-2`}>
                 <FormLabel>Collection</FormLabel>
-                <div className="min-w-full inset-x-0 h-[75px]">
+                <div className="min-w-full inset-x-0">
                   <Popover
                     open={openCollections}
                     onOpenChange={setOpenCollections}
@@ -278,7 +279,127 @@ const BookmarkForm = () => {
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent
+
+                    {!openOptions && openCollections ? (
+                      <div
+                        className={`fade-up min-w-full p-0 overflow-y-auto ${
+                          openCollections
+                            ? 'fixed inset-0 w-full h-full z-50 bg-white'
+                            : ''
+                        }`}
+                      >
+                        <button
+                          className="absolute top-2 right-2 p-1 bg-gray-100 hover:bg-gray-200 duration-100 rounded-full"
+                          onClick={() => setOpenCollections(false)}
+                        >
+                          <X className={`h-4 w-4`} />
+                        </button>
+                        <Command className="flex-grow min-w-full dropdown-content">
+                          <CommandInput
+                            className="min-w-[280px]"
+                            placeholder="Search Collection..."
+                          />
+                          <CommandEmpty>No Collection found.</CommandEmpty>
+                          {Array.isArray(collections?.response) && (
+                            <CommandGroup className="w-full overflow-y-auto">
+                              {isLoading ? (
+                                <CommandItem
+                                  value="Getting collections..."
+                                  key="Getting collections..."
+                                  onSelect={() => {
+                                    form.setValue('collection', {
+                                      name: 'Unorganized',
+                                    });
+                                    setOpenCollections(false);
+                                  }}
+                                >
+                                  Unorganized
+                                </CommandItem>
+                              ) : (
+                                collections.response?.map(
+                                  (collection: {
+                                    name: string;
+                                    id: number;
+                                    ownerId: number;
+                                  }) => (
+                                    <CommandItem
+                                      value={collection.name}
+                                      key={collection.id}
+                                      className="cursor-pointer"
+                                      onSelect={() => {
+                                        form.setValue('collection', {
+                                          ownerId: collection.ownerId,
+                                          id: collection.id,
+                                          name: collection.name,
+                                        });
+                                        setOpenCollections(false);
+                                      }}
+                                    >
+                                      {collection.name}
+                                    </CommandItem>
+                                  )
+                                )
+                              )}
+                            </CommandGroup>
+                          )}
+                        </Command>
+                      </div>
+                    ) : openOptions && openCollections ? (
+                      <PopoverContent
+                        className={`min-w-full p-0 overflow-y-auto max-h-[200px]`}
+                      >
+                        <Command className="flex-grow min-w-full dropdown-content">
+                          <CommandInput
+                            className="min-w-[280px]"
+                            placeholder="Search collection..."
+                          />
+                          <CommandEmpty>No Collection found.</CommandEmpty>
+                          {Array.isArray(collections?.response) && (
+                            <CommandGroup className="w-full">
+                              {isLoading ? (
+                                <CommandItem
+                                  value="Getting collections..."
+                                  key="Getting collections..."
+                                  onSelect={() => {
+                                    form.setValue('collection', {
+                                      name: 'Unorganized',
+                                    });
+                                    setOpenCollections(false);
+                                  }}
+                                >
+                                  Unorganized
+                                </CommandItem>
+                              ) : (
+                                collections.response?.map(
+                                  (collection: {
+                                    name: string;
+                                    id: number;
+                                    ownerId: number;
+                                  }) => (
+                                    <CommandItem
+                                      value={collection.name}
+                                      key={collection.id}
+                                      onSelect={() => {
+                                        form.setValue('collection', {
+                                          ownerId: collection.ownerId,
+                                          id: collection.id,
+                                          name: collection.name,
+                                        });
+                                        setOpenCollections(false);
+                                      }}
+                                    >
+                                      {collection.name}
+                                    </CommandItem>
+                                  )
+                                )
+                              )}
+                            </CommandGroup>
+                          )}
+                        </Command>
+                      </PopoverContent>
+                    ) : undefined}
+
+                    {/* <PopoverContent
                       className={`min-w-full p-0 overflow-y-auto ${
                         !openOptions ? 'max-h-[100px]' : 'max-h-[200px]'
                       }`}
@@ -331,7 +452,7 @@ const BookmarkForm = () => {
                           </CommandGroup>
                         )}
                       </Command>
-                    </PopoverContent>
+                    </PopoverContent> */}
                   </Popover>
                 </div>
                 <FormMessage />
@@ -339,8 +460,7 @@ const BookmarkForm = () => {
             )}
           />
           {openOptions ? (
-            <div className="details list-none space-y-5 py-1 ">
-              <hr />
+            <div className="details list-none space-y-5 pt-2">
               {tagsError ? <p>There was an error...</p> : null}
               <FormField
                 control={control}
@@ -399,7 +519,7 @@ const BookmarkForm = () => {
               />
             </div>
           ) : undefined}
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mt-4">
             <div
               className="inline-flex select-none items-center justify-center rounded-md text-sm font-medium ring-offset-background
                transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
