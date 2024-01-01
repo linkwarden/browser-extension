@@ -1,4 +1,3 @@
-import { Button } from '../../@/components/ui/Button.tsx';
 import Container from '../../@/components/Container.tsx';
 import WholeContainer from '../../@/components/WholeContainer.tsx';
 import BookmarkForm from '../../@/components/BookmarkForm.tsx';
@@ -25,16 +24,29 @@ function App() {
       <Container>
         <div className="flex justify-between w-full items-center">
           <div className="flex space-x-2 w-full items-center">
-            <a href={baseUrl} rel="noopener" target="_blank" referrerPolicy="no-referrer" className="hover:opacity-50 duration-100 ease-in-out"><img src="./128.png" height="36px" width="36px" alt="Linkwarden Logo"/></a>
+            <a
+              href={baseUrl}
+              rel="noopener"
+              target="_blank"
+              referrerPolicy="no-referrer"
+              className="hover:opacity-80 duration-200 rounded ease-in-out"
+            >
+              <img
+                src="./128.png"
+                height="30px"
+                width="30px"
+                className="rounded"
+                alt="Linkwarden Logo"
+              />
+            </a>
             <h1 className="text-lg">Add Link</h1>
           </div>
-          <Button
-            variant="link"
-            className="text-blue-500"
+          <p
+            className="text-blue-500 text-xs cursor-pointer hover:opacity-80 duration-200 ease-in-out w-fit"
             onClick={openOptions}
           >
             Config
-          </Button>
+          </p>
         </div>
         <BookmarkForm />
         <Modal open={!isAllConfigured} />
