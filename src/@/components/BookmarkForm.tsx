@@ -132,9 +132,9 @@ const BookmarkForm = () => {
   const { handleSubmit, control } = form;
 
   useEffect(() => {
-    getCurrentTabInfo().then((tabInfo) => {
-      form.setValue('url', tabInfo.url);
-      form.setValue('description', tabInfo.title);
+    getCurrentTabInfo().then(({ url, title }) => {
+      form.setValue('url', url);
+      form.setValue('description', title);
     });
     const getConfig = async () => {
       configured = await isConfigured();
@@ -264,15 +264,15 @@ const BookmarkForm = () => {
                           aria-expanded={openCollections}
                           className={cn(
                             'w-full justify-between',
-                            !field.value.name && 'text-muted-foreground'
+                            !field.value?.name && 'text-muted-foreground'
                           )}
                         >
                           {loadingCollections
                             ? 'Loading'
-                            : field.value.name
+                            : field.value?.name
                             ? collections.response?.find(
-                                (collection: { name: any }) =>
-                                  collection.name === field.value.name
+                                (collection: { name: string }) =>
+                                  collection.name === field.value?.name
                               )?.name || 'Unorganized'
                             : 'Select a collection...'}
                           <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />

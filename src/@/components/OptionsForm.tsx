@@ -33,6 +33,7 @@ import {
   getSession,
   performLoginOrLogout,
 } from '../lib/auth/auth.ts';
+import { Checkbox } from './ui/CheckBox.tsx';
 
 let HAD_PREVIOUS_SESSION = false;
 const OptionsForm = () => {
@@ -42,6 +43,7 @@ const OptionsForm = () => {
       baseUrl: '',
       username: '',
       password: '',
+      syncBookmarks: false,
     },
   });
 
@@ -230,6 +232,25 @@ const OptionsForm = () => {
               </FormItem>
             )}
           />
+          <FormField
+            control={control}
+            name="syncBookmarks"
+            render={({field}) => (
+              <FormItem>
+                <FormLabel>Sync Bookmarks</FormLabel>
+                <FormDescription>
+                  Sync your bookmarks with Linkwarden.
+                </FormDescription>
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <div className="flex justify-between">
             <div>
               {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
@@ -237,7 +258,7 @@ const OptionsForm = () => {
               <Button
                 type="button"
                 className="mb-2"
-                onClick={onReset as any}
+                onClick={onReset as never}
                 disabled={resetLoading}
               >
                 Reset

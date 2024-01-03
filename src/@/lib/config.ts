@@ -5,6 +5,7 @@ const DEFAULTS: optionsFormValues = {
   baseUrl: '',
   username: '',
   password: '',
+  syncBookmarks: false,
 };
 const CONFIG_KEY = 'lw_config_key';
 
