@@ -5,7 +5,7 @@ import OptionsForm from '../../@/components/OptionsForm.tsx';
 
 const App = () => {
   return (
-    <WholeContainer>
+    <WholeContainer className="max-h-[625px]">
       <Container>
         <div className="justify-center items-center p-2 flex">
           <h1 className="text-lg">Options configuration</h1>
