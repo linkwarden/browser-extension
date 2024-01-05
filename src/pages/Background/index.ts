@@ -132,6 +132,10 @@ browser.bookmarks.onChanged.addListener(async (_id: string, changeInfo: chrome.b
   }
 });
 
+//TODO: Currently when a bookmark is added it only add the id from the server not from the browser, so i cant search from id from browser and get the id from the server,
+// so in case we have the same url in different COllection it will delete the first it finds, i need to fix that, it should be easy,
+// i just need to store the id from the browser and the id from the server in the cache, and then when i need to delete i just search for the id from the server and delete it
+
 // This is the main function that will be called when a bookmark is deleted
 
 browser.bookmarks.onRemoved.addListener(async (_id: string, removeInfo: chrome.bookmarks.BookmarkRemoveInfo) => {
