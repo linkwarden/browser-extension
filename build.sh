@@ -6,8 +6,14 @@ npm install
 # Build
 npm run build
 
-# Copy to manifest to dist
-cp src/manifest.json dist/manifest.json
+# Check if --firefox argument was passed
+if [ "$1" = "--firefox" ]; then
+   # Copy to firefox/manifest.json
+   cp src/manifest.json firefox/manifest.json
+else
+   # Copy to dist/manifest.json
+   cp src/manifest.json dist/manifest.json
+fi
 
-#  Done (for now...)
+# Done (for now...)
 echo "Done! ✅"
