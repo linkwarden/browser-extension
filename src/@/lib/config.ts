@@ -24,5 +24,5 @@ export async function isConfigured() {
 }
 
 export async function clearConfig() {
-  return await setStorageItem(CONFIG_KEY, JSON.stringify({ baseUrl: '', username: '', password: '' }));
+  return await setStorageItem(CONFIG_KEY, JSON.stringify({ baseUrl: '', username: '', password: '', syncBookmarks: false }));
 }
