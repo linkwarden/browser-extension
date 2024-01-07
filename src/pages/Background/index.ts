@@ -1,6 +1,6 @@
 import { getBrowser } from '../../@/lib/utils.ts';
 import BookmarkTreeNode = chrome.bookmarks.BookmarkTreeNode;
-import { getConfig } from '../../@/lib/config.ts';
+import { getConfig, isConfigured } from '../../@/lib/config.ts';
 import { deleteLinkFetch, postLinkFetch, updateLinkFetch } from '../../@/lib/actions/links.ts';
 import { getCsrfTokenFetch, performLoginOrLogoutFetch } from '../../@/lib/auth/auth.ts';
 import {
@@ -8,6 +8,8 @@ import {
   deleteBookmarkMetadata, getBookmarkMetadataByBookmarkId, getBookmarkMetadataByUrl,
   saveBookmarkMetadata,
 } from '../../@/lib/cache.ts';
+import ContextType = chrome.contextMenus.ContextType;
+import OnClickData = chrome.contextMenus.OnClickData;
 
 const browser = getBrowser();
 
@@ -62,12 +64,6 @@ browser.bookmarks.onCreated.addListener(async (_id: string, bookmark: BookmarkTr
   }
 });
 
-// This is the main function that will be called when a bookmark is updated
-
-// Ignore errors from typescript, they come up because of the method im using in the function  such as getBookmarkMetadataByUrl
-// thats because the findIndex can return -1 if it doesnt find anything, and typescript doesnt like that
-// which in this case doesnt make sense because we are updating or deleting a bookmark that we know exists, stupid typescript (me), update: i see why it can be undefined...
-
 browser.bookmarks.onChanged.addListener(async (id: string, changeInfo: chrome.bookmarks.BookmarkChangeInfo) => {
   try {
     const { syncBookmarks, baseUrl, username, password } = await getConfig();
@@ -89,8 +85,10 @@ browser.bookmarks.onChanged.addListener(async (id: string, changeInfo: chrome.bo
 
     const link = await getBookmarkMetadataByBookmarkId(id);
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+    if (!link) {
+      return;
+    }
+
     const updatedLink = await updateLinkFetch(baseUrl, link.id, {
       url: changeInfo.url,
       collection: {
@@ -112,12 +110,6 @@ browser.bookmarks.onChanged.addListener(async (id: string, changeInfo: chrome.bo
   }
 });
 
-//TODO: Currently when a bookmark is added it only add the id from the server not from the browser, so i cant search from id from browser and get the id from the server,
-// so in case we have the same url in different COllection it will delete the first it finds, i need to fix that, it should be easy,
-// i just need to store the id from the browser and the id from the server in the cache, and then when i need to delete i just search for the id from the server and delete it
-
-// This is the main function that will be called when a bookmark is deleted
-
 browser.bookmarks.onRemoved.addListener(async (id: string, removeInfo: chrome.bookmarks.BookmarkRemoveInfo) => {
   try {
     const { syncBookmarks, baseUrl, username, password } = await getConfig();
@@ -138,18 +130,105 @@ browser.bookmarks.onRemoved.addListener(async (id: string, removeInfo: chrome.bo
     );
     const link = await getBookmarkMetadataByBookmarkId(id);
 
+    if (!link) {
+      return;
+    }
+
     await Promise.all([
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      deleteBookmarkMetadata(link?.bookmarkId),
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
+      deleteBookmarkMetadata(link.bookmarkId),
       deleteLinkFetch(baseUrl, link.id)
     ])
 
 
   } catch (error) {
     console.error(error);
+  }
+});
+
+// Example taken from: https://github.com/GoogleChrome/chrome-extensions-samples/blob/main/api-samples/contextMenus/basic/sample.js
+
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  await genericOnClick(info, tab);
+});
+
+// A generic onclick callback function.
+async function genericOnClick(info: OnClickData, tab: chrome.tabs.Tab | undefined) {
+  const { syncBookmarks, baseUrl } = await getConfig();
+  const configured = await isConfigured();
+  if (!tab?.url || !tab?.title || !configured) {
+    return;
+  }
+  switch (info.menuItemId) {
+    case 'radio':
+      // Radio item function
+      console.log('Radio item clicked. Status:', info.checked);
+      break;
+    case 'checkbox':
+      // Checkbox item function
+      console.log('Checkbox item clicked. Status:', info.checked);
+      break;
+    default:
+      // Handle cases where sync is enabled or not
+      if (syncBookmarks) {
+        browser.bookmarks.create({
+          parentId: '1',
+          title: tab.title,
+          url: tab.url,
+        });
+      } else {
+        try {
+          const csrfToken = await getCsrfTokenFetch(baseUrl);
+          await performLoginOrLogoutFetch(
+            `${baseUrl}/api/v1/auth/callback/credentials`,
+            {
+              username: 'test',
+              password: 'test',
+              redirect: false,
+              csrfToken,
+              callbackUrl: `${baseUrl}/login`,
+              json: true,
+            }
+          );
+          const newLink = await postLinkFetch(baseUrl, {
+            url: tab.url,
+            collection: {
+              name: "Unorganized",
+            },
+            tags: [],
+            name: tab.title,
+            description: tab.title,
+          });
+
+          const newLinkJson = await newLink.json()
+          const newLinkUrl: bookmarkMetadata = newLinkJson.response;
+          newLinkUrl.bookmarkId = tab.id?.toString();
+
+          await saveBookmarkMetadata(newLinkUrl)
+        } catch (error) {
+          console.error(error);
+        }
+
+      }
+  }
+}
+chrome.runtime.onInstalled.addListener(function () {
+  // Create one test item for each context type.
+  const contexts: ContextType[] = [
+    'page',
+    'selection',
+    'link',
+    'editable',
+    'image',
+    'video',
+    'audio'
+  ];
+  for (const context of contexts) {
+    const  title: string = "Add link to Linkwarden";
+    chrome.contextMenus.create({
+      title: title,
+      contexts: [context],
+      id: context
+    });
   }
 });
 
