@@ -41,6 +41,6 @@ export async function deleteLinkFetch(baseUrl: string, id: number) {
 
 export async function getLinksFetch(baseUrl: string) {
   const url = `${baseUrl}/api/v1/links`;
-
-  return await fetch(url);
+  const response = await fetch(url);
+  return await response.json();
 }

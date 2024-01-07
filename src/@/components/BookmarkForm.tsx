@@ -41,6 +41,7 @@ import {
   CommandInput,
   CommandItem,
 } from './ui/Command.tsx';
+import { saveLinksInCache } from '../lib/cache.ts';
 
 let HAD_PREVIOUS_SESSION = false;
 let configured = false;
@@ -135,12 +136,32 @@ const BookmarkForm = () => {
     getCurrentTabInfo().then(({ url, title }) => {
       form.setValue('url', url);
       form.setValue('description', title);
+      // Had to be done since, name isn't required but when syncing it is. If not it looks bad!.
+      form.setValue('name', title);
     });
     const getConfig = async () => {
       configured = await isConfigured();
     };
     getConfig();
   }, [form]);
+
+  useEffect(() => {
+    const syncBookmarks = async () => {
+      try {
+        const { syncBookmarks, baseUrl } = await getConfig();
+        if (!syncBookmarks) {
+          return;
+        }
+        if (await isConfigured()) {
+          await saveLinksInCache(baseUrl);
+          //await syncLocalBookmarks(baseUrl);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    syncBookmarks();
+  }, []);
 
   const {
     isLoading: loadingCollections,
@@ -498,7 +519,7 @@ const BookmarkForm = () => {
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Google..." {...field} />
+                      <Input placeholder="Google..." {...field}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

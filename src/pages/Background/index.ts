@@ -5,43 +5,11 @@ import { deleteLinkFetch, postLinkFetch, updateLinkFetch } from '../../@/lib/act
 import { getCsrfTokenFetch, performLoginOrLogoutFetch } from '../../@/lib/auth/auth.ts';
 import {
   bookmarkMetadata,
-  deleteBookmarkMetadata,
-  getBookmarkMetadataByUrl,
+  deleteBookmarkMetadata, getBookmarkMetadataByBookmarkId, getBookmarkMetadataByUrl,
   saveBookmarkMetadata,
 } from '../../@/lib/cache.ts';
 
 const browser = getBrowser();
-
-const getCurrentBookmarks = async () => {
-  return await browser.bookmarks.getTree();
-}
-
-// Testing will remove later
-const logBookmarks = (bookmarks: BookmarkTreeNode[]) => {
-  for (const bookmark of bookmarks) {
-    if (bookmark.url) {
-      const { url, title, parentId } = bookmark;
-      console.log(url, title, parentId);
-    }
-    else if (bookmark.children) {
-      logBookmarks(bookmark.children);
-    }
-  }
-}
-
-// Testing will remove later
-(async () => {
-  try {
-    const { syncBookmarks } = await getConfig();
-    if (!syncBookmarks) {
-      return;
-    }
-    const [root] = await getCurrentBookmarks();
-    logBookmarks(root.children);
-  } catch (error) {
-    console.error(error);
-  }
-})();
 
 // This is the main function that will be called when a bookmark is created
 // idk why wont work with axios...
@@ -51,6 +19,16 @@ browser.bookmarks.onCreated.addListener(async (_id: string, bookmark: BookmarkTr
     if (!syncBookmarks || !bookmark.url) {
       return;
     }
+
+    // Check if the bookmark already exists in the server by checking the url so, it doesn't create duplicates
+    // I know, could use the method search from the api, but I want to avoid as much api specific calls as possible
+    // in case isn't supported, so I prefer to do it this way, if performance is an issue I will think of change to that.
+
+    const existingLink = await getBookmarkMetadataByUrl(bookmark.url);
+    if (existingLink) {
+      return;
+    }
+
     const csrfToken = await getCsrfTokenFetch(baseUrl);
     await performLoginOrLogoutFetch(
       `${baseUrl}/api/v1/auth/callback/credentials`,
@@ -75,6 +53,7 @@ browser.bookmarks.onCreated.addListener(async (_id: string, bookmark: BookmarkTr
 
     const newLinkJson = await newLink.json()
     const newLinkUrl: bookmarkMetadata = newLinkJson.response;
+    newLinkUrl.bookmarkId = bookmark.id;
 
     await saveBookmarkMetadata(newLinkUrl)
 
@@ -87,9 +66,9 @@ browser.bookmarks.onCreated.addListener(async (_id: string, bookmark: BookmarkTr
 
 // Ignore errors from typescript, they come up because of the method im using in the function  such as getBookmarkMetadataByUrl
 // thats because the findIndex can return -1 if it doesnt find anything, and typescript doesnt like that
-// which in this case doesnt make sense because we are updating or deleting a bookmark that we know exists, stupid typescript (me)
+// which in this case doesnt make sense because we are updating or deleting a bookmark that we know exists, stupid typescript (me), update: i see why it can be undefined...
 
-browser.bookmarks.onChanged.addListener(async (_id: string, changeInfo: chrome.bookmarks.BookmarkChangeInfo) => {
+browser.bookmarks.onChanged.addListener(async (id: string, changeInfo: chrome.bookmarks.BookmarkChangeInfo) => {
   try {
     const { syncBookmarks, baseUrl, username, password } = await getConfig();
     if (!syncBookmarks || !changeInfo.url) {
@@ -108,7 +87,7 @@ browser.bookmarks.onChanged.addListener(async (_id: string, changeInfo: chrome.b
       }
     );
 
-    const link = await getBookmarkMetadataByUrl(changeInfo.url)
+    const link = await getBookmarkMetadataByBookmarkId(id);
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -124,6 +103,7 @@ browser.bookmarks.onChanged.addListener(async (_id: string, changeInfo: chrome.b
 
     const updatedLinkJson = await updatedLink.json()
     const newLinkUrl: bookmarkMetadata = updatedLinkJson.response;
+    newLinkUrl.bookmarkId = id;
 
     await saveBookmarkMetadata(newLinkUrl)
 
@@ -138,7 +118,7 @@ browser.bookmarks.onChanged.addListener(async (_id: string, changeInfo: chrome.b
 
 // This is the main function that will be called when a bookmark is deleted
 
-browser.bookmarks.onRemoved.addListener(async (_id: string, removeInfo: chrome.bookmarks.BookmarkRemoveInfo) => {
+browser.bookmarks.onRemoved.addListener(async (id: string, removeInfo: chrome.bookmarks.BookmarkRemoveInfo) => {
   try {
     const { syncBookmarks, baseUrl, username, password } = await getConfig();
     if (!syncBookmarks || !removeInfo.node.url) {
@@ -156,15 +136,15 @@ browser.bookmarks.onRemoved.addListener(async (_id: string, removeInfo: chrome.b
         json: true,
       }
     );
-    const link = await getBookmarkMetadataByUrl(removeInfo.node.url)
+    const link = await getBookmarkMetadataByBookmarkId(id);
 
     await Promise.all([
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      deleteBookmarkMetadata(link?.id),
+      deleteBookmarkMetadata(link?.bookmarkId),
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      deleteLinkFetch(baseUrl, link?.id)
+      deleteLinkFetch(baseUrl, link.id)
     ])
 
 
