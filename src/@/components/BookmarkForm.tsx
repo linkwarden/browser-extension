@@ -100,11 +100,11 @@ const BookmarkForm = () => {
       return;
     },
     onError: (error) => {
-      if (error as AxiosError) {
+      if (error instanceof AxiosError) {
         toast({
           title: 'Error',
           description:
-            (error as any).response.data.response ||
+            error.response?.data.response ||
             'There was an error while trying to save the link. Please try again.',
           variant: 'destructive',
         });
@@ -309,12 +309,12 @@ const BookmarkForm = () => {
                             : ''
                         }`}
                       >
-                        <button
-                          className="absolute top-2 right-2 p-1 bg-gray-100 hover:bg-gray-200 duration-100 rounded-full"
+                        <Button
+                          className="absolute top-1 right-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ease-in-out duration-200"
                           onClick={() => setOpenCollections(false)}
                         >
                           <X className={`h-4 w-4`} />
-                        </button>
+                        </Button>
                         <Command className="flex-grow min-w-full dropdown-content">
                           <CommandInput
                             className="min-w-[280px]"
