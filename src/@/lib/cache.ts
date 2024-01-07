@@ -86,7 +86,6 @@ export async function saveLinksInCache(baseUrl: string) {
   try {
     const links = await getLinksFetch(baseUrl);
     const linksResponse: bookmarkMetadata[] = links.response;
-    console.log(linksResponse, "Links from server");
 
     // Create a map to track which bookmarks are still present on the server
     const serverBookmarkMap = new Map<number, bookmarkMetadata>();
