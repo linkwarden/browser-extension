@@ -96,7 +96,6 @@ const OptionsForm = () => {
     mutationFn: async (values: optionsFormValues) => {
       // Do API call to test the connection and save the values
       const { username, password, usingSSO } = values;
-
       if (usingSSO) {
         const session = await getSession(values.baseUrl);
         if (!session) {
@@ -151,6 +150,7 @@ const OptionsForm = () => {
     onSuccess: async (values) => {
       const { usingSSO } = values;
       if (usingSSO) {
+        await saveConfig(values);
         toast({
           title: 'Saved',
           description:
