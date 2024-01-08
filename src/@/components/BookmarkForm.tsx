@@ -41,7 +41,7 @@ import {
   CommandInput,
   CommandItem,
 } from './ui/Command.tsx';
-import { getBookmarksMetadata, saveLinksInCache } from '../lib/cache.ts';
+import { saveLinksInCache } from '../lib/cache.ts';
 
 let HAD_PREVIOUS_SESSION = false;
 let configured = false;
@@ -202,7 +202,6 @@ const BookmarkForm = () => {
             }
           }
         }
-        console.log(await getBookmarksMetadata());
       } catch (error) {
         console.error(error);
       }
