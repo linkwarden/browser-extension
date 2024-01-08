@@ -2,7 +2,6 @@ import { getBrowser } from '../../@/lib/utils.ts';
 import BookmarkTreeNode = chrome.bookmarks.BookmarkTreeNode;
 import { getConfig, isConfigured } from '../../@/lib/config.ts';
 import { deleteLinkFetch, postLinkFetch, updateLinkFetch } from '../../@/lib/actions/links.ts';
-import { getCsrfTokenFetch, performLoginOrLogoutFetch } from '../../@/lib/auth/auth.ts';
 import {
   bookmarkMetadata,
   deleteBookmarkMetadata, getBookmarkMetadataByBookmarkId, getBookmarkMetadataByUrl,
@@ -17,7 +16,7 @@ const browser = getBrowser();
 // idk why wont work with axios...
 browser.bookmarks.onCreated.addListener(async (_id: string, bookmark: BookmarkTreeNode) => {
   try {
-    const { syncBookmarks, baseUrl, username, password } = await getConfig();
+    const { syncBookmarks, baseUrl } = await getConfig();
     if (!syncBookmarks || !bookmark.url) {
       return;
     }
@@ -31,18 +30,6 @@ browser.bookmarks.onCreated.addListener(async (_id: string, bookmark: BookmarkTr
       return;
     }
 
-    const csrfToken = await getCsrfTokenFetch(baseUrl);
-    await performLoginOrLogoutFetch(
-      `${baseUrl}/api/v1/auth/callback/credentials`,
-      {
-        username: username,
-        password: password,
-        redirect: false,
-        csrfToken,
-        callbackUrl: `${baseUrl}/login`,
-        json: true,
-      }
-    );
     const newLink = await postLinkFetch(baseUrl, {
       url: bookmark.url,
       collection: {
@@ -66,22 +53,10 @@ browser.bookmarks.onCreated.addListener(async (_id: string, bookmark: BookmarkTr
 
 browser.bookmarks.onChanged.addListener(async (id: string, changeInfo: chrome.bookmarks.BookmarkChangeInfo) => {
   try {
-    const { syncBookmarks, baseUrl, username, password } = await getConfig();
+    const { syncBookmarks, baseUrl } = await getConfig();
     if (!syncBookmarks || !changeInfo.url) {
       return;
     }
-    const csrfToken = await getCsrfTokenFetch(baseUrl);
-    await performLoginOrLogoutFetch(
-      `${baseUrl}/api/v1/auth/callback/credentials`,
-      {
-        username: username,
-        password: password,
-        redirect: false,
-        csrfToken,
-        callbackUrl: `${baseUrl}/login`,
-        json: true,
-      }
-    );
 
     const link = await getBookmarkMetadataByBookmarkId(id);
 
@@ -112,22 +87,10 @@ browser.bookmarks.onChanged.addListener(async (id: string, changeInfo: chrome.bo
 
 browser.bookmarks.onRemoved.addListener(async (id: string, removeInfo: chrome.bookmarks.BookmarkRemoveInfo) => {
   try {
-    const { syncBookmarks, baseUrl, username, password } = await getConfig();
+    const { syncBookmarks, baseUrl } = await getConfig();
     if (!syncBookmarks || !removeInfo.node.url) {
       return;
     }
-    const csrfToken = await getCsrfTokenFetch(baseUrl);
-    await performLoginOrLogoutFetch(
-      `${baseUrl}/api/v1/auth/callback/credentials`,
-      {
-        username: username,
-        password: password,
-        redirect: false,
-        csrfToken,
-        callbackUrl: `${baseUrl}/login`,
-        json: true,
-      }
-    );
     const link = await getBookmarkMetadataByBookmarkId(id);
 
     if (!link) {
@@ -138,7 +101,6 @@ browser.bookmarks.onRemoved.addListener(async (id: string, removeInfo: chrome.bo
       deleteBookmarkMetadata(link.bookmarkId),
       deleteLinkFetch(baseUrl, link.id)
     ])
-
 
   } catch (error) {
     console.error(error);
@@ -177,18 +139,6 @@ async function genericOnClick(info: OnClickData, tab: chrome.tabs.Tab | undefine
         });
       } else {
         try {
-          const csrfToken = await getCsrfTokenFetch(baseUrl);
-          await performLoginOrLogoutFetch(
-            `${baseUrl}/api/v1/auth/callback/credentials`,
-            {
-              username: 'test',
-              password: 'test',
-              redirect: false,
-              csrfToken,
-              callbackUrl: `${baseUrl}/login`,
-              json: true,
-            }
-          );
           const newLink = await postLinkFetch(baseUrl, {
             url: tab.url,
             collection: {

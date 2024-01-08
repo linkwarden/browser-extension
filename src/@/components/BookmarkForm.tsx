@@ -64,40 +64,50 @@ const BookmarkForm = () => {
   const { mutate: onSubmit, isLoading } = useMutation({
     mutationFn: async (values: bookmarkFormValues) => {
       const config = await getConfig();
-      const csrfToken = await getCsrfToken(config.baseUrl);
-      const session = await getSession(config.baseUrl);
 
-      HAD_PREVIOUS_SESSION = !!session;
+      if (config.usingSSO) {
+        const session = await getSession(config.baseUrl);
+        if (!session) {
+          throw new Error('You are not logged in!');
+        }
+        await postLink(config.baseUrl, values);
 
-      if (!HAD_PREVIOUS_SESSION) {
-        await performLoginOrLogout(
-          `${config.baseUrl}/api/v1/auth/callback/credentials`,
-          {
+      } else {
+        const csrfToken = await getCsrfToken(config.baseUrl);
+        const session = await getSession(config.baseUrl);
+
+        HAD_PREVIOUS_SESSION = !!session;
+
+        if (!HAD_PREVIOUS_SESSION) {
+          await performLoginOrLogout(
+            `${config.baseUrl}/api/v1/auth/callback/credentials`,
+            {
+              username: config.username,
+              password: config.password,
+              redirect: false,
+              csrfToken,
+              callbackUrl: `${config.baseUrl}/login`,
+              json: true,
+            }
+          );
+        }
+
+        await postLink(config.baseUrl, values);
+
+        if (!HAD_PREVIOUS_SESSION) {
+          const url = `${config.baseUrl}/api/v1/auth/signout`;
+          await performLoginOrLogout(url, {
             username: config.username,
             password: config.password,
             redirect: false,
             csrfToken,
             callbackUrl: `${config.baseUrl}/login`,
             json: true,
-          }
-        );
+          });
+        }
+
+        return;
       }
-
-      await postLink(config.baseUrl, values);
-
-      if (!HAD_PREVIOUS_SESSION) {
-        const url = `${config.baseUrl}/api/v1/auth/signout`;
-        await performLoginOrLogout(url, {
-          username: config.username,
-          password: config.password,
-          redirect: false,
-          csrfToken,
-          callbackUrl: `${config.baseUrl}/login`,
-          json: true,
-        });
-      }
-
-      return;
     },
     onError: (error) => {
       if (error instanceof AxiosError) {

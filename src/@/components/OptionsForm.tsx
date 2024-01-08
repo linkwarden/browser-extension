@@ -44,6 +44,7 @@ const OptionsForm = () => {
       username: '',
       password: '',
       syncBookmarks: false,
+      usingSSO: false,
     },
   });
 
@@ -94,25 +95,34 @@ const OptionsForm = () => {
   const { mutate: onSubmit, isLoading } = useMutation({
     mutationFn: async (values: optionsFormValues) => {
       // Do API call to test the connection and save the values
-      const { username, password } = values;
-      const csrfToken = await getCsrfToken(values.baseUrl);
+      const { username, password, usingSSO } = values;
 
-      const url = `${values.baseUrl}/api/v1/auth/callback/credentials`;
-      const data: DataLogin = {
-        username: username,
-        password: password,
-        redirect: false,
-        csrfToken: csrfToken,
-        callbackUrl: `${values.baseUrl}/login`,
-        json: true,
-      };
+      if (usingSSO) {
+        const session = await getSession(values.baseUrl);
+        if (!session) {
+          throw new Error('Not logged in');
+        }
+        return values;
+      } else {
+        const csrfToken = await getCsrfToken(values.baseUrl);
 
-      const session = await getSession(values.baseUrl);
-      HAD_PREVIOUS_SESSION = !!session;
+        const url = `${values.baseUrl}/api/v1/auth/callback/credentials`;
+        const data: DataLogin = {
+          username: username,
+          password: password,
+          redirect: false,
+          csrfToken: csrfToken,
+          callbackUrl: `${values.baseUrl}/login`,
+          json: true,
+        };
 
-      await performLoginOrLogout(url, data);
+        const session = await getSession(values.baseUrl);
+        HAD_PREVIOUS_SESSION = !!session;
 
-      return values;
+        await performLoginOrLogout(url, data);
+
+        return values;
+      }
     },
     onError: (error) => {
       // Do proper errors of axios instance here
@@ -139,25 +149,35 @@ const OptionsForm = () => {
       }
     },
     onSuccess: async (values) => {
-      await saveConfig(values);
+      const { usingSSO } = values;
+      if (usingSSO) {
+        toast({
+          title: 'Saved',
+          description:
+            'Your settings have been saved, you can now close this tab.',
+          variant: 'default',
+        });
+      } else {
+        await saveConfig(values);
 
-      if (!HAD_PREVIOUS_SESSION) {
-        const url = `${values.baseUrl}/api/v1/auth/signout`;
+        if (!HAD_PREVIOUS_SESSION) {
+          const url = `${values.baseUrl}/api/v1/auth/signout`;
 
-        const data: DataLogout = {
-          csrfToken: await getCsrfToken(values.baseUrl),
-          callbackUrl: `${values.baseUrl}/dashboard`,
-          json: true,
-        };
-        // If there was no previous session, we need to log out again, so we don't confuse the user
-        await performLoginOrLogout(url, data);
+          const data: DataLogout = {
+            csrfToken: await getCsrfToken(values.baseUrl),
+            callbackUrl: `${values.baseUrl}/dashboard`,
+            json: true,
+          };
+          // If there was no previous session, we need to log out again, so we don't confuse the user
+          await performLoginOrLogout(url, data);
+        }
+        toast({
+          title: 'Saved',
+          description:
+            'Your settings have been saved, you can now close this tab.',
+          variant: 'default',
+        });
       }
-      toast({
-        title: 'Saved',
-        description:
-          'Your settings have been saved, you can now close this tab.',
-        variant: 'default',
-      });
     },
   });
 
@@ -240,6 +260,25 @@ const OptionsForm = () => {
                 <FormLabel>Sync Bookmarks</FormLabel>
                 <FormDescription>
                   Sync your bookmarks with Linkwarden.
+                </FormDescription>
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="usingSSO"
+            render={({field}) => (
+              <FormItem>
+                <FormLabel>Using SSO</FormLabel>
+                <FormDescription>
+                  Enable the use of SSO instead of regular session (Make sure to be logged)
                 </FormDescription>
                 <FormControl>
                   <Checkbox
