@@ -21,7 +21,6 @@ browser.bookmarks.onCreated.addListener(async (_id: string, bookmark: BookmarkTr
     if (!syncBookmarks || !bookmark.url) {
       return;
     }
-
     const session = await getSessionFetch(baseUrl);
 
     // Check if the bookmark already exists in the server by checking the url so, it doesn't create duplicates

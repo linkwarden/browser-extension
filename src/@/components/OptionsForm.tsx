@@ -34,6 +34,7 @@ import {
   performLoginOrLogout,
 } from '../lib/auth/auth.ts';
 import { Checkbox } from './ui/CheckBox.tsx';
+import { clearBookmarksMetadata } from '../lib/cache.ts';
 
 let HAD_PREVIOUS_SESSION = false;
 const OptionsForm = () => {
@@ -88,6 +89,7 @@ const OptionsForm = () => {
         password: '',
       });
       await clearConfig();
+      await clearBookmarksMetadata();
       return;
     },
   });
