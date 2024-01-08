@@ -68,7 +68,7 @@ const BookmarkForm = () => {
       if (config.usingSSO) {
         const session = await getSession(config.baseUrl);
         if (!session) {
-          throw new Error('You are not logged in!');
+          return;
         }
         await postLink(config.baseUrl, values);
 
@@ -158,13 +158,49 @@ const BookmarkForm = () => {
   useEffect(() => {
     const syncBookmarks = async () => {
       try {
-        const { syncBookmarks, baseUrl } = await getConfig();
+        const { syncBookmarks, baseUrl, password, usingSSO, username } = await getConfig();
         if (!syncBookmarks) {
           return;
         }
         if (await isConfigured()) {
-          await saveLinksInCache(baseUrl);
-          //await syncLocalBookmarks(baseUrl);
+          if (usingSSO) {
+            const session = await getSession(baseUrl);
+            if (!session) {
+              return;
+            }
+            await saveLinksInCache(baseUrl);
+            //await syncLocalBookmarks(baseUrl);
+          } else {
+            const csrfToken = await getCsrfToken(baseUrl);
+            const session = await getSession(baseUrl);
+            HAD_PREVIOUS_SESSION = !!session;
+            if (!HAD_PREVIOUS_SESSION) {
+              await performLoginOrLogout(
+                `${baseUrl}/api/v1/auth/callback/credentials`,
+                {
+                  username,
+                  password,
+                  redirect: false,
+                  csrfToken,
+                  callbackUrl: `${baseUrl}/login`,
+                  json: true,
+                }
+              );
+            }
+            await saveLinksInCache(baseUrl);
+            //await syncLocalBookmarks(baseUrl);
+            if (!HAD_PREVIOUS_SESSION) {
+              const url = `${baseUrl}/api/v1/auth/signout`;
+              await performLoginOrLogout(url, {
+                username,
+                password,
+                redirect: false,
+                csrfToken,
+                callbackUrl: `${baseUrl}/login`,
+                json: true,
+              });
+            }
+          }
         }
       } catch (error) {
         console.error(error);
@@ -182,8 +218,16 @@ const BookmarkForm = () => {
     queryFn: async () => {
       const config = await getConfig();
 
-      const csrfToken = await getCsrfToken(config.baseUrl);
       const session = await getSession(config.baseUrl);
+
+      if (!session && config.usingSSO) {
+        return [];
+      } else if (session && config.usingSSO) {
+        const data = await getCollections(config.baseUrl);
+        return data.data;
+      }
+
+      const csrfToken = await getCsrfToken(config.baseUrl);
 
       HAD_PREVIOUS_SESSION = !!session;
 

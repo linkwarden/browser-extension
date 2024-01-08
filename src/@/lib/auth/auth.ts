@@ -58,3 +58,9 @@ export async function getSession(url: string) {
   const session = await axios.get(`${url}/api/v1/auth/session`);
   return session.data.user;
 }
+
+export async function getSessionFetch(url: string) {
+  const session = await fetch(`${url}/api/v1/auth/session`);
+  const sessionJson = await session.json();
+  return sessionJson.user;
+}
