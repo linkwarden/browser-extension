@@ -102,26 +102,25 @@ const OptionsForm = () => {
           throw new Error('Not logged in');
         }
         return values;
-      } else {
-        const csrfToken = await getCsrfToken(values.baseUrl);
-
-        const url = `${values.baseUrl}/api/v1/auth/callback/credentials`;
-        const data: DataLogin = {
-          username: username,
-          password: password,
-          redirect: false,
-          csrfToken: csrfToken,
-          callbackUrl: `${values.baseUrl}/login`,
-          json: true,
-        };
-
-        const session = await getSession(values.baseUrl);
-        HAD_PREVIOUS_SESSION = !!session;
-
-        await performLoginOrLogout(url, data);
-
-        return values;
       }
+      const csrfToken = await getCsrfToken(values.baseUrl);
+
+      const url = `${values.baseUrl}/api/v1/auth/callback/credentials`;
+      const data: DataLogin = {
+        username: username,
+        password: password,
+        redirect: false,
+        csrfToken: csrfToken,
+        callbackUrl: `${values.baseUrl}/login`,
+        json: true,
+      };
+
+      const session = await getSession(values.baseUrl);
+      HAD_PREVIOUS_SESSION = !!session;
+
+      await performLoginOrLogout(url, data);
+      return values;
+
     },
     onError: (error) => {
       // Do proper errors of axios instance here

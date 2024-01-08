@@ -9,6 +9,7 @@ import {
 } from '../../@/lib/cache.ts';
 import ContextType = chrome.contextMenus.ContextType;
 import OnClickData = chrome.contextMenus.OnClickData;
+import { getCsrfTokenFetch, getSessionFetch, performLoginOrLogoutFetch } from '../../@/lib/auth/auth.ts';
 
 const browser = getBrowser();
 
@@ -16,10 +17,12 @@ const browser = getBrowser();
 // idk why wont work with axios...
 browser.bookmarks.onCreated.addListener(async (_id: string, bookmark: BookmarkTreeNode) => {
   try {
-    const { syncBookmarks, baseUrl } = await getConfig();
+    const { syncBookmarks, baseUrl, username, password, usingSSO } = await getConfig();
     if (!syncBookmarks || !bookmark.url) {
       return;
     }
+
+    const session = await getSessionFetch(baseUrl);
 
     // Check if the bookmark already exists in the server by checking the url so, it doesn't create duplicates
     // I know, could use the method search from the api, but I want to avoid as much api specific calls as possible
@@ -27,6 +30,21 @@ browser.bookmarks.onCreated.addListener(async (_id: string, bookmark: BookmarkTr
 
     const existingLink = await getBookmarkMetadataByUrl(bookmark.url);
     if (existingLink) {
+      return;
+    }
+
+    if (!session && !usingSSO) {
+      const csrfToken = await getCsrfTokenFetch(baseUrl);
+
+      await performLoginOrLogoutFetch(`${baseUrl}/api/v1/auth/callback/credentials`, {
+        csrfToken: csrfToken,
+        callbackUrl: `${baseUrl}/api/v1/auth/callback`,
+        json: true,
+        redirect: false,
+        username: username,
+        password: password,
+      })
+    } else if (!session && usingSSO) {
       return;
     }
 
@@ -53,7 +71,7 @@ browser.bookmarks.onCreated.addListener(async (_id: string, bookmark: BookmarkTr
 
 browser.bookmarks.onChanged.addListener(async (id: string, changeInfo: chrome.bookmarks.BookmarkChangeInfo) => {
   try {
-    const { syncBookmarks, baseUrl } = await getConfig();
+    const { syncBookmarks, baseUrl, username, password, usingSSO } = await getConfig();
     if (!syncBookmarks || !changeInfo.url) {
       return;
     }
@@ -61,6 +79,23 @@ browser.bookmarks.onChanged.addListener(async (id: string, changeInfo: chrome.bo
     const link = await getBookmarkMetadataByBookmarkId(id);
 
     if (!link) {
+      return;
+    }
+
+    const session = await getSessionFetch(baseUrl);
+
+    if (!session && !usingSSO) {
+      const csrfToken = await getCsrfTokenFetch(baseUrl);
+
+      await performLoginOrLogoutFetch(`${baseUrl}/api/v1/auth/callback/credentials`, {
+        csrfToken: csrfToken,
+        callbackUrl: `${baseUrl}/api/v1/auth/callback`,
+        json: true,
+        redirect: false,
+        username: username,
+        password: password,
+      })
+    } else if (!session && usingSSO) {
       return;
     }
 
@@ -87,13 +122,30 @@ browser.bookmarks.onChanged.addListener(async (id: string, changeInfo: chrome.bo
 
 browser.bookmarks.onRemoved.addListener(async (id: string, removeInfo: chrome.bookmarks.BookmarkRemoveInfo) => {
   try {
-    const { syncBookmarks, baseUrl } = await getConfig();
+    const { syncBookmarks, baseUrl, username, password, usingSSO } = await getConfig();
     if (!syncBookmarks || !removeInfo.node.url) {
       return;
     }
     const link = await getBookmarkMetadataByBookmarkId(id);
 
     if (!link) {
+      return;
+    }
+
+    const session = await getSessionFetch(baseUrl);
+
+    if (!session && !usingSSO) {
+      const csrfToken = await getCsrfTokenFetch(baseUrl);
+
+      await performLoginOrLogoutFetch(`${baseUrl}/api/v1/auth/callback/credentials`, {
+        csrfToken: csrfToken,
+        callbackUrl: `${baseUrl}/api/v1/auth/callback`,
+        json: true,
+        redirect: false,
+        username: username,
+        password: password,
+      })
+    } else if (!session && usingSSO) {
       return;
     }
 
@@ -115,7 +167,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
 // A generic onclick callback function.
 async function genericOnClick(info: OnClickData, tab: chrome.tabs.Tab | undefined) {
-  const { syncBookmarks, baseUrl } = await getConfig();
+  const { syncBookmarks, baseUrl, username, password, usingSSO } = await getConfig();
   const configured = await isConfigured();
   if (!tab?.url || !tab?.title || !configured) {
     return;
@@ -139,6 +191,23 @@ async function genericOnClick(info: OnClickData, tab: chrome.tabs.Tab | undefine
         });
       } else {
         try {
+          const session = await getSessionFetch(baseUrl);
+
+          if (!session && !usingSSO) {
+            const csrfToken = await getCsrfTokenFetch(baseUrl);
+
+            await performLoginOrLogoutFetch(`${baseUrl}/api/v1/auth/callback/credentials`, {
+              csrfToken: csrfToken,
+              callbackUrl: `${baseUrl}/api/v1/auth/callback`,
+              json: true,
+              redirect: false,
+              username: username,
+              password: password,
+            })
+          } else if (!session && usingSSO) {
+            return;
+          }
+
           const newLink = await postLinkFetch(baseUrl, {
             url: tab.url,
             collection: {
