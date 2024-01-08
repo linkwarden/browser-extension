@@ -85,6 +85,7 @@ export async function deleteBookmarkMetadata(id: string | undefined) {
 export async function saveLinksInCache(baseUrl: string) {
   try {
     const links = await getLinksFetch(baseUrl);
+    console.log(links)
     const linksResponse: bookmarkMetadata[] = links.response;
 
     // Create a map to track which bookmarks are still present on the server
@@ -114,6 +115,7 @@ export async function saveLinksInCache(baseUrl: string) {
       const indexToRemove = bookmarksMetadata.indexOf(bookmarkToRemove);
       if (indexToRemove !== -1) {
         bookmarksMetadata.splice(indexToRemove, 1);
+        browser.bookmarks.remove(bookmarkToRemove.bookmarkId);
       }
     }
 
