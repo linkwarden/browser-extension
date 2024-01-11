@@ -17,22 +17,7 @@ export interface bookmarkMetadata extends bookmarkFormValues{
   bookmarkId?: string;
 }
 
-const DEFAULTS: bookmarkMetadata[] = [
-  {
-    id: 0,
-    collectionId: 0,
-    name: '',
-    url: '',
-    description: '',
-    collection: {
-      id: 0,
-      name: '',
-      ownerId: 0,
-    },
-    tags: [],
-    bookmarkId: "",
-  }
-];
+const DEFAULTS: bookmarkMetadata[] = []
 
 export async function getBookmarksMetadata(): Promise<bookmarkMetadata[]> {
   const bookmarksMetadata = await getStorageItem(BOOKMARKS_METADATA_KEY);
@@ -95,10 +80,11 @@ export async function saveLinksInCache(baseUrl: string) {
     const bookmarksMetadata = await getBookmarksMetadata();
 
     // Update or add bookmarks based on server response
-    for (const link of linksResponse) {
+    for (let link of linksResponse) {
       const existingLinkIndex = bookmarksMetadata.findIndex((bookmarkMetadata) => bookmarkMetadata.id === link.id);
       if (existingLinkIndex !== -1) {
         // Update existing bookmark if there are changes
+        link = { ...bookmarksMetadata[existingLinkIndex], ...link };
         bookmarksMetadata[existingLinkIndex] = link;
       } else {
         // Add new bookmark from the server
@@ -114,6 +100,7 @@ export async function saveLinksInCache(baseUrl: string) {
       const indexToRemove = bookmarksMetadata.indexOf(bookmarkToRemove);
       if (indexToRemove !== -1) {
         bookmarksMetadata.splice(indexToRemove, 1);
+        console.log(bookmarksToRemove)
         browser.bookmarks.remove(bookmarkToRemove.bookmarkId);
       }
     }
