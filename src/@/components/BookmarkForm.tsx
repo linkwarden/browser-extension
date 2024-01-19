@@ -144,10 +144,10 @@ const BookmarkForm = () => {
 
   useEffect(() => {
     getCurrentTabInfo().then(({ url, title }) => {
-      form.setValue('url', url);
-      form.setValue('description', title);
+      form.setValue('url', url ? url : '');
+      form.setValue('description', title ? title : '');
       // Had to be done since, name isn't required but when syncing it is. If not it looks bad!.
-      form.setValue('name', title);
+      form.setValue('name', title ? title : '');
     });
     const getConfig = async () => {
       configured = await isConfigured();

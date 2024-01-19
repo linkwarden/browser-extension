@@ -101,7 +101,9 @@ export async function saveLinksInCache(baseUrl: string) {
       if (indexToRemove !== -1) {
         bookmarksMetadata.splice(indexToRemove, 1);
         console.log(bookmarksToRemove)
-        browser.bookmarks.remove(bookmarkToRemove.bookmarkId);
+        if (bookmarkToRemove.bookmarkId != null) {
+          await browser.bookmarks.remove(bookmarkToRemove.bookmarkId);
+        }
       }
     }
 
@@ -128,6 +130,7 @@ export async function syncLocalBookmarks(baseUrl: string) {
     // Retrieve all local bookmarks
     const [root] = await getCurrentBookmarks();
     const localBookmarks: bookmarkMetadata[] = [];
+    if (!root.children) return;
     logBookmarks(root.children, localBookmarks);
 
     // Load cached bookmarks metadata
