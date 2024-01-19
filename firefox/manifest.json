@@ -24,14 +24,22 @@
     "48": "./48.png",
     "128": "./128.png"
   },
-  "permissions": ["tabs", "http://*/*", "https://*/*"],
+  "permissions": ["storage", "activeTab", "tabs", "bookmarks", "contextMenus", "http://*/*", "https://*/*"],
   "commands": {
     "_execute_action": {
       "suggested_key": {
-        "default": "Alt+Shift+K",
-        "mac": "MacCtrl+Shift+K"
+        "default": "Ctrl+Shift+V",
+        "mac": "Command+Shift+K"
       }
     }
+  },
+  "omnibox": {
+    "keyword": "lk"
+  },
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false,
+    "type": "module"
   },
   "browser_specific_settings": {
     "gecko": {

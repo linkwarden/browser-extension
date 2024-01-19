@@ -163,7 +163,9 @@ browser.bookmarks.onRemoved.addListener(async (id: string, removeInfo: chrome.bo
 // This is for the context menus!
 // Example taken from: https://github.com/GoogleChrome/chrome-extensions-samples/blob/main/api-samples/contextMenus/basic/sample.js
 
-browser.contextMenus.onClicked.addListener(async (info: OnClickData, tab: chrome.tabs.Tab | undefined) => {
+browser.contextMenus.onClicked.addListener(async (info, tab) => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
   await genericOnClick(info, tab);
 });
 
@@ -311,13 +313,15 @@ browser.omnibox.onInputEntered.addListener(async (content: string, disposition: 
 
   switch (disposition) {
     case "currentTab":
-      browser.tabs.update({ url });
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      await browser.tabs.update({ url });
       break;
     case "newForegroundTab":
-      browser.tabs.create({ url });
+      await browser.tabs.create({ url });
       break;
     case "newBackgroundTab":
-      browser.tabs.create({ url, active: false });
+      await browser.tabs.create({ url, active: false });
       break;
   }
 });
