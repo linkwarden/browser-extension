@@ -32,7 +32,7 @@ export async function getStorageItem(key: string) {
     const result = await getBrowser().storage.local.get([key]);
     return result[key];
   } else {
-    return localStorage.getItem(key);
+    return getBrowser().storage.local.get(key);
   }
 }
 
@@ -41,7 +41,7 @@ export async function setStorageItem(key: string, value: string) {
   if (getChromeStorage()) {
     return await chrome.storage.local.set({ [key]: value });
   } else {
-    localStorage.setItem(key, value);
+    await getBrowser().storage.local.set({ [key]: value });
     return Promise.resolve();
   }
 }
