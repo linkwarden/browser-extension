@@ -100,7 +100,6 @@ export async function saveLinksInCache(baseUrl: string) {
       const indexToRemove = bookmarksMetadata.indexOf(bookmarkToRemove);
       if (indexToRemove !== -1) {
         bookmarksMetadata.splice(indexToRemove, 1);
-        console.log(bookmarksToRemove)
         if (bookmarkToRemove.bookmarkId != null) {
           await browser.bookmarks.remove(bookmarkToRemove.bookmarkId);
         }
