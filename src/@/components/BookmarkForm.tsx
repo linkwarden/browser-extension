@@ -71,7 +71,6 @@ const BookmarkForm = () => {
           return;
         }
         await postLink(config.baseUrl, values);
-
       } else {
         const csrfToken = await getCsrfToken(config.baseUrl);
         const session = await getSession(config.baseUrl);
@@ -158,7 +157,8 @@ const BookmarkForm = () => {
   useEffect(() => {
     const syncBookmarks = async () => {
       try {
-        const { syncBookmarks, baseUrl, password, usingSSO, username } = await getConfig();
+        const { syncBookmarks, baseUrl, password, usingSSO, username } =
+          await getConfig();
         if (!syncBookmarks) {
           return;
         }
@@ -205,7 +205,7 @@ const BookmarkForm = () => {
       } catch (error) {
         console.error(error);
       }
-    }
+    };
     syncBookmarks();
   }, []);
 
@@ -364,12 +364,12 @@ const BookmarkForm = () => {
                         }`}
                       >
                         <Button
-                          className="absolute top-1 right-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ease-in-out duration-200"
+                          className="absolute top-1 right-1 bg-transparent hover:bg-transparent hover:opacity-50 transition-colors ease-in-out duration-200"
                           onClick={() => setOpenCollections(false)}
                         >
-                          <X className={`h-4 w-4`} />
+                          <X className={`h-4 w-4 text-black dark:text-white`} />
                         </Button>
-                        <Command className="flex-grow min-w-full dropdown-content">
+                        <Command className="flex-grow min-w-full dropdown-content rounded-none">
                           <CommandInput
                             className="min-w-[280px]"
                             placeholder="Search Collection..."
@@ -573,7 +573,7 @@ const BookmarkForm = () => {
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Google..." {...field}/>
+                      <Input placeholder="Google..." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
