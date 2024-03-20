@@ -96,6 +96,8 @@ const OptionsForm = () => {
 
   const { mutate: onSubmit, isLoading } = useMutation({
     mutationFn: async (values: optionsFormValues) => {
+      values.baseUrl = values.baseUrl.replace(/\/$/, '');
+
       // Do API call to test the connection and save the values
       const { username, password, usingSSO } = values;
       if (usingSSO) {
@@ -122,7 +124,6 @@ const OptionsForm = () => {
 
       await performLoginOrLogout(url, data);
       return values;
-
     },
     onError: (error) => {
       // Do proper errors of axios instance here
@@ -208,8 +209,7 @@ const OptionsForm = () => {
               <FormItem>
                 <FormLabel>URL</FormLabel>
                 <FormDescription>
-                  The address of your Linkwarden instance. (Without trailing
-                  slash)
+                  The address of your Linkwarden instance.
                 </FormDescription>
                 <FormControl>
                   <Input
@@ -253,7 +253,7 @@ const OptionsForm = () => {
               </FormItem>
             )}
           />
-          <FormField
+          {/* <FormField
             control={control}
             name="syncBookmarks"
             render={({field}) => (
@@ -271,22 +271,26 @@ const OptionsForm = () => {
                 <FormMessage />
               </FormItem>
             )}
-          />
+          /> */}
           <FormField
             control={control}
             name="usingSSO"
-            render={({field}) => (
+            render={({ field }) => (
               <FormItem>
-                <FormLabel>Using SSO</FormLabel>
+                <div className="flex gap-1 items-center">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormLabel>Use SSO (Leave Unchecked as Default)</FormLabel>
+                </div>
+
                 <FormDescription>
-                  Enable the use of SSO instead of regular session (Make sure to be logged)
+                  Enable the use of Single Sign-On instead of regular session
+                  (Make sure you're already logged in to Linkwarden).
                 </FormDescription>
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
