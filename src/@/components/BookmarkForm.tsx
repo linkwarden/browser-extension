@@ -41,6 +41,7 @@ import {
   CommandInput,
   CommandItem,
 } from './ui/Command.tsx';
+import { saveLinksInCache } from '../lib/cache.ts';
 
 let HAD_PREVIOUS_SESSION = false;
 let configured = false;
@@ -63,47 +64,56 @@ const BookmarkForm = () => {
   const { mutate: onSubmit, isLoading } = useMutation({
     mutationFn: async (values: bookmarkFormValues) => {
       const config = await getConfig();
-      const csrfToken = await getCsrfToken(config.baseUrl);
-      const session = await getSession(config.baseUrl);
 
-      HAD_PREVIOUS_SESSION = !!session;
+      if (config.usingSSO) {
+        const session = await getSession(config.baseUrl);
+        if (!session) {
+          return;
+        }
+        await postLink(config.baseUrl, values);
+      } else {
+        const csrfToken = await getCsrfToken(config.baseUrl);
+        const session = await getSession(config.baseUrl);
 
-      if (!HAD_PREVIOUS_SESSION) {
-        await performLoginOrLogout(
-          `${config.baseUrl}/api/v1/auth/callback/credentials`,
-          {
+        HAD_PREVIOUS_SESSION = !!session;
+
+        if (!HAD_PREVIOUS_SESSION) {
+          await performLoginOrLogout(
+            `${config.baseUrl}/api/v1/auth/callback/credentials`,
+            {
+              username: config.username,
+              password: config.password,
+              redirect: false,
+              csrfToken,
+              callbackUrl: `${config.baseUrl}/login`,
+              json: true,
+            }
+          );
+        }
+
+        await postLink(config.baseUrl, values);
+
+        if (!HAD_PREVIOUS_SESSION) {
+          const url = `${config.baseUrl}/api/v1/auth/signout`;
+          await performLoginOrLogout(url, {
             username: config.username,
             password: config.password,
             redirect: false,
             csrfToken,
             callbackUrl: `${config.baseUrl}/login`,
             json: true,
-          }
-        );
+          });
+        }
+
+        return;
       }
-
-      await postLink(config.baseUrl, values);
-
-      if (!HAD_PREVIOUS_SESSION) {
-        const url = `${config.baseUrl}/api/v1/auth/signout`;
-        await performLoginOrLogout(url, {
-          username: config.username,
-          password: config.password,
-          redirect: false,
-          csrfToken,
-          callbackUrl: `${config.baseUrl}/login`,
-          json: true,
-        });
-      }
-
-      return;
     },
     onError: (error) => {
-      if (error as AxiosError) {
+      if (error instanceof AxiosError) {
         toast({
           title: 'Error',
           description:
-            (error as any).response.data.response ||
+            error.response?.data.response ||
             'There was an error while trying to save the link. Please try again.',
           variant: 'destructive',
         });
@@ -132,15 +142,72 @@ const BookmarkForm = () => {
   const { handleSubmit, control } = form;
 
   useEffect(() => {
-    getCurrentTabInfo().then((tabInfo) => {
-      form.setValue('url', tabInfo.url);
-      form.setValue('description', tabInfo.title);
+    getCurrentTabInfo().then(({ url, title }) => {
+      form.setValue('url', url ? url : '');
+      form.setValue('description', title ? title : '');
+      // Had to be done since, name isn't required but when syncing it is. If not it looks bad!.
+      form.setValue('name', title ? title : '');
     });
     const getConfig = async () => {
       configured = await isConfigured();
     };
     getConfig();
   }, [form]);
+
+  useEffect(() => {
+    const syncBookmarks = async () => {
+      try {
+        const { syncBookmarks, baseUrl, password, usingSSO, username } =
+          await getConfig();
+        if (!syncBookmarks) {
+          return;
+        }
+        if (await isConfigured()) {
+          if (usingSSO) {
+            const session = await getSession(baseUrl);
+            if (!session) {
+              return;
+            }
+            await saveLinksInCache(baseUrl);
+            //await syncLocalBookmarks(baseUrl);
+          } else {
+            const csrfToken = await getCsrfToken(baseUrl);
+            const session = await getSession(baseUrl);
+            HAD_PREVIOUS_SESSION = !!session;
+            if (!HAD_PREVIOUS_SESSION) {
+              await performLoginOrLogout(
+                `${baseUrl}/api/v1/auth/callback/credentials`,
+                {
+                  username,
+                  password,
+                  redirect: false,
+                  csrfToken,
+                  callbackUrl: `${baseUrl}/login`,
+                  json: true,
+                }
+              );
+            }
+            await saveLinksInCache(baseUrl);
+            //await syncLocalBookmarks(baseUrl);
+            if (!HAD_PREVIOUS_SESSION) {
+              const url = `${baseUrl}/api/v1/auth/signout`;
+              await performLoginOrLogout(url, {
+                username,
+                password,
+                redirect: false,
+                csrfToken,
+                callbackUrl: `${baseUrl}/login`,
+                json: true,
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    syncBookmarks();
+  }, []);
 
   const {
     isLoading: loadingCollections,
@@ -151,8 +218,16 @@ const BookmarkForm = () => {
     queryFn: async () => {
       const config = await getConfig();
 
-      const csrfToken = await getCsrfToken(config.baseUrl);
       const session = await getSession(config.baseUrl);
+
+      if (!session && config.usingSSO) {
+        return [];
+      } else if (session && config.usingSSO) {
+        const data = await getCollections(config.baseUrl);
+        return data.data;
+      }
+
+      const csrfToken = await getCsrfToken(config.baseUrl);
 
       HAD_PREVIOUS_SESSION = !!session;
 
@@ -264,15 +339,15 @@ const BookmarkForm = () => {
                           aria-expanded={openCollections}
                           className={cn(
                             'w-full justify-between',
-                            !field.value.name && 'text-muted-foreground'
+                            !field.value?.name && 'text-muted-foreground'
                           )}
                         >
                           {loadingCollections
                             ? 'Loading'
-                            : field.value.name
+                            : field.value?.name
                             ? collections.response?.find(
-                                (collection: { name: any }) =>
-                                  collection.name === field.value.name
+                                (collection: { name: string }) =>
+                                  collection.name === field.value?.name
                               )?.name || 'Unorganized'
                             : 'Select a collection...'}
                           <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -288,13 +363,13 @@ const BookmarkForm = () => {
                             : ''
                         }`}
                       >
-                        <button
-                          className="absolute top-2 right-2 p-1 bg-gray-100 hover:bg-gray-200 duration-100 rounded-full"
+                        <Button
+                          className="absolute top-1 right-1 bg-transparent hover:bg-transparent hover:opacity-50 transition-colors ease-in-out duration-200"
                           onClick={() => setOpenCollections(false)}
                         >
-                          <X className={`h-4 w-4`} />
-                        </button>
-                        <Command className="flex-grow min-w-full dropdown-content">
+                          <X className={`h-4 w-4 text-black dark:text-white`} />
+                        </Button>
+                        <Command className="flex-grow min-w-full dropdown-content rounded-none">
                           <CommandInput
                             className="min-w-[280px]"
                             placeholder="Search Collection..."

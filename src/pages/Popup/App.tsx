@@ -5,6 +5,7 @@ import { openOptions } from '../../@/lib/utils.ts';
 import { useEffect, useState } from 'react';
 import { getConfig, isConfigured } from '../../@/lib/config.ts';
 import Modal from '../../@/components/Modal.tsx';
+import { ModeToggle } from '../../@/components/ModeToggle.tsx';
 
 function App() {
   const [isAllConfigured, setIsAllConfigured] = useState<boolean>();
@@ -41,12 +42,15 @@ function App() {
             </a>
             <h1 className="text-lg">Add Link</h1>
           </div>
-          <p
-            className="text-blue-500 text-xs cursor-pointer hover:opacity-80 duration-200 ease-in-out w-fit"
-            onClick={openOptions}
-          >
-            Config
-          </p>
+          <div className="flex items-center justify-center space-x-2">
+            <ModeToggle />
+            <p
+              className="text-blue-500 text-xs cursor-pointer hover:opacity-80 duration-200 ease-in-out w-fit"
+              onClick={openOptions}
+            >
+              Config
+            </p>
+          </div>
         </div>
         <BookmarkForm />
         <Modal open={!isAllConfigured} />

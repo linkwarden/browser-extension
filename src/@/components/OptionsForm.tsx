@@ -33,6 +33,8 @@ import {
   getSession,
   performLoginOrLogout,
 } from '../lib/auth/auth.ts';
+import { Checkbox } from './ui/CheckBox.tsx';
+import { clearBookmarksMetadata } from '../lib/cache.ts';
 
 let HAD_PREVIOUS_SESSION = false;
 const OptionsForm = () => {
@@ -42,6 +44,8 @@ const OptionsForm = () => {
       baseUrl: '',
       username: '',
       password: '',
+      syncBookmarks: false,
+      usingSSO: false,
     },
   });
 
@@ -85,14 +89,24 @@ const OptionsForm = () => {
         password: '',
       });
       await clearConfig();
+      await clearBookmarksMetadata();
       return;
     },
   });
 
   const { mutate: onSubmit, isLoading } = useMutation({
     mutationFn: async (values: optionsFormValues) => {
+      values.baseUrl = values.baseUrl.replace(/\/$/, '');
+
       // Do API call to test the connection and save the values
-      const { username, password } = values;
+      const { username, password, usingSSO } = values;
+      if (usingSSO) {
+        const session = await getSession(values.baseUrl);
+        if (!session) {
+          throw new Error('Not logged in');
+        }
+        return values;
+      }
       const csrfToken = await getCsrfToken(values.baseUrl);
 
       const url = `${values.baseUrl}/api/v1/auth/callback/credentials`;
@@ -109,7 +123,6 @@ const OptionsForm = () => {
       HAD_PREVIOUS_SESSION = !!session;
 
       await performLoginOrLogout(url, data);
-
       return values;
     },
     onError: (error) => {
@@ -137,25 +150,36 @@ const OptionsForm = () => {
       }
     },
     onSuccess: async (values) => {
-      await saveConfig(values);
+      const { usingSSO } = values;
+      if (usingSSO) {
+        await saveConfig(values);
+        toast({
+          title: 'Saved',
+          description:
+            'Your settings have been saved, you can now close this tab.',
+          variant: 'default',
+        });
+      } else {
+        await saveConfig(values);
 
-      if (!HAD_PREVIOUS_SESSION) {
-        const url = `${values.baseUrl}/api/v1/auth/signout`;
+        if (!HAD_PREVIOUS_SESSION) {
+          const url = `${values.baseUrl}/api/v1/auth/signout`;
 
-        const data: DataLogout = {
-          csrfToken: await getCsrfToken(values.baseUrl),
-          callbackUrl: `${values.baseUrl}/dashboard`,
-          json: true,
-        };
-        // If there was no previous session, we need to log out again, so we don't confuse the user
-        await performLoginOrLogout(url, data);
+          const data: DataLogout = {
+            csrfToken: await getCsrfToken(values.baseUrl),
+            callbackUrl: `${values.baseUrl}/dashboard`,
+            json: true,
+          };
+          // If there was no previous session, we need to log out again, so we don't confuse the user
+          await performLoginOrLogout(url, data);
+        }
+        toast({
+          title: 'Saved',
+          description:
+            'Your settings have been saved, you can now close this tab.',
+          variant: 'default',
+        });
       }
-      toast({
-        title: 'Saved',
-        description:
-          'Your settings have been saved, you can now close this tab.',
-        variant: 'default',
-      });
     },
   });
 
@@ -185,8 +209,7 @@ const OptionsForm = () => {
               <FormItem>
                 <FormLabel>URL</FormLabel>
                 <FormDescription>
-                  The address of your Linkwarden instance. (Without trailing
-                  slash)
+                  The address of your Linkwarden instance.
                 </FormDescription>
                 <FormControl>
                   <Input
@@ -230,6 +253,48 @@ const OptionsForm = () => {
               </FormItem>
             )}
           />
+          {/* <FormField
+            control={control}
+            name="syncBookmarks"
+            render={({field}) => (
+              <FormItem>
+                <FormLabel>Sync Bookmarks</FormLabel>
+                <FormDescription>
+                  Sync your bookmarks with Linkwarden.
+                </FormDescription>
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          /> */}
+          <FormField
+            control={control}
+            name="usingSSO"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex gap-1 items-center">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormLabel>Use SSO (Leave Unchecked as Default)</FormLabel>
+                </div>
+
+                <FormDescription>
+                  Enable the use of Single Sign-On instead of regular session
+                  (Make sure you're already logged in to Linkwarden).
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <div className="flex justify-between">
             <div>
               {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
@@ -237,7 +302,7 @@ const OptionsForm = () => {
               <Button
                 type="button"
                 className="mb-2"
-                onClick={onReset as any}
+                onClick={onReset as never}
                 disabled={resetLoading}
               >
                 Reset
