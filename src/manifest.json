@@ -24,13 +24,20 @@
     "48": "./48.png",
     "128": "./128.png"
   },
-  "permissions": ["storage", "activeTab", "tabs"],
+  "permissions": ["storage", "activeTab", "tabs", "bookmarks", "commands", "contextMenus"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "omnibox": {
+    "keyword": "lk"
+  },
   "host_permissions": ["*://*/*"],
   "commands": {
     "_execute_action": {
       "suggested_key": {
-        "default": "Alt+Shift+K",
-        "mac": "MacCtrl+Shift+K"
+        "default": "Ctrl+Shift+V",
+        "mac": "Command+Shift+K"
       }
     }
   }

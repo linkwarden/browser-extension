@@ -10,7 +10,7 @@ export interface TabInfo {
   title: string;
 }
 
-export async function getCurrentTabInfo(): Promise<TabInfo> {
+export async function getCurrentTabInfo(): Promise<{ title: string | undefined; url: string | undefined }> {
   const tabs = await getBrowser().tabs.query({ active: true, currentWindow: true });
   const { url, title } = tabs[0];
   return { url, title };
@@ -29,18 +29,19 @@ export function getChromeStorage() {
 
 export async function getStorageItem(key: string) {
   if (getChromeStorage()) {
-    const result = await chrome.storage.local.get([key]);
+    const result = await getBrowser().storage.local.get([key]);
     return result[key];
   } else {
-    return localStorage.getItem(key);
+    return getBrowser().storage.local.get(key);
   }
 }
+
 
 export async function setStorageItem(key: string, value: string) {
   if (getChromeStorage()) {
     return await chrome.storage.local.set({ [key]: value });
   } else {
-    localStorage.setItem(key, value);
+    await getBrowser().storage.local.set({ [key]: value });
     return Promise.resolve();
   }
 }

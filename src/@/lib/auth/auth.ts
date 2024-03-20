@@ -22,6 +22,12 @@ export async function getCsrfToken(url: string): Promise<string> {
 
 }
 
+export async function getCsrfTokenFetch(url: string): Promise<string> {
+  const token = await fetch(`${url}/api/v1/auth/csrf`);
+  const { csrfToken } = await token.json();
+  return csrfToken;
+}
+
 export async function performLoginOrLogout(url: string, data: DataLogin | DataLogout) {
   const formBody = Object.entries(data)
     .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
@@ -34,7 +40,27 @@ export async function performLoginOrLogout(url: string, data: DataLogin | DataLo
   });
 }
 
+export async function performLoginOrLogoutFetch(url: string, data: DataLogin | DataLogout) {
+  const formBody = Object.entries(data)
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join('&');
+
+  return await fetch(url, {
+    method: 'POST',
+    body: formBody,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+}
+
 export async function getSession(url: string) {
   const session = await axios.get(`${url}/api/v1/auth/session`);
   return session.data.user;
+}
+
+export async function getSessionFetch(url: string) {
+  const session = await fetch(`${url}/api/v1/auth/session`);
+  const sessionJson = await session.json();
+  return sessionJson.user;
 }
