@@ -54,8 +54,12 @@ export async function performLoginOrLogoutFetch(url: string, data: DataLogin | D
   });
 }
 
-export async function getSession(url: string) {
-  const session = await axios.get(`${url}/api/v1/auth/session`);
+export async function getSession(url: string, apiKey: string) {
+  const session = await axios.get(`${url}/api/v1/auth/session`, {
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+    },
+  });
   return session.data.user;
 }
 

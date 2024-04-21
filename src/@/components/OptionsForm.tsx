@@ -26,17 +26,9 @@ import {
 import { Toaster } from './ui/Toaster.tsx';
 import { toast } from '../../hooks/use-toast.ts';
 import { AxiosError } from 'axios';
-import {
-  DataLogin,
-  DataLogout,
-  getCsrfToken,
-  getSession,
-  performLoginOrLogout,
-} from '../lib/auth/auth.ts';
-import { Checkbox } from './ui/CheckBox.tsx';
 import { clearBookmarksMetadata } from '../lib/cache.ts';
+import { getCollections } from '../lib/actions/collections.ts';
 
-let HAD_PREVIOUS_SESSION = false;
 const OptionsForm = () => {
   const form = useForm<optionsFormValues>({
     resolver: zodResolver(optionsFormSchema),
@@ -46,24 +38,12 @@ const OptionsForm = () => {
       password: '',
       syncBookmarks: false,
       usingSSO: false,
+      apiKey: '',
     },
   });
 
   const { mutate: onReset, isLoading: resetLoading } = useMutation({
     mutationFn: async () => {
-      // For some reason (IDK how browser works!) cookies are shared across all tabs in the same browser
-      // session is shared with the extension. This means that if you log out of
-      // the extension, you will also be logged out of the website. This is not
-      // ideal, but I don't know how to fix it.
-      // If someone knows how to fix this, please let me know.
-      // For now, I will implement my own shady way to trick into thinking that
-      // this behaviour never happens. I will do this by making a request to the
-      // website to log out, and then make a request to the website to log in
-      // again. This will trick the website into thinking that the user is still
-      // logged in, but the extension will be logged out.
-      // This is by far no ideal as I'm making more request to the server, but at this
-      // scale I don't think it really matters. (onSubmit)
-
       const configured = await isConfigured();
 
       if (!configured) {
@@ -76,7 +56,7 @@ const OptionsForm = () => {
       toast({
         title: 'Error',
         description:
-          "Either you didn't configure the extension or there was an error while trying to log out. Please try again.",
+          'Either you didn\'t configure the extension or there was an error while trying to log out. Please try again.',
         variant: 'destructive',
       });
       return;
@@ -87,6 +67,9 @@ const OptionsForm = () => {
         baseUrl: '',
         username: '',
         password: '',
+        apiKey: '',
+        usingSSO: false,
+        syncBookmarks: false,
       });
       await clearConfig();
       await clearBookmarksMetadata();
@@ -97,32 +80,14 @@ const OptionsForm = () => {
   const { mutate: onSubmit, isLoading } = useMutation({
     mutationFn: async (values: optionsFormValues) => {
       values.baseUrl = values.baseUrl.replace(/\/$/, '');
+      // Do API call to test the connection and save the values, cant do anymore...
 
-      // Do API call to test the connection and save the values
-      const { username, password, usingSSO } = values;
-      if (usingSSO) {
-        const session = await getSession(values.baseUrl);
-        if (!session) {
-          throw new Error('Not logged in');
-        }
-        return values;
+      const collections = await getCollections(values.baseUrl, values.apiKey);
+
+      if (collections.status !== 200) {
+        throw new Error('Invalid credentials');
       }
-      const csrfToken = await getCsrfToken(values.baseUrl);
 
-      const url = `${values.baseUrl}/api/v1/auth/callback/credentials`;
-      const data: DataLogin = {
-        username: username,
-        password: password,
-        redirect: false,
-        csrfToken: csrfToken,
-        callbackUrl: `${values.baseUrl}/login`,
-        json: true,
-      };
-
-      const session = await getSession(values.baseUrl);
-      HAD_PREVIOUS_SESSION = !!session;
-
-      await performLoginOrLogout(url, data);
       return values;
     },
     onError: (error) => {
@@ -150,36 +115,14 @@ const OptionsForm = () => {
       }
     },
     onSuccess: async (values) => {
-      const { usingSSO } = values;
-      if (usingSSO) {
-        await saveConfig(values);
-        toast({
-          title: 'Saved',
-          description:
-            'Your settings have been saved, you can now close this tab.',
-          variant: 'default',
-        });
-      } else {
-        await saveConfig(values);
+      await saveConfig(values);
 
-        if (!HAD_PREVIOUS_SESSION) {
-          const url = `${values.baseUrl}/api/v1/auth/signout`;
-
-          const data: DataLogout = {
-            csrfToken: await getCsrfToken(values.baseUrl),
-            callbackUrl: `${values.baseUrl}/dashboard`,
-            json: true,
-          };
-          // If there was no previous session, we need to log out again, so we don't confuse the user
-          await performLoginOrLogout(url, data);
-        }
-        toast({
-          title: 'Saved',
-          description:
-            'Your settings have been saved, you can now close this tab.',
-          variant: 'default',
-        });
-      }
+      toast({
+        title: 'Saved',
+        description:
+          'Your settings have been saved, you can now close this tab.',
+        variant: 'default',
+      });
     },
   });
 
@@ -200,11 +143,11 @@ const OptionsForm = () => {
       <Form {...form}>
         <form
           onSubmit={handleSubmit((e) => onSubmit(e))}
-          className="space-y-3 p-2"
+          className='space-y-3 p-2'
         >
           <FormField
             control={control}
-            name="baseUrl"
+            name='baseUrl'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>URL</FormLabel>
@@ -213,7 +156,7 @@ const OptionsForm = () => {
                 </FormDescription>
                 <FormControl>
                   <Input
-                    placeholder="https://cloud.linkwarden.app"
+                    placeholder='https://cloud.linkwarden.app'
                     {...field}
                   />
                 </FormControl>
@@ -221,9 +164,9 @@ const OptionsForm = () => {
               </FormItem>
             )}
           />
-          <FormField
+          {/*<FormField
             control={control}
-            name="username"
+            name='username'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Username/Email</FormLabel>
@@ -231,23 +174,42 @@ const OptionsForm = () => {
                   Username for your Linkwarden account.
                 </FormDescription>
                 <FormControl>
-                  <Input placeholder="Username..." {...field} />
+                  <Input placeholder='Username...' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+            <FormField
+            control={control}
+          name='password'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormDescription>
+                Password for your Linkwarden account.
+              </FormDescription>
+              <FormControl>
+                <Input placeholder='Password' {...field} type='password' />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        */}
           <FormField
             control={control}
-            name="password"
+            name='apiKey'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password</FormLabel>
+                <FormLabel>API KEY</FormLabel>
                 <FormDescription>
-                  Password for your Linkwarden account.
+                  Api key for your Linkwarden account.
                 </FormDescription>
                 <FormControl>
-                  <Input placeholder="Password" {...field} type="password" />
+                  <Input
+                    placeholder='eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..mkTNGkl3kXDjYb54.XA29mauKrHSqwGgBk1Zb2hanecG8_c9MVPI_qv7Ge1k-UYLG5Arag5eXfVYGacu3RqVCci4NZgsBH6r16QZ5rhRzGmwkSv_PGNNzfqbAWi4k9Em8KYkc.wAZ64-qx9DaGSr0gqShnrQ' {...field}
+                    type='text' />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -272,12 +234,12 @@ const OptionsForm = () => {
               </FormItem>
             )}
           /> */}
-          <FormField
+          {/*<FormField
             control={control}
-            name="usingSSO"
+            name='usingSSO'
             render={({ field }) => (
               <FormItem>
-                <div className="flex gap-1 items-center">
+                <div className='flex gap-1 items-center'>
                   <FormControl>
                     <Checkbox
                       checked={field.value}
@@ -294,21 +256,21 @@ const OptionsForm = () => {
                 <FormMessage />
               </FormItem>
             )}
-          />
-          <div className="flex justify-between">
+          />*/}
+          <div className='flex justify-between'>
             <div>
               {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
               {/*@ts-ignore*/}
               <Button
-                type="button"
-                className="mb-2"
+                type='button'
+                className='mb-2'
                 onClick={onReset as never}
                 disabled={resetLoading}
               >
                 Reset
               </Button>
             </div>
-            <Button disabled={isLoading} type="submit">
+            <Button disabled={isLoading} type='submit'>
               Save
             </Button>
           </div>
