@@ -1,5 +1,6 @@
 import { bookmarkFormValues } from '../validators/bookmarkForm.ts';
 import axios from 'axios';
+import { bookmarkMetadata } from '../cache.ts';
 
 export async function postLink(baseUrl: string, data: bookmarkFormValues, apiKey: string) {
   const url = `${baseUrl}/api/v1/links`;
@@ -48,7 +49,7 @@ export async function deleteLinkFetch(baseUrl: string, id: number, apiKey: strin
   });
 }
 
-export async function getLinksFetch(baseUrl: string, apiKey: string) {
+export async function getLinksFetch(baseUrl: string, apiKey: string): Promise<{ response: bookmarkMetadata[] }> {
   const url = `${baseUrl}/api/v1/links`;
   const response = await fetch(url, {
     headers: {

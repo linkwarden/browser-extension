@@ -16,7 +16,7 @@ import { Input } from './ui/Input.tsx';
 import { Button } from './ui/Button.tsx';
 import { TagInput } from './TagInput.tsx';
 import { Textarea } from './ui/Textarea.tsx';
-import { cn, getCurrentTabInfo } from '../lib/utils.ts';
+import { checkDuplicatedItem, cn, getCurrentTabInfo } from '../lib/utils.ts';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { getConfig, isConfigured } from '../lib/config.ts';
@@ -39,6 +39,7 @@ import {
 import { saveLinksInCache } from '../lib/cache.ts';
 
 let configured = false;
+let duplicated = false;
 const BookmarkForm = () => {
   const [openOptions, setOpenOptions] = useState<boolean>(false);
   const [openCollections, setOpenCollections] = useState<boolean>(false);
@@ -110,6 +111,7 @@ const BookmarkForm = () => {
     });
     const getConfigUse = async () => {
       configured = await isConfigured();
+      duplicated = await checkDuplicatedItem();
     };
     getConfigUse();
   }, [form]);
@@ -452,6 +454,7 @@ const BookmarkForm = () => {
               />
             </div>
           ) : undefined}
+          {duplicated && <p className='text-muted text-zinc-600'>This bookmark is already on Linkwarden</p>}
           <div className='flex justify-between items-center mt-4'>
             <div
               className='inline-flex select-none items-center justify-center rounded-md text-sm font-medium ring-offset-background
