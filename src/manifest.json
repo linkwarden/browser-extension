@@ -36,8 +36,8 @@
   "commands": {
     "_execute_action": {
       "suggested_key": {
-        "default": "Ctrl+Shift+V",
-        "mac": "Command+Shift+K"
+        "default": "Ctrl+Shift+F",
+        "mac": "Command+Shift+F"
       }
     }
   }
