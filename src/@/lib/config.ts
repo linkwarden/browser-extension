@@ -8,6 +8,7 @@ const DEFAULTS: optionsFormValues = {
   syncBookmarks: false,
   usingSSO: false,
   apiKey: '',
+  defaultCollection: 'Unorganized',
 };
 
 const CONFIG_KEY = 'lw_config_key';
@@ -27,5 +28,13 @@ export async function isConfigured() {
 }
 
 export async function clearConfig() {
-  return await setStorageItem(CONFIG_KEY, JSON.stringify({ baseUrl: '', username: '', password: '', syncBookmarks: false, usingSSO: false, apiKey: ''}));
+  return await setStorageItem(CONFIG_KEY, JSON.stringify({
+    baseUrl: '',
+    username: '',
+    password: '',
+    syncBookmarks: false,
+    usingSSO: false,
+    apiKey: '',
+    defaultCollection: 'Unorganized',
+  }));
 }

@@ -39,6 +39,7 @@ const OptionsForm = () => {
       syncBookmarks: false,
       usingSSO: false,
       apiKey: '',
+      defaultCollection: 'Unorganized',
     },
   });
 
@@ -70,6 +71,7 @@ const OptionsForm = () => {
         apiKey: '',
         usingSSO: false,
         syncBookmarks: false,
+        defaultCollection: 'Unorganized',
       });
       await clearConfig();
       await clearBookmarksMetadata();
@@ -157,6 +159,25 @@ const OptionsForm = () => {
                 <FormControl>
                   <Input
                     placeholder='https://cloud.linkwarden.app'
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name='defaultCollection'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Default collection</FormLabel>
+                <FormDescription>
+                  Default collection to add bookmarks to.
+                </FormDescription>
+                <FormControl>
+                  <Input
+                    placeholder='Unorganized'
                     {...field}
                   />
                 </FormControl>
