@@ -137,7 +137,7 @@ const BookmarkForm = () => {
       }
     };
     syncBookmarks();
-  }, []);
+  }, [form]);
 
   const {
     isLoading: loadingCollections,
@@ -148,9 +148,11 @@ const BookmarkForm = () => {
     queryFn: async () => {
       const config = await getConfig();
 
-      const data = await getCollections(config.baseUrl, config.apiKey);
+      const response = await getCollections(config.baseUrl, config.apiKey);
 
-      return data.data;
+      return response.data.response.sort((a, b) => {
+        return a.name.localeCompare(b.name);
+      });
     },
     enabled: configured,
   });
@@ -164,9 +166,11 @@ const BookmarkForm = () => {
     queryFn: async () => {
       const config = await getConfig();
 
-      const data = await getTags(config.baseUrl, config.apiKey);
+      const response = await getTags(config.baseUrl, config.apiKey);
 
-      return data.data;
+      return response.data.response.sort((a, b) => {
+        return a.name.localeCompare(b.name);
+      });
     },
     enabled: configured,
   });
@@ -205,7 +209,7 @@ const BookmarkForm = () => {
                           {loadingCollections
                             ? 'Loading'
                             : field.value?.name
-                              ? collections.response?.find(
+                              ? collections?.find(
                               (collection: { name: string }) =>
                                 collection.name === field.value?.name,
                             )?.name || form.getValues('collection')?.name
@@ -235,7 +239,7 @@ const BookmarkForm = () => {
                             placeholder='Search Collection...'
                           />
                           <CommandEmpty>No Collection found.</CommandEmpty>
-                          {Array.isArray(collections?.response) && (
+                          {Array.isArray(collections) && (
                             <CommandGroup className='w-full overflow-y-auto'>
                               {isLoading ? (
                                 <CommandItem
@@ -251,7 +255,7 @@ const BookmarkForm = () => {
                                   Unorganized
                                 </CommandItem>
                               ) : (
-                                collections.response?.map(
+                                collections?.map(
                                   (collection: {
                                     name: string;
                                     id: number;
@@ -289,7 +293,7 @@ const BookmarkForm = () => {
                             placeholder='Search collection...'
                           />
                           <CommandEmpty>No Collection found.</CommandEmpty>
-                          {Array.isArray(collections?.response) && (
+                          {Array.isArray(collections) && (
                             <CommandGroup className='w-full'>
                               {isLoading ? (
                                 <CommandItem
@@ -305,7 +309,7 @@ const BookmarkForm = () => {
                                   Unorganized
                                 </CommandItem>
                               ) : (
-                                collections.response?.map(
+                                collections?.map(
                                   (collection: {
                                     name: string;
                                     id: number;
@@ -419,7 +423,7 @@ const BookmarkForm = () => {
                       <TagInput
                         onChange={field.onChange}
                         value={field.value ?? []}
-                        tags={tags.response}
+                        tags={tags}
                       />
                     )}
                     <FormMessage />
