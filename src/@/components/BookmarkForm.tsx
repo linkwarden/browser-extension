@@ -98,22 +98,30 @@ const BookmarkForm = () => {
 
   useEffect(() => {
     getCurrentTabInfo().then(({ url, title }) => {
-      form.setValue('url', url ? url : '');
-      form.setValue('description', title ? title : '');
-      // Had to be done since, name isn't required but when syncing it is. If not it looks bad!.
-      form.setValue('name', title ? title : '');
+      getConfig().then((config) => {
+        form.setValue('url', url ? url : '');
+        form.setValue('description', title ? title : '');
+        // Had to be done since, name isn't required but when syncing it is. If not it looks bad!.
+        form.setValue('name', title ? title : '');
+        form.setValue('collection', {
+          name: config.defaultCollection,
+        });
+      });
     });
-    const getConfig = async () => {
+    const getConfigUse = async () => {
       configured = await isConfigured();
     };
-    getConfig();
+    getConfigUse();
   }, [form]);
 
   useEffect(() => {
     const syncBookmarks = async () => {
       try {
-        const { syncBookmarks, baseUrl } =
+        const { syncBookmarks, baseUrl, defaultCollection } =
           await getConfig();
+        form.setValue('collection', {
+          name: defaultCollection,
+        });
         if (!syncBookmarks) {
           return;
         }
@@ -198,7 +206,7 @@ const BookmarkForm = () => {
                               ? collections.response?.find(
                               (collection: { name: string }) =>
                                 collection.name === field.value?.name,
-                            )?.name || 'Unorganized'
+                            )?.name || form.getValues('collection')?.name
                               : 'Select a collection...'}
                           <CaretSortIcon className='ml-2 h-4 w-4 shrink-0 opacity-50' />
                         </Button>

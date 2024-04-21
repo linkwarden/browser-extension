@@ -7,6 +7,7 @@ export const optionsFormSchema = z.object({
   syncBookmarks: z.boolean().default(false),
   usingSSO: z.boolean().default(false),
   apiKey: z.string().startsWith('eyJ', 'This has to be an API key'),
+  defaultCollection: z.string().optional().default('Unorganized'),
 });
 
 export type optionsFormValues = z.infer<typeof optionsFormSchema>;
