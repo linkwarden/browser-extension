@@ -155,6 +155,14 @@ const BookmarkForm = () => {
   }, [form]);
 
   useEffect(() => {
+    const setExpanded = async () => {
+      const { defaultExpanded } = await getConfig();
+      setOpenOptions(defaultExpanded);
+    };
+    setExpanded();
+  }, []);
+
+  useEffect(() => {
     const syncBookmarks = async () => {
       try {
         const { syncBookmarks, baseUrl, password, usingSSO, username } =

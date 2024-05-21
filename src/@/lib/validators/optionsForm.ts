@@ -5,7 +5,8 @@ export const optionsFormSchema = z.object({
   username: z.string().min(1, 'This cannot be empty'),
   password: z.string().min(1, 'This cannot be empty'),
   syncBookmarks: z.boolean().default(false),
-  usingSSO: z.boolean().default(false)
+  usingSSO: z.boolean().default(false),
+  defaultExpanded: z.boolean().default(false)
 });
 
 export type optionsFormValues = z.infer<typeof optionsFormSchema>;

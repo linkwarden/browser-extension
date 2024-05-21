@@ -46,6 +46,7 @@ const OptionsForm = () => {
       password: '',
       syncBookmarks: false,
       usingSSO: false,
+      defaultExpanded: false,
     },
   });
 
@@ -290,6 +291,28 @@ const OptionsForm = () => {
                 <FormDescription>
                   Enable the use of Single Sign-On instead of regular session
                   (Make sure you're already logged in to Linkwarden).
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={control}
+            name="defaultExpanded"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex gap-1 items-center">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormLabel>Show options in popup</FormLabel>
+                </div>
+
+                <FormDescription>
+                  Show all options in the popup form by default.
                 </FormDescription>
                 <FormMessage />
               </FormItem>

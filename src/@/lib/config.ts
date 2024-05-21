@@ -7,6 +7,7 @@ const DEFAULTS: optionsFormValues = {
   password: '',
   syncBookmarks: false,
   usingSSO: false,
+  defaultExpanded: false,
 };
 
 const CONFIG_KEY = 'lw_config_key';
