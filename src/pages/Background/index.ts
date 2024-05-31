@@ -9,7 +9,6 @@ import {
 } from '../../@/lib/cache.ts';
 import ContextType = chrome.contextMenus.ContextType;
 import OnClickData = chrome.contextMenus.OnClickData;
-import { getCsrfTokenFetch, getSessionFetch, performLoginOrLogoutFetch } from '../../@/lib/auth/auth.ts';
 import OnInputEnteredDisposition = chrome.omnibox.OnInputEnteredDisposition;
 
 const browser = getBrowser();
@@ -19,12 +18,10 @@ const browser = getBrowser();
 
 browser.bookmarks.onCreated.addListener(async (_id: string, bookmark: BookmarkTreeNode) => {
   try {
-    const { syncBookmarks, baseUrl, username, password, usingSSO } = await getConfig();
+    const { syncBookmarks, baseUrl, apiKey } = await getConfig();
     if (!syncBookmarks || !bookmark.url) {
       return;
     }
-    const session = await getSessionFetch(baseUrl);
-
     // Check if the bookmark already exists in the server by checking the url so, it doesn't create duplicates
     // I know, could use the method search from the api, but I want to avoid as much api specific calls as possible
     // in case isn't supported, so I prefer to do it this way, if performance is an issue I will think of change to that.
@@ -34,36 +31,22 @@ browser.bookmarks.onCreated.addListener(async (_id: string, bookmark: BookmarkTr
       return;
     }
 
-    if (!session && !usingSSO) {
-      const csrfToken = await getCsrfTokenFetch(baseUrl);
-
-      await performLoginOrLogoutFetch(`${baseUrl}/api/v1/auth/callback/credentials`, {
-        csrfToken: csrfToken,
-        callbackUrl: `${baseUrl}/api/v1/auth/callback`,
-        json: true,
-        redirect: false,
-        username: username,
-        password: password,
-      })
-    } else if (!session && usingSSO) {
-      return;
-    }
 
     const newLink = await postLinkFetch(baseUrl, {
       url: bookmark.url,
       collection: {
-        name: "Unorganized",
+        name: 'Unorganized',
       },
       tags: [],
       name: bookmark.title,
       description: bookmark.title,
-    });
+    }, apiKey);
 
-    const newLinkJson = await newLink.json()
+    const newLinkJson = await newLink.json();
     const newLinkUrl: bookmarkMetadata = newLinkJson.response;
     newLinkUrl.bookmarkId = bookmark.id;
 
-    await saveBookmarkMetadata(newLinkUrl)
+    await saveBookmarkMetadata(newLinkUrl);
 
   } catch (error) {
     console.error(error);
@@ -72,7 +55,7 @@ browser.bookmarks.onCreated.addListener(async (_id: string, bookmark: BookmarkTr
 
 browser.bookmarks.onChanged.addListener(async (id: string, changeInfo: chrome.bookmarks.BookmarkChangeInfo) => {
   try {
-    const { syncBookmarks, baseUrl, username, password, usingSSO } = await getConfig();
+    const { syncBookmarks, baseUrl, apiKey } = await getConfig();
     if (!syncBookmarks || !changeInfo.url) {
       return;
     }
@@ -83,38 +66,22 @@ browser.bookmarks.onChanged.addListener(async (id: string, changeInfo: chrome.bo
       return;
     }
 
-    const session = await getSessionFetch(baseUrl);
-
-    if (!session && !usingSSO) {
-      const csrfToken = await getCsrfTokenFetch(baseUrl);
-
-      await performLoginOrLogoutFetch(`${baseUrl}/api/v1/auth/callback/credentials`, {
-        csrfToken: csrfToken,
-        callbackUrl: `${baseUrl}/api/v1/auth/callback`,
-        json: true,
-        redirect: false,
-        username: username,
-        password: password,
-      })
-    } else if (!session && usingSSO) {
-      return;
-    }
 
     const updatedLink = await updateLinkFetch(baseUrl, link.id, {
       url: changeInfo.url,
       collection: {
-        name: "Unorganized",
+        name: 'Unorganized',
       },
       tags: [],
       name: changeInfo.title,
       description: changeInfo.title,
-    });
+    }, apiKey);
 
-    const updatedLinkJson = await updatedLink.json()
+    const updatedLinkJson = await updatedLink.json();
     const newLinkUrl: bookmarkMetadata = updatedLinkJson.response;
     newLinkUrl.bookmarkId = id;
 
-    await saveBookmarkMetadata(newLinkUrl)
+    await saveBookmarkMetadata(newLinkUrl);
 
   } catch (error) {
     console.error(error);
@@ -123,7 +90,7 @@ browser.bookmarks.onChanged.addListener(async (id: string, changeInfo: chrome.bo
 
 browser.bookmarks.onRemoved.addListener(async (id: string, removeInfo: chrome.bookmarks.BookmarkRemoveInfo) => {
   try {
-    const { syncBookmarks, baseUrl, username, password, usingSSO } = await getConfig();
+    const { syncBookmarks, baseUrl, apiKey } = await getConfig();
     if (!syncBookmarks || !removeInfo.node.url) {
       return;
     }
@@ -133,27 +100,10 @@ browser.bookmarks.onRemoved.addListener(async (id: string, removeInfo: chrome.bo
       return;
     }
 
-    const session = await getSessionFetch(baseUrl);
-
-    if (!session && !usingSSO) {
-      const csrfToken = await getCsrfTokenFetch(baseUrl);
-
-      await performLoginOrLogoutFetch(`${baseUrl}/api/v1/auth/callback/credentials`, {
-        csrfToken: csrfToken,
-        callbackUrl: `${baseUrl}/api/v1/auth/callback`,
-        json: true,
-        redirect: false,
-        username: username,
-        password: password,
-      })
-    } else if (!session && usingSSO) {
-      return;
-    }
-
     await Promise.all([
       deleteBookmarkMetadata(link.bookmarkId),
-      deleteLinkFetch(baseUrl, link.id)
-    ])
+      deleteLinkFetch(baseUrl, link.id, apiKey),
+    ]);
 
   } catch (error) {
     console.error(error);
@@ -171,7 +121,7 @@ browser.contextMenus.onClicked.addListener(async (info, tab) => {
 
 // A generic onclick callback function.
 async function genericOnClick(info: OnClickData, tab: chrome.tabs.Tab | undefined) {
-  const { syncBookmarks, baseUrl, username, password, usingSSO } = await getConfig();
+  const { syncBookmarks, baseUrl, apiKey } = await getConfig();
   const configured = await isConfigured();
   if (!tab?.url || !tab?.title || !configured) {
     return;
@@ -195,38 +145,21 @@ async function genericOnClick(info: OnClickData, tab: chrome.tabs.Tab | undefine
         });
       } else {
         try {
-          const session = await getSessionFetch(baseUrl);
-
-          if (!session && !usingSSO) {
-            const csrfToken = await getCsrfTokenFetch(baseUrl);
-
-            await performLoginOrLogoutFetch(`${baseUrl}/api/v1/auth/callback/credentials`, {
-              csrfToken: csrfToken,
-              callbackUrl: `${baseUrl}/api/v1/auth/callback`,
-              json: true,
-              redirect: false,
-              username: username,
-              password: password,
-            })
-          } else if (!session && usingSSO) {
-            return;
-          }
-
           const newLink = await postLinkFetch(baseUrl, {
             url: tab.url,
             collection: {
-              name: "Unorganized",
+              name: 'Unorganized',
             },
             tags: [],
             name: tab.title,
             description: tab.title,
-          });
+          }, apiKey);
 
-          const newLinkJson = await newLink.json()
+          const newLinkJson = await newLink.json();
           const newLinkUrl: bookmarkMetadata = newLinkJson.response;
           newLinkUrl.bookmarkId = tab.id?.toString();
 
-          await saveBookmarkMetadata(newLinkUrl)
+          await saveBookmarkMetadata(newLinkUrl);
         } catch (error) {
           console.error(error);
         }
@@ -234,8 +167,9 @@ async function genericOnClick(info: OnClickData, tab: chrome.tabs.Tab | undefine
       }
   }
 }
-browser.runtime.onInstalled.addListener(function () {
-  // Create one test item for each context type.
+
+browser.runtime.onInstalled.addListener(function(details) {
+  // Create one test item for each context type...
   const contexts: ContextType[] = [
     'page',
     'selection',
@@ -243,15 +177,18 @@ browser.runtime.onInstalled.addListener(function () {
     'editable',
     'image',
     'video',
-    'audio'
+    'audio',
   ];
-  for (const context of contexts) {
-    const  title: string = "Add link to Linkwarden";
-    browser.contextMenus.create({
-      title: title,
-      contexts: [context],
-      id: context
-    });
+  // Is this even needed?
+  if (details.reason === 'update' || details.reason === 'install') {
+    for (const context of contexts) {
+      const title: string = 'Add link to Linkwarden';
+      browser.contextMenus.create({
+        title: title,
+        contexts: [context],
+        id: context,
+      });
+    }
   }
 });
 
@@ -266,7 +203,10 @@ browser.omnibox.onInputStarted.addListener(async () => {
   });
 });
 
-browser.omnibox.onInputChanged.addListener(async (text: string, suggest: (arg0: { content: string; description: string; }[]) => void) => {
+browser.omnibox.onInputChanged.addListener(async (text: string, suggest: (arg0: {
+  content: string;
+  description: string;
+}[]) => void) => {
   const configured = await isConfigured();
 
   if (!configured) {
@@ -280,12 +220,12 @@ browser.omnibox.onInputChanged.addListener(async (text: string, suggest: (arg0: 
   });
 
   const bookmarkSuggestions = searchedBookmarks.map(bookmark => {
-     return {
-       content: bookmark.url,
-       description: bookmark.name || bookmark.url
-     }
+    return {
+      content: bookmark.url,
+      description: bookmark.name || bookmark.url,
+    };
   });
-  suggest(bookmarkSuggestions)
+  suggest(bookmarkSuggestions);
 
 });
 
@@ -304,23 +244,23 @@ browser.omnibox.onInputEntered.addListener(async (content: string, disposition: 
   // Edge doesn't allow updating the New Tab Page (tested with version 117).
   // Trying to do so will throw: "Error: Cannot update NTP tab."
   // As a workaround, open a new tab instead.
-  if (disposition === "currentTab") {
+  if (disposition === 'currentTab') {
     const tabInfo = await getCurrentTabInfo();
-    if (tabInfo.url === "edge://newtab/") {
-      disposition = "newForegroundTab";
+    if (tabInfo.url === 'edge://newtab/') {
+      disposition = 'newForegroundTab';
     }
   }
 
   switch (disposition) {
-    case "currentTab":
+    case 'currentTab':
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       await browser.tabs.update({ url });
       break;
-    case "newForegroundTab":
+    case 'newForegroundTab':
       await browser.tabs.create({ url });
       break;
-    case "newBackgroundTab":
+    case 'newBackgroundTab':
       await browser.tabs.create({ url, active: false });
       break;
   }

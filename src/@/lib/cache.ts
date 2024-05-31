@@ -2,6 +2,8 @@ import { getBrowser, getStorageItem, setStorageItem } from './utils.ts';
 import { bookmarkFormValues } from './validators/bookmarkForm.ts';
 import { deleteLinkFetch, getLinksFetch, postLinkFetch, updateLinkFetch } from './actions/links.ts';
 import BookmarkTreeNode = chrome.bookmarks.BookmarkTreeNode;
+import { getConfig } from './config.ts';
+
 const browser = getBrowser();
 
 const BOOKMARKS_METADATA_KEY = 'lw_bookmarks_metadata_cache';
@@ -11,13 +13,13 @@ const BOOKMARKS_METADATA_KEY = 'lw_bookmarks_metadata_cache';
 // I think I can do this by using the bookmark id as the key, and the value will be the link object itself (or maybe just the url?)
 // I think I can also use the url as the key, and the value will be the bookmark id (or maybe just the bookmark object itself?)
 
-export interface bookmarkMetadata extends bookmarkFormValues{
+export interface bookmarkMetadata extends bookmarkFormValues {
   id: number;
   collectionId: number;
   bookmarkId?: string;
 }
 
-const DEFAULTS: bookmarkMetadata[] = []
+const DEFAULTS: bookmarkMetadata[] = [];
 
 export async function getBookmarksMetadata(): Promise<bookmarkMetadata[]> {
   const bookmarksMetadata = await getStorageItem(BOOKMARKS_METADATA_KEY);
@@ -66,11 +68,13 @@ export async function deleteBookmarkMetadata(id: string | undefined) {
   }
   return await saveBookmarksMetadata(bookmarksMetadata);
 }
+
 // It just works, don't MOVE
 export async function saveLinksInCache(baseUrl: string) {
   try {
-    const links = await getLinksFetch(baseUrl);
-    const linksResponse: bookmarkMetadata[] = links.response;
+    const { apiKey } = await getConfig();
+    const links = await getLinksFetch(baseUrl, apiKey);
+    const linksResponse = links.response;
 
     // Create a map to track which bookmarks are still present on the server
     const serverBookmarkMap = new Map<number, bookmarkMetadata>();
@@ -121,11 +125,12 @@ export async function createBookmarkInBrowser(bookmark: bookmarkMetadata): Promi
 
 const getCurrentBookmarks = async () => {
   return await browser.bookmarks.getTree();
-}
+};
 
 // Testing will remove later, idk if this would be ok to do, since they are being duplicated in the browser.
 export async function syncLocalBookmarks(baseUrl: string) {
   try {
+    const { apiKey } = await getConfig();
     // Retrieve all local bookmarks
     const [root] = await getCurrentBookmarks();
     const localBookmarks: bookmarkMetadata[] = [];
@@ -148,10 +153,10 @@ export async function syncLocalBookmarks(baseUrl: string) {
       const cachedBookmark = cachedBookmarksMap.get(localBookmark.url);
       if (!cachedBookmark) {
         // New bookmark
-        createPromises.push(postLinkFetch(baseUrl, localBookmark));
+        createPromises.push(postLinkFetch(baseUrl, localBookmark, apiKey));
       } else if (cachedBookmark.name !== localBookmark.name) {
         // Updated bookmark
-        updatePromises.push(updateLinkFetch(baseUrl, cachedBookmark.id, localBookmark));
+        updatePromises.push(updateLinkFetch(baseUrl, cachedBookmark.id, localBookmark, apiKey));
       }
       // Remove from the map to track deleted bookmarks
       cachedBookmarksMap.delete(localBookmark.url);
@@ -159,7 +164,7 @@ export async function syncLocalBookmarks(baseUrl: string) {
 
     // Prepare delete promises for bookmarks that are no longer in the local bookmarks
     for (const [, cachedBookmark] of cachedBookmarksMap) {
-      deletePromises.push(deleteLinkFetch(baseUrl, cachedBookmark.id));
+      deletePromises.push(deleteLinkFetch(baseUrl, cachedBookmark.id, apiKey));
     }
 
     // Run all create, update, and delete operations in parallel

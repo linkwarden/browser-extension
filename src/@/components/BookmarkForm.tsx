@@ -16,14 +16,9 @@ import { Input } from './ui/Input.tsx';
 import { Button } from './ui/Button.tsx';
 import { TagInput } from './TagInput.tsx';
 import { Textarea } from './ui/Textarea.tsx';
-import { cn, getCurrentTabInfo } from '../lib/utils.ts';
+import { checkDuplicatedItem, cn, getCurrentTabInfo } from '../lib/utils.ts';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import {
-  getCsrfToken,
-  getSession,
-  performLoginOrLogout,
-} from '../lib/auth/auth.ts';
 import { getConfig, isConfigured } from '../lib/config.ts';
 import { postLink } from '../lib/actions/links.ts';
 import { AxiosError } from 'axios';
@@ -43,8 +38,8 @@ import {
 } from './ui/Command.tsx';
 import { saveLinksInCache } from '../lib/cache.ts';
 
-let HAD_PREVIOUS_SESSION = false;
 let configured = false;
+let duplicated = false;
 const BookmarkForm = () => {
   const [openOptions, setOpenOptions] = useState<boolean>(false);
   const [openCollections, setOpenCollections] = useState<boolean>(false);
@@ -65,48 +60,9 @@ const BookmarkForm = () => {
     mutationFn: async (values: bookmarkFormValues) => {
       const config = await getConfig();
 
-      if (config.usingSSO) {
-        const session = await getSession(config.baseUrl);
-        if (!session) {
-          return;
-        }
-        await postLink(config.baseUrl, values);
-      } else {
-        const csrfToken = await getCsrfToken(config.baseUrl);
-        const session = await getSession(config.baseUrl);
+      await postLink(config.baseUrl, values, config.apiKey);
 
-        HAD_PREVIOUS_SESSION = !!session;
-
-        if (!HAD_PREVIOUS_SESSION) {
-          await performLoginOrLogout(
-            `${config.baseUrl}/api/v1/auth/callback/credentials`,
-            {
-              username: config.username,
-              password: config.password,
-              redirect: false,
-              csrfToken,
-              callbackUrl: `${config.baseUrl}/login`,
-              json: true,
-            }
-          );
-        }
-
-        await postLink(config.baseUrl, values);
-
-        if (!HAD_PREVIOUS_SESSION) {
-          const url = `${config.baseUrl}/api/v1/auth/signout`;
-          await performLoginOrLogout(url, {
-            username: config.username,
-            password: config.password,
-            redirect: false,
-            csrfToken,
-            callbackUrl: `${config.baseUrl}/login`,
-            json: true,
-          });
-        }
-
-        return;
-      }
+      return;
     },
     onError: (error) => {
       if (error instanceof AxiosError) {
@@ -131,7 +87,7 @@ const BookmarkForm = () => {
       setTimeout(() => {
         window.close();
         // I want to show some confirmation before it's closed...
-      }, 1000);
+      }, 3500);
       toast({
         title: 'Success',
         description: 'Link saved successfully!',
@@ -143,15 +99,21 @@ const BookmarkForm = () => {
 
   useEffect(() => {
     getCurrentTabInfo().then(({ url, title }) => {
-      form.setValue('url', url ? url : '');
-      form.setValue('description', title ? title : '');
-      // Had to be done since, name isn't required but when syncing it is. If not it looks bad!.
-      form.setValue('name', title ? title : '');
+      getConfig().then((config) => {
+        form.setValue('url', url ? url : '');
+        form.setValue('description', title ? title : '');
+        // Had to be done since, name isn't required but when syncing it is. If not it looks bad!.
+        form.setValue('name', title ? title : '');
+        form.setValue('collection', {
+          name: config.defaultCollection,
+        });
+      });
     });
-    const getConfig = async () => {
+    const getConfigUse = async () => {
       configured = await isConfigured();
+      duplicated = await checkDuplicatedItem();
     };
-    getConfig();
+    getConfigUse();
   }, [form]);
 
   useEffect(() => {
@@ -165,57 +127,25 @@ const BookmarkForm = () => {
   useEffect(() => {
     const syncBookmarks = async () => {
       try {
-        const { syncBookmarks, baseUrl, password, usingSSO, username } =
+        const { syncBookmarks, baseUrl, defaultCollection } =
           await getConfig();
+        form.setValue('collection', {
+          name: defaultCollection,
+        });
         if (!syncBookmarks) {
           return;
         }
         if (await isConfigured()) {
-          if (usingSSO) {
-            const session = await getSession(baseUrl);
-            if (!session) {
-              return;
-            }
-            await saveLinksInCache(baseUrl);
-            //await syncLocalBookmarks(baseUrl);
-          } else {
-            const csrfToken = await getCsrfToken(baseUrl);
-            const session = await getSession(baseUrl);
-            HAD_PREVIOUS_SESSION = !!session;
-            if (!HAD_PREVIOUS_SESSION) {
-              await performLoginOrLogout(
-                `${baseUrl}/api/v1/auth/callback/credentials`,
-                {
-                  username,
-                  password,
-                  redirect: false,
-                  csrfToken,
-                  callbackUrl: `${baseUrl}/login`,
-                  json: true,
-                }
-              );
-            }
-            await saveLinksInCache(baseUrl);
-            //await syncLocalBookmarks(baseUrl);
-            if (!HAD_PREVIOUS_SESSION) {
-              const url = `${baseUrl}/api/v1/auth/signout`;
-              await performLoginOrLogout(url, {
-                username,
-                password,
-                redirect: false,
-                csrfToken,
-                callbackUrl: `${baseUrl}/login`,
-                json: true,
-              });
-            }
-          }
+          await saveLinksInCache(baseUrl);
+          //await syncLocalBookmarks(baseUrl);
+
         }
       } catch (error) {
         console.error(error);
       }
     };
     syncBookmarks();
-  }, []);
+  }, [form]);
 
   const {
     isLoading: loadingCollections,
@@ -226,48 +156,11 @@ const BookmarkForm = () => {
     queryFn: async () => {
       const config = await getConfig();
 
-      const session = await getSession(config.baseUrl);
+      const response = await getCollections(config.baseUrl, config.apiKey);
 
-      if (!session && config.usingSSO) {
-        return [];
-      } else if (session && config.usingSSO) {
-        const data = await getCollections(config.baseUrl);
-        return data.data;
-      }
-
-      const csrfToken = await getCsrfToken(config.baseUrl);
-
-      HAD_PREVIOUS_SESSION = !!session;
-
-      if (!HAD_PREVIOUS_SESSION) {
-        await performLoginOrLogout(
-          `${config.baseUrl}/api/v1/auth/callback/credentials`,
-          {
-            username: config.username,
-            password: config.password,
-            redirect: false,
-            csrfToken,
-            callbackUrl: `${config.baseUrl}/login`,
-            json: true,
-          }
-        );
-      }
-
-      const data = await getCollections(config.baseUrl);
-
-      if (!HAD_PREVIOUS_SESSION) {
-        const url = `${config.baseUrl}/api/v1/auth/signout`;
-        await performLoginOrLogout(url, {
-          username: config.username,
-          password: config.password,
-          redirect: false,
-          csrfToken,
-          callbackUrl: `${config.baseUrl}/login`,
-          json: true,
-        });
-      }
-
-      return data.data;
+      return response.data.response.sort((a, b) => {
+        return a.name.localeCompare(b.name);
+      });
     },
     enabled: configured,
   });
@@ -281,40 +174,11 @@ const BookmarkForm = () => {
     queryFn: async () => {
       const config = await getConfig();
 
-      const csrfToken = await getCsrfToken(config.baseUrl);
-      const session = await getSession(config.baseUrl);
+      const response = await getTags(config.baseUrl, config.apiKey);
 
-      HAD_PREVIOUS_SESSION = !!session;
-
-      if (!HAD_PREVIOUS_SESSION) {
-        await performLoginOrLogout(
-          `${config.baseUrl}/api/v1/auth/callback/credentials`,
-          {
-            username: config.username,
-            password: config.password,
-            redirect: false,
-            csrfToken,
-            callbackUrl: `${config.baseUrl}/login`,
-            json: true,
-          }
-        );
-      }
-
-      const data = await getTags(config.baseUrl);
-
-      if (!HAD_PREVIOUS_SESSION) {
-        const url = `${config.baseUrl}/api/v1/auth/signout`;
-        await performLoginOrLogout(url, {
-          username: config.username,
-          password: config.password,
-          redirect: false,
-          csrfToken,
-          callbackUrl: `${config.baseUrl}/login`,
-          json: true,
-        });
-      }
-
-      return data.data;
+      return response.data.response.sort((a, b) => {
+        return a.name.localeCompare(b.name);
+      });
     },
     enabled: configured,
   });
@@ -322,19 +186,19 @@ const BookmarkForm = () => {
   return (
     <div>
       <Form {...form}>
-        <form onSubmit={handleSubmit((e) => onSubmit(e))} className="py-1">
+        <form onSubmit={handleSubmit((e) => onSubmit(e))} className='py-1'>
           {collectionError ? (
-            <p className="text-red-600">
+            <p className='text-red-600'>
               There was an error, please make sure the website is available.
             </p>
           ) : null}
           <FormField
             control={control}
-            name="collection"
+            name='collection'
             render={({ field }) => (
               <FormItem className={`my-2`}>
                 <FormLabel>Collection</FormLabel>
-                <div className="min-w-full inset-x-0">
+                <div className='min-w-full inset-x-0'>
                   <Popover
                     open={openCollections}
                     onOpenChange={setOpenCollections}
@@ -342,23 +206,23 @@ const BookmarkForm = () => {
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
-                          variant="outline"
-                          role="combobox"
+                          variant='outline'
+                          role='combobox'
                           aria-expanded={openCollections}
                           className={cn(
                             'w-full justify-between',
-                            !field.value?.name && 'text-muted-foreground'
+                            !field.value?.name && 'text-muted-foreground',
                           )}
                         >
                           {loadingCollections
                             ? 'Loading'
                             : field.value?.name
-                            ? collections.response?.find(
-                                (collection: { name: string }) =>
-                                  collection.name === field.value?.name
-                              )?.name || 'Unorganized'
-                            : 'Select a collection...'}
-                          <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              ? collections?.find(
+                              (collection: { name: string }) =>
+                                collection.name === field.value?.name,
+                            )?.name || form.getValues('collection')?.name
+                              : 'Select a collection...'}
+                          <CaretSortIcon className='ml-2 h-4 w-4 shrink-0 opacity-50' />
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
@@ -372,23 +236,23 @@ const BookmarkForm = () => {
                         }`}
                       >
                         <Button
-                          className="absolute top-1 right-1 bg-transparent hover:bg-transparent hover:opacity-50 transition-colors ease-in-out duration-200"
+                          className='absolute top-1 right-1 bg-transparent hover:bg-transparent hover:opacity-50 transition-colors ease-in-out duration-200'
                           onClick={() => setOpenCollections(false)}
                         >
                           <X className={`h-4 w-4 text-black dark:text-white`} />
                         </Button>
-                        <Command className="flex-grow min-w-full dropdown-content rounded-none">
+                        <Command className='flex-grow min-w-full dropdown-content rounded-none'>
                           <CommandInput
-                            className="min-w-[280px]"
-                            placeholder="Search Collection..."
+                            className='min-w-[280px]'
+                            placeholder='Search Collection...'
                           />
                           <CommandEmpty>No Collection found.</CommandEmpty>
-                          {Array.isArray(collections?.response) && (
-                            <CommandGroup className="w-full overflow-y-auto">
+                          {Array.isArray(collections) && (
+                            <CommandGroup className='w-full overflow-y-auto'>
                               {isLoading ? (
                                 <CommandItem
-                                  value="Getting collections..."
-                                  key="Getting collections..."
+                                  value='Getting collections...'
+                                  key='Getting collections...'
                                   onSelect={() => {
                                     form.setValue('collection', {
                                       name: 'Unorganized',
@@ -399,7 +263,7 @@ const BookmarkForm = () => {
                                   Unorganized
                                 </CommandItem>
                               ) : (
-                                collections.response?.map(
+                                collections?.map(
                                   (collection: {
                                     name: string;
                                     id: number;
@@ -408,7 +272,7 @@ const BookmarkForm = () => {
                                     <CommandItem
                                       value={collection.name}
                                       key={collection.id}
-                                      className="cursor-pointer"
+                                      className='cursor-pointer'
                                       onSelect={() => {
                                         form.setValue('collection', {
                                           ownerId: collection.ownerId,
@@ -420,7 +284,7 @@ const BookmarkForm = () => {
                                     >
                                       {collection.name}
                                     </CommandItem>
-                                  )
+                                  ),
                                 )
                               )}
                             </CommandGroup>
@@ -431,18 +295,18 @@ const BookmarkForm = () => {
                       <PopoverContent
                         className={`min-w-full p-0 overflow-y-auto max-h-[200px]`}
                       >
-                        <Command className="flex-grow min-w-full dropdown-content">
+                        <Command className='flex-grow min-w-full dropdown-content'>
                           <CommandInput
-                            className="min-w-[280px]"
-                            placeholder="Search collection..."
+                            className='min-w-[280px]'
+                            placeholder='Search collection...'
                           />
                           <CommandEmpty>No Collection found.</CommandEmpty>
-                          {Array.isArray(collections?.response) && (
-                            <CommandGroup className="w-full">
+                          {Array.isArray(collections) && (
+                            <CommandGroup className='w-full'>
                               {isLoading ? (
                                 <CommandItem
-                                  value="Getting collections..."
-                                  key="Getting collections..."
+                                  value='Getting collections...'
+                                  key='Getting collections...'
                                   onSelect={() => {
                                     form.setValue('collection', {
                                       name: 'Unorganized',
@@ -453,7 +317,7 @@ const BookmarkForm = () => {
                                   Unorganized
                                 </CommandItem>
                               ) : (
-                                collections.response?.map(
+                                collections?.map(
                                   (collection: {
                                     name: string;
                                     id: number;
@@ -473,7 +337,7 @@ const BookmarkForm = () => {
                                     >
                                       {collection.name}
                                     </CommandItem>
-                                  )
+                                  ),
                                 )
                               )}
                             </CommandGroup>
@@ -543,11 +407,11 @@ const BookmarkForm = () => {
             )}
           />
           {openOptions ? (
-            <div className="details list-none space-y-5 pt-2">
+            <div className='details list-none space-y-5 pt-2'>
               {tagsError ? <p>There was an error...</p> : null}
               <FormField
                 control={control}
-                name="tags"
+                name='tags'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tags</FormLabel>
@@ -567,7 +431,7 @@ const BookmarkForm = () => {
                       <TagInput
                         onChange={field.onChange}
                         value={field.value ?? []}
-                        tags={tags.response}
+                        tags={tags}
                       />
                     )}
                     <FormMessage />
@@ -576,12 +440,12 @@ const BookmarkForm = () => {
               />
               <FormField
                 control={control}
-                name="name"
+                name='name'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Google..." {...field} />
+                      <Input placeholder='Google...' {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -589,12 +453,12 @@ const BookmarkForm = () => {
               />
               <FormField
                 control={control}
-                name="description"
+                name='description'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Description..." {...field} />
+                      <Textarea placeholder='Description...' {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -602,17 +466,18 @@ const BookmarkForm = () => {
               />
             </div>
           ) : undefined}
-          <div className="flex justify-between items-center mt-4">
+          {duplicated && <p className='text-muted text-zinc-600'>This bookmark is already on Linkwarden</p>}
+          <div className='flex justify-between items-center mt-4'>
             <div
-              className="inline-flex select-none items-center justify-center rounded-md text-sm font-medium ring-offset-background
+              className='inline-flex select-none items-center justify-center rounded-md text-sm font-medium ring-offset-background
                transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
                focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
-               hover:bg-accent hover:text-accent-foreground hover:cursor-pointer p-2"
+               hover:bg-accent hover:text-accent-foreground hover:cursor-pointer p-2'
               onClick={() => setOpenOptions((prevState) => !prevState)}
             >
               {openOptions ? 'Hide' : 'More'} Options
             </div>
-            <Button disabled={isLoading} type="submit">
+            <Button disabled={isLoading} type='submit'>
               Save
             </Button>
           </div>
