@@ -3,7 +3,7 @@
   "name": "Linkwarden",
   "description": "The browser extension for Linkwarden.",
   "homepage_url": "https://linkwarden.app/",
-  "version": "1.2.5",
+  "version": "1.2.7",
   "action": {
     "default_popup": "./index.html",
     "default_icon": {
@@ -24,15 +24,24 @@
     "48": "./48.png",
     "128": "./128.png"
   },
-  "permissions": ["storage", "activeTab", "tabs", "bookmarks", "commands", "contextMenus"],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs",
+    "bookmarks",
+    "commands",
+    "contextMenus"
+  ],
   "background": {
-    "service_worker": "background.js",
+    "service_worker": "./background.js",
     "type": "module"
   },
   "omnibox": {
     "keyword": "lk"
   },
-  "host_permissions": ["*://*/*"],
+  "host_permissions": [
+    "*://*/*"
+  ],
   "commands": {
     "_execute_action": {
       "suggested_key": {

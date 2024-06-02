@@ -168,8 +168,8 @@ async function genericOnClick(info: OnClickData, tab: chrome.tabs.Tab | undefine
   }
 }
 
-browser.runtime.onInstalled.addListener(function() {
-  // Create one test item for each context type.
+browser.runtime.onInstalled.addListener(function(details) {
+  // Create one test item for each context type...
   const contexts: ContextType[] = [
     'page',
     'selection',
@@ -179,13 +179,16 @@ browser.runtime.onInstalled.addListener(function() {
     'video',
     'audio',
   ];
-  for (const context of contexts) {
-    const title: string = 'Add link to Linkwarden';
-    browser.contextMenus.create({
-      title: title,
-      contexts: [context],
-      id: context,
-    });
+  // Is this even needed?
+  if (details.reason === 'update' || details.reason === 'install') {
+    for (const context of contexts) {
+      const title: string = 'Add link to Linkwarden';
+      browser.contextMenus.create({
+        title: title,
+        contexts: [context],
+        id: context,
+      });
+    }
   }
 });
 
