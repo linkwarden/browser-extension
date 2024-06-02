@@ -28,6 +28,7 @@ import { toast } from '../../hooks/use-toast.ts';
 import { AxiosError } from 'axios';
 import { clearBookmarksMetadata } from '../lib/cache.ts';
 import { getCollections } from '../lib/actions/collections.ts';
+import { Checkbox } from './ui/CheckBox.tsx';
 
 const OptionsForm = () => {
   const form = useForm<optionsFormValues>({
@@ -40,6 +41,7 @@ const OptionsForm = () => {
       usingSSO: false,
       apiKey: '',
       defaultCollection: 'Unorganized',
+      defaultExpanded: false,
     },
   });
 
@@ -57,7 +59,7 @@ const OptionsForm = () => {
       toast({
         title: 'Error',
         description:
-          'Either you didn\'t configure the extension or there was an error while trying to log out. Please try again.',
+          "Either you didn't configure the extension or there was an error while trying to log out. Please try again.",
         variant: 'destructive',
       });
       return;
@@ -145,11 +147,11 @@ const OptionsForm = () => {
       <Form {...form}>
         <form
           onSubmit={handleSubmit((e) => onSubmit(e))}
-          className='space-y-3 p-2'
+          className="space-y-3 p-2"
         >
           <FormField
             control={control}
-            name='baseUrl'
+            name="baseUrl"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>URL</FormLabel>
@@ -158,7 +160,7 @@ const OptionsForm = () => {
                 </FormDescription>
                 <FormControl>
                   <Input
-                    placeholder='https://cloud.linkwarden.app'
+                    placeholder="https://cloud.linkwarden.app"
                     {...field}
                   />
                 </FormControl>
@@ -168,7 +170,7 @@ const OptionsForm = () => {
           />
           <FormField
             control={control}
-            name='defaultCollection'
+            name="defaultCollection"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Default collection</FormLabel>
@@ -176,10 +178,7 @@ const OptionsForm = () => {
                   Default collection to add bookmarks to.
                 </FormDescription>
                 <FormControl>
-                  <Input
-                    placeholder='Unorganized'
-                    {...field}
-                  />
+                  <Input placeholder="Unorganized" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -220,7 +219,7 @@ const OptionsForm = () => {
         */}
           <FormField
             control={control}
-            name='apiKey'
+            name="apiKey"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>API KEY</FormLabel>
@@ -229,8 +228,10 @@ const OptionsForm = () => {
                 </FormDescription>
                 <FormControl>
                   <Input
-                    placeholder='eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..mkTNGkl3kXDjYb54.XA29mauKrHSqwGgBk1Zb2hanecG8_c9MVPI_qv7Ge1k-UYLG5Arag5eXfVYGacu3RqVCci4NZgsBH6r16QZ5rhRzGmwkSv_PGNNzfqbAWi4k9Em8KYkc.wAZ64-qx9DaGSr0gqShnrQ' {...field}
-                    type='text' />
+                    placeholder="eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..mkTNGkl3kXDjYb54.XA29mauKrHSqwGgBk1Zb2hanecG8_c9MVPI_qv7Ge1k-UYLG5Arag5eXfVYGacu3RqVCci4NZgsBH6r16QZ5rhRzGmwkSv_PGNNzfqbAWi4k9Em8KYkc.wAZ64-qx9DaGSr0gqShnrQ"
+                    {...field}
+                    type="text"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -278,20 +279,42 @@ const OptionsForm = () => {
               </FormItem>
             )}
           />*/}
-          <div className='flex justify-between'>
+          <FormField
+            control={control}
+            name="defaultExpanded"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex gap-1 items-center">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value as boolean}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormLabel>Show options in popup</FormLabel>
+                </div>
+
+                <FormDescription>
+                  Show all options in the popup form by default.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="flex justify-between">
             <div>
               {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
               {/*@ts-ignore*/}
               <Button
-                type='button'
-                className='mb-2'
+                type="button"
+                className="mb-2"
                 onClick={onReset as never}
                 disabled={resetLoading}
               >
                 Reset
               </Button>
             </div>
-            <Button disabled={isLoading} type='submit'>
+            <Button disabled={isLoading} type="submit">
               Save
             </Button>
           </div>
