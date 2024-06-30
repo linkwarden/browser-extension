@@ -24,7 +24,15 @@
     "48": "./48.png",
     "128": "./128.png"
   },
-  "permissions": ["storage", "activeTab", "tabs", "bookmarks", "commands", "contextMenus"],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs",
+    "bookmarks",
+    "commands",
+    "contextMenus",
+    "webNavigation"
+  ],
   "background": {
     "service_worker": "background.js",
     "type": "module"
