@@ -9,6 +9,7 @@ const DEFAULTS: optionsFormValues = {
   usingSSO: false,
   apiKey: '',
   defaultCollection: 'Unorganized',
+  defaultExpanded: false,
 };
 
 const CONFIG_KEY = 'lw_config_key';

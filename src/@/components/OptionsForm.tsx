@@ -28,6 +28,7 @@ import { toast } from '../../hooks/use-toast.ts';
 import { AxiosError } from 'axios';
 import { clearBookmarksMetadata } from '../lib/cache.ts';
 import { getCollections } from '../lib/actions/collections.ts';
+import { Checkbox } from './ui/CheckBox.tsx';
 
 const OptionsForm = () => {
   const form = useForm<optionsFormValues>({
@@ -40,6 +41,7 @@ const OptionsForm = () => {
       usingSSO: false,
       apiKey: '',
       defaultCollection: 'Unorganized',
+      defaultExpanded: false,
     },
   });
 
@@ -218,6 +220,28 @@ const OptionsForm = () => {
           )}
         />
         */}
+          <FormField
+            control={control}
+            name="defaultExpanded"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex gap-1 items-center">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value as boolean}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormLabel>Show options in popup</FormLabel>
+                </div>
+
+                <FormDescription>
+                  Show all options in the popup form by default.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={control}
             name='apiKey'
