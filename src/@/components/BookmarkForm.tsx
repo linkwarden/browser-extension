@@ -98,6 +98,14 @@ const BookmarkForm = () => {
   const { handleSubmit, control } = form;
 
   useEffect(() => {
+    const setExpanded = async () => {
+      const { defaultExpanded } = await getConfig();
+      setOpenOptions(defaultExpanded);
+    };
+    setExpanded();
+  }, []);
+
+  useEffect(() => {
     getCurrentTabInfo().then(({ url, title }) => {
       getConfig().then((config) => {
         form.setValue('url', url ? url : '');
