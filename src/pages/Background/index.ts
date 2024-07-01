@@ -1,4 +1,4 @@
-import { getBrowser, getCurrentTabInfo } from '../../@/lib/utils.ts';
+import { getBrowser, getCurrentTabInfo, setIcon } from '../../@/lib/utils.ts';
 import BookmarkTreeNode = chrome.bookmarks.BookmarkTreeNode;
 import { getConfig, isConfigured } from '../../@/lib/config.ts';
 import {
@@ -365,19 +365,37 @@ browser.omnibox.onInputEntered.addListener(
   }
 );
 
-browser.webNavigation.onCompleted.addListener(async (evt) => {
-  // Filter out any sub-frame related navigation event
-  if (evt.frameId !== 0) {
-    return;
-  }
-  const url = new URL(evt.url);
-  console.log('Page loaded:', url);
+// Update icon is link is already saved
+const updateIcon = async () => {
+  let supportedProtocols = ['http:', 'https:'];
 
+  let getActiveTab = await browser.tabs.query({
+    active: true,
+    currentWindow: true,
+  });
+
+  let urlString = getActiveTab[0]?.url;
+  if (urlString) {
+    let url = new URL(urlString);
+    if (supportedProtocols.includes(url.protocol)) {
+      let exists = await doesLinkExist(url);
+      console.log(exists);
+      exists ? setIcon('./saved.jpg') : setIcon('./48.png');
+    } else {
+      setIcon('./48.png');
+    }
+    console.log(`Active tab: ${getActiveTab[0].url}`);
+  }
+};
+
+const doesLinkExist = async (url: URL): Promise<boolean> => {
   const { syncBookmarks, baseUrl, username, password, usingSSO } =
     await getConfig();
+  console.log(syncBookmarks); // needed to fix compile error
+
   const configured = await isConfigured();
   if (!configured) {
-    return;
+    return false;
   }
 
   const session = await getSessionFetch(baseUrl);
@@ -397,7 +415,7 @@ browser.webNavigation.onCompleted.addListener(async (evt) => {
       }
     );
   } else if (!session && usingSSO) {
-    return;
+    return false;
   }
 
   const result = await getLinkFetch(baseUrl, url.href);
@@ -406,25 +424,24 @@ browser.webNavigation.onCompleted.addListener(async (evt) => {
   if (result.response.length >= 1) {
     // manually checking if the link actually exists because api
     // returns approximate results
-    result.response.forEach((link: any) => {
-      if (link.url == url.href) {
-        console.log('Link found');
-        setIcon('./saved.jpg');
-      }
-    });
+    return result.response.some((link: any) => link.url == url.href);
   } else {
     console.log('Link not found');
-    setIcon('./48.png');
-  }
-
-  console.log(syncBookmarks);
-});
-
-const setIcon = (imgPath: string) => {
-  if (getBrowser() === chrome) {
-    browser.action.setIcon({ path: imgPath });
-  } else {
-    // firefox uses manifest v2
-    browser.browserAction.setIcon({ path: imgPath });
+    return false;
   }
 };
+
+// From : https://github.com/mdn/webextensions-examples/blob/main/bookmark-it/background.js
+browser.bookmarks.onCreated.addListener(updateIcon);
+
+// listen for bookmarks being removed
+browser.bookmarks.onRemoved.addListener(updateIcon);
+
+// listen to tab URL changes
+browser.tabs.onUpdated.addListener(updateIcon);
+
+// listen to tab switching
+browser.tabs.onActivated.addListener(updateIcon);
+
+// listen for window switching
+browser.windows.onFocusChanged.addListener(updateIcon);

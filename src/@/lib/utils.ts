@@ -10,12 +10,17 @@ export interface TabInfo {
   title: string;
 }
 
-export async function getCurrentTabInfo(): Promise<{ title: string | undefined; url: string | undefined }> {
-  const tabs = await getBrowser().tabs.query({ active: true, currentWindow: true });
+export async function getCurrentTabInfo(): Promise<{
+  title: string | undefined;
+  url: string | undefined;
+}> {
+  const tabs = await getBrowser().tabs.query({
+    active: true,
+    currentWindow: true,
+  });
   const { url, title } = tabs[0];
   return { url, title };
 }
-
 
 export function getBrowser() {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -36,7 +41,6 @@ export async function getStorageItem(key: string) {
   }
 }
 
-
 export async function setStorageItem(key: string, value: string) {
   if (getChromeStorage()) {
     return await chrome.storage.local.set({ [key]: value });
@@ -48,4 +52,13 @@ export async function setStorageItem(key: string, value: string) {
 
 export function openOptions() {
   getBrowser().runtime.openOptionsPage();
+}
+
+export function setIcon(imgPath: string) {
+  if (getBrowser() === chrome) {
+    chrome.action.setIcon({ path: imgPath });
+  } else {
+    // firefox uses manifest v2
+    browser.browserAction.setIcon({ path: imgPath });
+  }
 }
