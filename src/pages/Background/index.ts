@@ -270,3 +270,26 @@ browser.omnibox.onInputEntered.addListener(async (content: string, disposition: 
 });
 
 
+// refresh for sidepanel on tab change
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  // if (changeInfo.url) {
+    console.log("Tab URL changed:", changeInfo.url, " Tab ID:", tabId);
+
+    // Reload the side panel if needed
+    chrome.sidePanel.setOptions({ path: "./index.html" });
+  // }
+});
+
+// Listen for tab changes 
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  console.log("Tab changed:", activeInfo);
+
+  try {
+    await chrome.sidePanel.setOptions({
+      path: "./index.html"
+    });
+    console.log("Side panel reloaded.");
+  } catch (error) {
+    console.error("Failed to reload the side panel:", error);
+  }
+});
