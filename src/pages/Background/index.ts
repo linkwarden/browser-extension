@@ -12,6 +12,7 @@ import OnClickData = chrome.contextMenus.OnClickData;
 import OnInputEnteredDisposition = chrome.omnibox.OnInputEnteredDisposition;
 
 const browser = getBrowser();
+let configuration = null; // this js needs init function which initializes the configuration variable thus solving many lines in this file which repeadiatly uses getConfig() it might be better 
 
 // This is the main functions that will be called when a bookmark is created, update or deleted
 // Won't work with axios xhr or something not supported by the browser
@@ -236,10 +237,12 @@ browser.omnibox.onInputEntered.addListener(async (content: string, disposition: 
     return;
   }
 
+  configuration = await getConfig(); // code line waiting to be replaced by nothing once global init function is done until then mae do with this
+
   const isUrl = /^http(s)?:\/\//.test(content);
   const url = isUrl
     ? content
-    : `lk`;
+    : `${configuration.baseUrl}/search?q=${encodeURIComponent(content)}`; // This part was taken https://github.com/sissbruecker/linkding-extension/blob/master/src/background.js
 
   // Edge doesn't allow updating the New Tab Page (tested with version 117).
   // Trying to do so will throw: "Error: Cannot update NTP tab."
