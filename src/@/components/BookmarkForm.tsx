@@ -42,12 +42,21 @@ import {
   CommandItem,
 } from './ui/Command.tsx';
 import { saveLinksInCache } from '../lib/cache.ts';
+import { Checkbox } from './ui/CheckBox.tsx';
+import { Label } from './ui/Label.tsx';
 
 let HAD_PREVIOUS_SESSION = false;
 let configured = false;
 const BookmarkForm = () => {
   const [openOptions, setOpenOptions] = useState<boolean>(false);
   const [openCollections, setOpenCollections] = useState<boolean>(false);
+  const [uploadImage, setUploadImage] = useState<boolean>(false);
+
+  const handleCheckedChange = (state: boolean | 'indeterminate') => {
+    if (state === 'indeterminate') return;
+    setUploadImage(state);
+  };
+
   const form = useForm<bookmarkFormValues>({
     resolver: zodResolver(bookmarkFormSchema),
     defaultValues: {
@@ -70,7 +79,7 @@ const BookmarkForm = () => {
         if (!session) {
           return;
         }
-        await postLink(config.baseUrl, values);
+        await postLink(config.baseUrl, uploadImage, values);
       } else {
         const csrfToken = await getCsrfToken(config.baseUrl);
         const session = await getSession(config.baseUrl);
@@ -91,7 +100,7 @@ const BookmarkForm = () => {
           );
         }
 
-        await postLink(config.baseUrl, values);
+        await postLink(config.baseUrl, uploadImage, values);
 
         if (!HAD_PREVIOUS_SESSION) {
           const url = `${config.baseUrl}/api/v1/auth/signout`;
@@ -345,11 +354,11 @@ const BookmarkForm = () => {
                           {loadingCollections
                             ? 'Loading'
                             : field.value?.name
-                            ? collections.response?.find(
+                              ? collections.response?.find(
                                 (collection: { name: string }) =>
                                   collection.name === field.value?.name
                               )?.name || 'Unorganized'
-                            : 'Select a collection...'}
+                              : 'Select a collection...'}
                           <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </FormControl>
@@ -357,11 +366,10 @@ const BookmarkForm = () => {
 
                     {!openOptions && openCollections ? (
                       <div
-                        className={`fade-up min-w-full p-0 overflow-y-auto ${
-                          openCollections
-                            ? 'fixed inset-0 w-full h-full z-50 bg-white'
-                            : ''
-                        }`}
+                        className={`fade-up min-w-full p-0 overflow-y-auto ${openCollections
+                          ? 'fixed inset-0 w-full h-full z-50 bg-white'
+                          : ''
+                          }`}
                       >
                         <Button
                           className="absolute top-1 right-1 bg-transparent hover:bg-transparent hover:opacity-50 transition-colors ease-in-out duration-200"
@@ -534,7 +542,7 @@ const BookmarkForm = () => {
               </FormItem>
             )}
           />
-          {openOptions ? (
+          {openOptions && (
             <div className="details list-none space-y-5 pt-2">
               {tagsError ? <p>There was an error...</p> : null}
               <FormField
@@ -592,8 +600,12 @@ const BookmarkForm = () => {
                   </FormItem>
                 )}
               />
+              <div className='flex items-center gap-2'>
+                <Checkbox checked={uploadImage} onCheckedChange={handleCheckedChange} />
+                <Label>Upload image from browser</Label>
+              </div>
             </div>
-          ) : undefined}
+          )}
           <div className="flex justify-between items-center mt-4">
             <div
               className="inline-flex select-none items-center justify-center rounded-md text-sm font-medium ring-offset-background
