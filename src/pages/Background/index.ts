@@ -246,7 +246,7 @@ browser.runtime.onInstalled.addListener(function () {
     'audio'
   ];
   for (const context of contexts) {
-    const  title: string = "Add link to Linkwarden";
+    const title: string = "Add link to Linkwarden";
     browser.contextMenus.create({
       title: title,
       contexts: [context],
@@ -280,10 +280,10 @@ browser.omnibox.onInputChanged.addListener(async (text: string, suggest: (arg0: 
   });
 
   const bookmarkSuggestions = searchedBookmarks.map(bookmark => {
-     return {
-       content: bookmark.url,
-       description: bookmark.name || bookmark.url
-     }
+    return {
+      content: bookmark.url,
+      description: bookmark.name || bookmark.url
+    }
   });
   suggest(bookmarkSuggestions)
 
@@ -325,5 +325,3 @@ browser.omnibox.onInputEntered.addListener(async (content: string, disposition: 
       break;
   }
 });
-
-
