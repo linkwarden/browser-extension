@@ -16,7 +16,6 @@ export async function getCurrentTabInfo(): Promise<{ title: string | undefined; 
   return { url, title };
 }
 
-
 export function getBrowser() {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   //@ts-ignore
@@ -35,7 +34,6 @@ export async function getStorageItem(key: string) {
     return getBrowser().storage.local.get(key);
   }
 }
-
 
 export async function setStorageItem(key: string, value: string) {
   if (getChromeStorage()) {

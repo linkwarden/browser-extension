@@ -1,34 +1,6 @@
+import { captureFullPageScreenshot } from '../screenshot.ts';
 import { bookmarkFormValues } from '../validators/bookmarkForm.ts';
 import axios from 'axios';
-
-async function captureFullPageScreenshot(): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    chrome.windows.getCurrent((window) => {
-      if (!window || !window.id) {
-        reject(new Error("Unable to get the current window ID."));
-        return;
-      }
-
-      chrome.tabs.captureVisibleTab(window.id, { format: "png" }, (dataUrl) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
-
-        if (!dataUrl) {
-          reject(new Error("Failed to capture screenshot."));
-          return;
-        }
-
-        fetch(dataUrl)
-          .then((res) => res.blob())
-          .then(resolve)
-          .catch(reject);
-      });
-    });
-  });
-}
-
 
 export async function postLink(baseUrl: string, uploadImage: boolean, data: bookmarkFormValues) {
   const url = `${baseUrl}/api/v1/links`;
