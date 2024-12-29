@@ -10,16 +10,36 @@ const loadImage = (blob: Blob): Promise<HTMLImageElement> => {
 const drawImagesOnCanvas = async (
   canvas: HTMLCanvasElement,
   blobs: Blob[],
-  viewportHeight: number
+  viewportHeight: number,
+  totalHeight: number
 ) => {
   const ctx = canvas.getContext('2d');
   if (!ctx) {
     throw new Error('Failed to get canvas context.');
   }
 
-  for (let index = 0; index < blobs.length; index++) {
+  let currentHeight = 0;
+  for (let index = 0; index < blobs.length - 1; index++) {
     const img = await loadImage(blobs[index]);
-    ctx.drawImage(img, 0, index * viewportHeight);
+    ctx.drawImage(img, 0, currentHeight);
+    currentHeight += viewportHeight;
+  }
+
+  const remainingHeight = totalHeight - currentHeight;
+  if (remainingHeight > 0) {
+    const lastImage = await loadImage(blobs[blobs.length - 1]);
+    const croppedHeight = viewportHeight - remainingHeight;
+    ctx.drawImage(
+      lastImage,
+      0,
+      croppedHeight,
+      lastImage.width,
+      remainingHeight,
+      0,
+      currentHeight,
+      lastImage.width,
+      remainingHeight
+    );
   }
 
   return new Promise<Blob>((resolve, reject) => {
@@ -32,6 +52,7 @@ const drawImagesOnCanvas = async (
     });
   });
 };
+
 
 export async function captureFullPageScreenshot(): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -53,7 +74,6 @@ export async function captureFullPageScreenshot(): Promise<Blob> {
         let totalHeight = 0;
         const viewportHeight = tab.height!;
 
-        // Function to change `fixed` and `sticky` to `relative` and return original styles
         const modifyPositionStyles = () => {
           const elements = Array.from(document.querySelectorAll('*'));
           const originalStyles: {
@@ -73,7 +93,6 @@ export async function captureFullPageScreenshot(): Promise<Blob> {
           return originalStyles;
         };
 
-        // Function to restore original styles
         const restorePositionStyles = (
           originalStyles: {
             element: HTMLElement;
@@ -99,7 +118,6 @@ export async function captureFullPageScreenshot(): Promise<Blob> {
             totalHeight = result[0].result;
             const viewportWidth = tab.width!;
 
-            // Inject the style-modification script to adjust `fixed`/`sticky` elements
             chrome.scripting.executeScript(
               {
                 target: { tabId: tab.id! },
@@ -120,9 +138,8 @@ export async function captureFullPageScreenshot(): Promise<Blob> {
                     canvas.width = viewportWidth;
                     canvas.height = totalHeight;
 
-                    drawImagesOnCanvas(canvas, fullPageBlob, viewportHeight)
+                    drawImagesOnCanvas(canvas, fullPageBlob, viewportHeight, totalHeight)
                       .then((blob) => {
-                        // Restore original styles
                         chrome.scripting.executeScript(
                           {
                             target: { tabId: tab.id! },
@@ -134,11 +151,12 @@ export async function captureFullPageScreenshot(): Promise<Blob> {
                       })
                       .catch(reject);
                   } else {
+                    const scrollToPosition = Math.min(scrollPosition, totalHeight - viewportHeight);
                     chrome.scripting.executeScript(
                       {
                         target: { tabId: tab.id! },
                         func: (scrollPosition) => scrollTo(0, scrollPosition),
-                        args: [scrollPosition],
+                        args: [scrollToPosition],
                       },
                       () => {
                         setTimeout(() => {
