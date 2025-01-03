@@ -1,3 +1,5 @@
+import browser from 'webextension-polyfill';
+
 const loadImage = (blob: Blob): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -10,34 +12,50 @@ const loadImage = (blob: Blob): Promise<HTMLImageElement> => {
 const drawImagesOnCanvas = async (
   canvas: HTMLCanvasElement,
   blobs: Blob[],
+  viewportWidth: number,
   viewportHeight: number,
-  totalHeight: number
+  totalHeight: number,
+  dpr: number
 ) => {
   const ctx = canvas.getContext('2d');
   if (!ctx) {
     throw new Error('Failed to get canvas context.');
   }
 
+  ctx.scale(dpr, dpr);
+
   let currentHeight = 0;
+
   for (let index = 0; index < blobs.length - 1; index++) {
     const img = await loadImage(blobs[index]);
-    ctx.drawImage(img, 0, currentHeight);
+    ctx.drawImage(
+      img,
+      0,
+      0,
+      img.width,
+      img.height,
+      0,
+      currentHeight,
+      viewportWidth,
+      viewportHeight
+    );
     currentHeight += viewportHeight;
   }
 
   const remainingHeight = totalHeight - currentHeight;
   if (remainingHeight > 0) {
     const lastImage = await loadImage(blobs[blobs.length - 1]);
-    const croppedHeight = viewportHeight - remainingHeight;
+    const cropTop = (viewportHeight - remainingHeight) * dpr;
+    const neededHeight = remainingHeight * dpr;
     ctx.drawImage(
       lastImage,
       0,
-      croppedHeight,
+      cropTop,
       lastImage.width,
-      remainingHeight,
+      neededHeight,
       0,
       currentHeight,
-      lastImage.width,
+      viewportWidth,
       remainingHeight
     );
   }
@@ -53,6 +71,22 @@ const drawImagesOnCanvas = async (
   });
 };
 
+async function executeScript(tabId: number, func: any, args: any[] = []) {
+  if (typeof chrome.scripting !== 'undefined') {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId },
+      func,
+      args,
+    });
+    return results[0]?.result;
+  } else {
+    const results = await browser.tabs.executeScript(tabId, {
+      code: `(${func})(${args.map((arg) => JSON.stringify(arg)).join(',')})`,
+    });
+    return results[0];
+  }
+}
+
 async function captureFullPageScreenshot(): Promise<Blob> {
   const tabs = await browser.tabs.query({ active: true, currentWindow: true });
   const tab = tabs[0];
@@ -60,135 +94,126 @@ async function captureFullPageScreenshot(): Promise<Blob> {
     throw new Error('Unable to get the current tab.');
   }
 
-  const hideScrollbarsCSS = `
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-`;
-
-  const addHideScrollbarClassCode = `
-  (() => {
+  const addHideScrollbarClass = () => {
     const style = document.createElement('style');
     style.id = 'hide-scrollbar-style';
-    style.textContent = \`${hideScrollbarsCSS}\`;
+    style.textContent = `
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    `;
     document.head.appendChild(style);
+    document.documentElement.classList.add('hide-scrollbar');
+    document.body.classList.add('hide-scrollbar');
+  };
 
-    const html = document.documentElement;
-    const body = document.body;
-
-    html.classList.add('hide-scrollbar');
-    body.classList.add('hide-scrollbar');
-
-    return 'Scrollbars hidden.';
-  })();
-`;
-
-  const removeHideScrollbarClassCode = `
-  (() => {
+  const removeHideScrollbarClass = () => {
     const style = document.getElementById('hide-scrollbar-style');
-    if (style) {
-      style.remove();
-    }
+    if (style) style.remove();
+    document.documentElement.classList.remove('hide-scrollbar');
+    document.body.classList.remove('hide-scrollbar');
+  };
 
-    const html = document.documentElement;
-    const body = document.body;
-
-    html.classList.remove('hide-scrollbar');
-    body.classList.remove('hide-scrollbar');
-
-    return 'Scrollbars restored.';
-  })();
-`;
-
-  // Hide scrollbars
-  await browser.tabs.executeScript(tab.id, {
-    code: addHideScrollbarClassCode,
-  });
-
-  const totalHeight = await browser.tabs
-    .executeScript(tab.id, {
-      code: 'document.documentElement.scrollHeight',
-    })
-    .then((results) => results[0]);
-
-  const viewportHeight = await browser.tabs
-    .executeScript(tab.id, {
-      code: 'window.innerHeight',
-    })
-    .then((results) => results[0]);
-
-  const viewportWidth = await browser.tabs
-    .executeScript(tab.id, {
-      code: 'window.innerWidth',
-    })
-    .then((results) => results[0]);
-
-  const modifyPositionStylesCode = `
-    (() => {
-      const elements = Array.from(document.querySelectorAll('*'));
-      const originalStyles = [];
-      elements.forEach((el) => {
-        const computedStyle = getComputedStyle(el);
-        if (['fixed', 'sticky'].includes(computedStyle.position)) {
-          originalStyles.push({
-            element: el,
-            originalPosition: el.style.position,
-          });
-          el.style.position = 'relative';
-        }
-      });
-      return originalStyles.map(({ element, originalPosition }) => ({
-        elementSelector: element.outerHTML,
-        originalPosition,
+  const adjustFixedElements = () => {
+    const elements = Array.from(document.querySelectorAll('*'));
+    const originalStyles = elements
+      .filter((el) => {
+        const cs = getComputedStyle(el);
+        return ['fixed', 'sticky'].includes(cs.position);
+      })
+      .map((el) => ({
+        selector: el.tagName.toLowerCase() + (el.id ? `#${el.id}` : ''),
+        position: (el as any).style.position,
       }));
-    })();
-  `;
 
-  // Modify styles to handle fixed and sticky elements
-  await browser.tabs
-    .executeScript(tab.id, {
-      code: modifyPositionStylesCode,
-    })
-    .then((results) => results[0]);
-
-  const fullPageBlobs: Blob[] = [];
-  let scrollPosition = 0;
-
-  while (scrollPosition < totalHeight) {
-    await browser.tabs.executeScript(tab.id, {
-      code: `window.scrollTo(0, ${scrollPosition});`,
+    elements.forEach((el) => {
+      const cs = getComputedStyle(el);
+      if (['fixed', 'sticky'].includes(cs.position)) {
+        (el as any).style.position = 'relative';
+      }
     });
+
+    return originalStyles;
+  };
+
+  const restoreFixedElements = (
+    originalStyles: { selector: string; position: string | null }[]
+  ) => {
+    originalStyles.forEach(({ selector, position }) => {
+      const element = document.querySelector(selector);
+      if (element) {
+        (element as HTMLElement).style.position = position || '';
+      }
+    });
+  };
+
+  await executeScript(tab.id, addHideScrollbarClass);
+  const originalStyles = await executeScript(tab.id, adjustFixedElements);
+
+  const totalHeight = (await executeScript(
+    tab.id,
+    () => document.documentElement.scrollHeight
+  )) as number;
+  const viewportHeight = (await executeScript(
+    tab.id,
+    () => window.innerHeight
+  )) as number;
+  const viewportWidth = (await executeScript(
+    tab.id,
+    () => window.innerWidth
+  )) as number;
+  const dpr = (await executeScript(
+    tab.id,
+    () => window.devicePixelRatio
+  )) as number;
+
+  const numShots = Math.ceil(totalHeight / viewportHeight);
+
+  const blobs: Blob[] = [];
+
+  for (let i = 0; i < numShots; i++) {
+    const currentScroll =
+      i < numShots - 1 ? i * viewportHeight : totalHeight - viewportHeight;
+
+    const finalScroll = currentScroll < 0 ? 0 : currentScroll;
+
+    await executeScript(
+      tab.id,
+      (pos: any) => {
+        document.documentElement.style.scrollBehavior = 'auto';
+        window.scrollTo(0, pos);
+      },
+      [finalScroll]
+    );
+
+    await new Promise((r) => setTimeout(r, 500));
 
     const dataUrl = await browser.tabs.captureVisibleTab(tab.windowId!, {
       format: 'png',
     });
-
     const blob = await fetch(dataUrl).then((res) => res.blob());
-    fullPageBlobs.push(blob);
-
-    scrollPosition += viewportHeight;
-    await new Promise((r) => setTimeout(r, 500)); // Allow scrolling to complete.
+    blobs.push(blob);
   }
 
   const canvas = document.createElement('canvas');
-  canvas.width = viewportWidth;
-  canvas.height = totalHeight;
+  canvas.width = viewportWidth * dpr;
+  canvas.height = totalHeight * dpr;
 
   const resultBlob = await drawImagesOnCanvas(
     canvas,
-    fullPageBlobs,
+    blobs,
+    viewportWidth,
     viewportHeight,
-    totalHeight
+    totalHeight,
+    dpr
   );
 
-  // Restore scrollbars
-  await browser.tabs.executeScript(tab.id, {
-    code: removeHideScrollbarClassCode,
-  });
+  await executeScript(tab.id, removeHideScrollbarClass);
+  await executeScript(tab.id, restoreFixedElements, [originalStyles]);
 
   return resultBlob;
 }

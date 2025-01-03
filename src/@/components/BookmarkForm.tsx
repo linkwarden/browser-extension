@@ -72,49 +72,18 @@ const BookmarkForm = () => {
     mutationFn: async (values: bookmarkFormValues) => {
       const config = await getConfig();
 
-      if (config.usingSSO) {
-        const session = await getSession(config.baseUrl);
-        if (!session) {
-          return;
-        }
-        await postLink(config.baseUrl, uploadImage, values, setState, config.apiKey);
-      } else {
-        const csrfToken = await getCsrfToken(config.baseUrl);
-        const session = await getSession(config.baseUrl);
-
-        HAD_PREVIOUS_SESSION = !!session;
-
-        if (!HAD_PREVIOUS_SESSION) {
-          await performLoginOrLogout(
-            `${config.baseUrl}/api/v1/auth/callback/credentials`,
-            {
-              username: config.username,
-              password: config.password,
-              redirect: false,
-              csrfToken,
-              callbackUrl: `${config.baseUrl}/login`,
-              json: true,
-            }
-          );
-        }
-
-        await postLink(config.baseUrl, uploadImage, values, setState, config.apiKey);
-
-        if (!HAD_PREVIOUS_SESSION) {
-          const url = `${config.baseUrl}/api/v1/auth/signout`;
-          await performLoginOrLogout(url, {
-            username: config.username,
-            password: config.password,
-            redirect: false,
-            csrfToken,
-            callbackUrl: `${config.baseUrl}/login`,
-            json: true,
-          });
-        }
+      await postLink(
+        config.baseUrl,
+        uploadImage,
+        values,
+        setState,
+        config.apiKey
+      );
 
       return;
     },
     onError: (error) => {
+      console.error(error);
       if (error instanceof AxiosError) {
         toast({
           title: 'Error',
@@ -151,8 +120,6 @@ const BookmarkForm = () => {
     getCurrentTabInfo().then(({ url, title }) => {
       getConfig().then((config) => {
         form.setValue('url', url ? url : '');
-        form.setValue('description', title ? title : '');
-        // Had to be done since, name isn't required but when syncing it is. If not it looks bad!.
         form.setValue('name', title ? title : '');
         form.setValue('collection', {
           name: config.defaultCollection,
@@ -457,7 +424,7 @@ const BookmarkForm = () => {
                 Upload image from browser
               </Label>
             </div>
-          ) : undefined}
+          )}
           {duplicated && (
             <p className="text-muted text-zinc-600 dark:text-zinc-400 mt-2">
               You already have this link saved.
