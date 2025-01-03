@@ -53,150 +53,88 @@ const drawImagesOnCanvas = async (
   });
 };
 
+async function captureFullPageScreenshot(): Promise<Blob> {
+  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+  const tab = tabs[0];
+  if (!tab || !tab.id) {
+    throw new Error('Unable to get the current tab.');
+  }
 
-export async function captureFullPageScreenshot(): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    chrome.windows.getCurrent((window) => {
-      if (!window || window.id === undefined) {
-        reject(new Error('Unable to get the current window ID.'));
-        return;
-      }
+  const totalHeight = await browser.tabs
+    .executeScript(tab.id, {
+      code: 'document.documentElement.scrollHeight',
+    })
+    .then((results) => results[0]);
 
-      const windowId = window.id;
-      chrome.tabs.query({ active: true, windowId }, (tabs) => {
-        const tab = tabs[0];
-        if (!tab || !tab.id) {
-          reject(new Error('Unable to get the current tab.'));
-          return;
+  const viewportHeight = await browser.tabs
+    .executeScript(tab.id, {
+      code: 'window.innerHeight',
+    })
+    .then((results) => results[0]);
+
+  const viewportWidth = await browser.tabs
+    .executeScript(tab.id, {
+      code: 'window.innerWidth',
+    })
+    .then((results) => results[0]);
+
+  const modifyPositionStylesCode = `
+    (() => {
+      const elements = Array.from(document.querySelectorAll('*'));
+      const originalStyles = [];
+      elements.forEach((el) => {
+        const computedStyle = getComputedStyle(el);
+        if (['fixed', 'sticky'].includes(computedStyle.position)) {
+          originalStyles.push({
+            element: el,
+            originalPosition: el.style.position,
+          });
+          el.style.position = 'relative';
         }
-
-        const fullPageBlob: Blob[] = [];
-        let totalHeight = 0;
-        const viewportHeight = tab.height!;
-
-        const modifyPositionStyles = () => {
-          const elements = Array.from(document.querySelectorAll('*'));
-          const originalStyles: {
-            element: HTMLElement;
-            originalPosition: string | null;
-          }[] = [];
-          elements.forEach((el) => {
-            const computedStyle = getComputedStyle(el);
-            if (['fixed', 'sticky'].includes(computedStyle.position)) {
-              originalStyles.push({
-                element: el as HTMLElement,
-                originalPosition: (el as HTMLElement).style.position || null,
-              });
-              (el as HTMLElement).style.position = 'relative';
-            }
-          });
-          return originalStyles;
-        };
-
-        const restorePositionStyles = (
-          originalStyles: {
-            element: HTMLElement;
-            originalPosition: string | null;
-          }[]
-        ) => {
-          originalStyles.forEach(({ element, originalPosition }) => {
-            element.style.position = originalPosition ?? '';
-          });
-        };
-
-        chrome.scripting.executeScript(
-          {
-            target: { tabId: tab.id! },
-            func: () => document.documentElement.scrollHeight,
-          },
-          (result) => {
-            if (chrome.runtime.lastError) {
-              reject(new Error(chrome.runtime.lastError.message));
-              return;
-            }
-
-            totalHeight = result[0].result;
-            const viewportWidth = tab.width!;
-
-            chrome.scripting.executeScript(
-              {
-                target: { tabId: tab.id! },
-                func: modifyPositionStyles,
-              },
-              (originalStylesResult) => {
-                if (chrome.runtime.lastError) {
-                  reject(new Error(chrome.runtime.lastError.message));
-                  return;
-                }
-
-                const originalStyles = originalStylesResult[0].result;
-                let scrollPosition = 0;
-
-                const captureNextScreenshot = () => {
-                  if (scrollPosition >= totalHeight) {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = viewportWidth;
-                    canvas.height = totalHeight;
-
-                    drawImagesOnCanvas(canvas, fullPageBlob, viewportHeight, totalHeight)
-                      .then((blob) => {
-                        chrome.scripting.executeScript(
-                          {
-                            target: { tabId: tab.id! },
-                            func: restorePositionStyles,
-                            args: [originalStyles],
-                          },
-                          () => resolve(blob)
-                        );
-                      })
-                      .catch(reject);
-                  } else {
-                    const scrollToPosition = Math.min(scrollPosition, totalHeight - viewportHeight);
-                    chrome.scripting.executeScript(
-                      {
-                        target: { tabId: tab.id! },
-                        func: (scrollPosition) => scrollTo(0, scrollPosition),
-                        args: [scrollToPosition],
-                      },
-                      () => {
-                        setTimeout(() => {
-                          chrome.tabs.captureVisibleTab(
-                            windowId,
-                            { format: 'png' },
-                            (dataUrl) => {
-                              if (chrome.runtime.lastError) {
-                                reject(
-                                  new Error(chrome.runtime.lastError.message)
-                                );
-                                return;
-                              }
-                              if (!dataUrl) {
-                                reject(
-                                  new Error('Failed to capture screenshot.')
-                                );
-                                return;
-                              }
-                              fetch(dataUrl)
-                                .then((res) => res.blob())
-                                .then((blob) => {
-                                  fullPageBlob.push(blob);
-                                  scrollPosition += viewportHeight;
-                                  captureNextScreenshot();
-                                })
-                                .catch(reject);
-                            }
-                          );
-                        }, 500);
-                      }
-                    );
-                  }
-                };
-                captureNextScreenshot();
-              }
-            );
-          }
-        );
       });
+      return originalStyles.map(({ element, originalPosition }) => ({
+        elementSelector: element.outerHTML,
+        originalPosition,
+      }));
+    })();
+  `;
+
+  // Modify styles to handle fixed and sticky elements
+  await browser.tabs
+    .executeScript(tab.id, {
+      code: modifyPositionStylesCode,
+    })
+    .then((results) => results[0]);
+
+  const fullPageBlobs: Blob[] = [];
+  let scrollPosition = 0;
+
+  while (scrollPosition < totalHeight) {
+    await browser.tabs.executeScript(tab.id, {
+      code: `window.scrollTo(0, ${scrollPosition});`,
     });
-  });
+
+    const dataUrl = await browser.tabs.captureVisibleTab(tab.windowId!, {
+      format: 'png',
+    });
+
+    const blob = await fetch(dataUrl).then((res) => res.blob());
+    fullPageBlobs.push(blob);
+
+    scrollPosition += viewportHeight;
+    await new Promise((r) => setTimeout(r, 500)); // Allow scrolling to complete.
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = viewportWidth;
+  canvas.height = totalHeight;
+
+  return await drawImagesOnCanvas(
+    canvas,
+    fullPageBlobs,
+    viewportHeight,
+    totalHeight
+  );
 }
+
+export default captureFullPageScreenshot;
