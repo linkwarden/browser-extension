@@ -9,7 +9,6 @@ const DEFAULTS: optionsFormValues = {
   usingSSO: false,
   apiKey: '',
   defaultCollection: 'Unorganized',
-  defaultExpanded: false,
 };
 
 const CONFIG_KEY = 'lw_config_key';
@@ -25,17 +24,25 @@ export async function saveConfig(config: optionsFormValues) {
 
 export async function isConfigured() {
   const config = await getConfig();
-  return !!config.baseUrl && config.baseUrl !== '' && !!config.apiKey && config.apiKey !== '';
+  return (
+    !!config.baseUrl &&
+    config.baseUrl !== '' &&
+    !!config.apiKey &&
+    config.apiKey !== ''
+  );
 }
 
 export async function clearConfig() {
-  return await setStorageItem(CONFIG_KEY, JSON.stringify({
-    baseUrl: '',
-    username: '',
-    password: '',
-    syncBookmarks: false,
-    usingSSO: false,
-    apiKey: '',
-    defaultCollection: 'Unorganized',
-  }));
+  return await setStorageItem(
+    CONFIG_KEY,
+    JSON.stringify({
+      baseUrl: '',
+      username: '',
+      password: '',
+      syncBookmarks: false,
+      usingSSO: false,
+      apiKey: '',
+      defaultCollection: 'Unorganized',
+    })
+  );
 }

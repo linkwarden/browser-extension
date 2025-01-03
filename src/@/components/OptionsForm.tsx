@@ -28,7 +28,6 @@ import { toast } from '../../hooks/use-toast.ts';
 import { AxiosError } from 'axios';
 import { clearBookmarksMetadata } from '../lib/cache.ts';
 import { getCollections } from '../lib/actions/collections.ts';
-import { Checkbox } from './ui/CheckBox.tsx';
 
 const OptionsForm = () => {
   const form = useForm<optionsFormValues>({
@@ -38,10 +37,7 @@ const OptionsForm = () => {
       username: '',
       password: '',
       syncBookmarks: false,
-      usingSSO: false,
-      apiKey: '',
       defaultCollection: 'Unorganized',
-      defaultExpanded: false,
     },
   });
 
@@ -59,7 +55,7 @@ const OptionsForm = () => {
       toast({
         title: 'Error',
         description:
-          'Either you didn\'t configure the extension or there was an error while trying to log out. Please try again.',
+          "Either you didn't configure the extension or there was an error while trying to log out. Please try again.",
         variant: 'destructive',
       });
       return;
@@ -70,8 +66,6 @@ const OptionsForm = () => {
         baseUrl: '',
         username: '',
         password: '',
-        apiKey: '',
-        usingSSO: false,
         syncBookmarks: false,
         defaultCollection: 'Unorganized',
       });
@@ -147,11 +141,11 @@ const OptionsForm = () => {
       <Form {...form}>
         <form
           onSubmit={handleSubmit((e) => onSubmit(e))}
-          className='space-y-3 p-2'
+          className="space-y-3 p-2"
         >
           <FormField
             control={control}
-            name='baseUrl'
+            name="baseUrl"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>URL</FormLabel>
@@ -160,7 +154,7 @@ const OptionsForm = () => {
                 </FormDescription>
                 <FormControl>
                   <Input
-                    placeholder='https://cloud.linkwarden.app'
+                    placeholder="https://cloud.linkwarden.app"
                     {...field}
                   />
                 </FormControl>
@@ -170,7 +164,7 @@ const OptionsForm = () => {
           />
           <FormField
             control={control}
-            name='defaultCollection'
+            name="defaultCollection"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Default collection</FormLabel>
@@ -178,18 +172,15 @@ const OptionsForm = () => {
                   Default collection to add bookmarks to.
                 </FormDescription>
                 <FormControl>
-                  <Input
-                    placeholder='Unorganized'
-                    {...field}
-                  />
+                  <Input placeholder="Unorganized" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          {/*<FormField
+          <FormField
             control={control}
-            name='username'
+            name="username"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Username/Email</FormLabel>
@@ -197,64 +188,39 @@ const OptionsForm = () => {
                   Username for your Linkwarden account.
                 </FormDescription>
                 <FormControl>
-                  <Input placeholder='Username...' {...field} />
+                  <Input placeholder="Username..." {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-            <FormField
-            control={control}
-          name='password'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormDescription>
-                Password for your Linkwarden account.
-              </FormDescription>
-              <FormControl>
-                <Input placeholder='Password' {...field} type='password' />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        */}
           <FormField
             control={control}
-            name="defaultExpanded"
+            name="password"
             render={({ field }) => (
               <FormItem>
-                <div className="flex gap-1 items-center">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value as boolean}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormLabel>Show options in popup</FormLabel>
-                </div>
-
+                <FormLabel>Password</FormLabel>
                 <FormDescription>
-                  Show all options in the popup form by default.
+                  Password for your Linkwarden account.
                 </FormDescription>
+                <FormControl>
+                  <Input placeholder="Password" {...field} type="password" />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
           <FormField
             control={control}
-            name='apiKey'
+            name="apiKey"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>API KEY</FormLabel>
                 <FormDescription>
-                  Api key for your Linkwarden account.
+                  API key for your Linkwarden account.
                 </FormDescription>
                 <FormControl>
-                  <Input
-                    placeholder='eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..mkTNGkl3kXDjYb54.XA29mauKrHSqwGgBk1Zb2hanecG8_c9MVPI_qv7Ge1k-UYLG5Arag5eXfVYGacu3RqVCci4NZgsBH6r16QZ5rhRzGmwkSv_PGNNzfqbAWi4k9Em8KYkc.wAZ64-qx9DaGSr0gqShnrQ' {...field}
-                    type='text' />
+                  <Input placeholder="••••••••••••••" {...field} type="text" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -279,43 +245,20 @@ const OptionsForm = () => {
               </FormItem>
             )}
           /> */}
-          {/*<FormField
-            control={control}
-            name='usingSSO'
-            render={({ field }) => (
-              <FormItem>
-                <div className='flex gap-1 items-center'>
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormLabel>Use SSO (Leave Unchecked as Default)</FormLabel>
-                </div>
-
-                <FormDescription>
-                  Enable the use of Single Sign-On instead of regular session
-                  (Make sure you're already logged in to Linkwarden).
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />*/}
-          <div className='flex justify-between'>
+          <div className="flex justify-between">
             <div>
               {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
               {/*@ts-ignore*/}
               <Button
-                type='button'
-                className='mb-2'
+                type="button"
+                className="mb-2"
                 onClick={onReset as never}
                 disabled={resetLoading}
               >
                 Reset
               </Button>
             </div>
-            <Button disabled={isLoading} type='submit'>
+            <Button disabled={isLoading} type="submit">
               Save
             </Button>
           </div>
