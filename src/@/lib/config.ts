@@ -1,24 +1,21 @@
 import { getStorageItem, setStorageItem } from './utils.ts';
-import { optionsFormValues } from './validators/optionsForm.ts';
+import { configType } from './validators/config.ts';
 
-const DEFAULTS: optionsFormValues = {
+const DEFAULTS: configType = {
   baseUrl: '',
-  username: '',
-  password: '',
-  syncBookmarks: false,
-  usingSSO: false,
   apiKey: '',
   defaultCollection: 'Unorganized',
+  syncBookmarks: false,
 };
 
-const CONFIG_KEY = 'lw_config_key';
+const CONFIG_KEY = 'linkwarden_config';
 
-export async function getConfig(): Promise<optionsFormValues> {
+export async function getConfig(): Promise<configType> {
   const config = await getStorageItem(CONFIG_KEY);
   return config ? JSON.parse(config) : DEFAULTS;
 }
 
-export async function saveConfig(config: optionsFormValues) {
+export async function saveConfig(config: configType) {
   return await setStorageItem(CONFIG_KEY, JSON.stringify(config));
 }
 

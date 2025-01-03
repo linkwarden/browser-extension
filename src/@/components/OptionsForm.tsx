@@ -27,13 +27,14 @@ import { Toaster } from './ui/Toaster.tsx';
 import { toast } from '../../hooks/use-toast.ts';
 import { AxiosError } from 'axios';
 import { clearBookmarksMetadata } from '../lib/cache.ts';
-import { getCollections } from '../lib/actions/collections.ts';
+import { getSession } from '../lib/auth/auth.ts';
+// import { Checkbox } from './ui/CheckBox.tsx';
 
 const OptionsForm = () => {
   const form = useForm<optionsFormValues>({
     resolver: zodResolver(optionsFormSchema),
     defaultValues: {
-      baseUrl: '',
+      baseUrl: 'https://cloud.linkwarden.app',
       username: '',
       password: '',
       syncBookmarks: false,
@@ -79,14 +80,24 @@ const OptionsForm = () => {
     mutationFn: async (values: optionsFormValues) => {
       values.baseUrl = values.baseUrl.replace(/\/$/, '');
       // Do API call to test the connection and save the values, cant do anymore...
+      const session = await getSession(
+        values.baseUrl,
+        values.username,
+        values.password
+      );
 
-      const collections = await getCollections(values.baseUrl, values.apiKey);
-
-      if (collections.status !== 200) {
+      if (session.status !== 200) {
         throw new Error('Invalid credentials');
       }
 
-      return values;
+      return {
+        ...values,
+        data: session.data as {
+          response: {
+            token: string;
+          };
+        },
+      };
     },
     onError: (error) => {
       // Do proper errors of axios instance here
@@ -113,7 +124,12 @@ const OptionsForm = () => {
       }
     },
     onSuccess: async (values) => {
-      await saveConfig(values);
+      await saveConfig({
+        baseUrl: values.baseUrl,
+        defaultCollection: values.defaultCollection,
+        syncBookmarks: values.syncBookmarks,
+        apiKey: values.data.response.token,
+      });
 
       toast({
         title: 'Saved',
@@ -150,7 +166,7 @@ const OptionsForm = () => {
               <FormItem>
                 <FormLabel>URL</FormLabel>
                 <FormDescription>
-                  The address of your Linkwarden instance.
+                  The address of the Linkwarden instance.
                 </FormDescription>
                 <FormControl>
                   <Input
@@ -162,7 +178,8 @@ const OptionsForm = () => {
               </FormItem>
             )}
           />
-          <FormField
+          {/* Commenting this since it has bugs (duplicate created when you pass another collection other than the default "Unorganized" collection) */}
+          {/* <FormField
             control={control}
             name="defaultCollection"
             render={({ field }) => (
@@ -177,18 +194,18 @@ const OptionsForm = () => {
                 <FormMessage />
               </FormItem>
             )}
-          />
+          /> */}
           <FormField
             control={control}
             name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Username/Email</FormLabel>
+                <FormLabel>Username or Email</FormLabel>
                 <FormDescription>
-                  Username for your Linkwarden account.
+                  Your Linkwarden Username or Email.
                 </FormDescription>
                 <FormControl>
-                  <Input placeholder="Username..." {...field} />
+                  <Input placeholder="johnny" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -204,23 +221,11 @@ const OptionsForm = () => {
                   Password for your Linkwarden account.
                 </FormDescription>
                 <FormControl>
-                  <Input placeholder="Password" {...field} type="password" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={control}
-            name="apiKey"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>API KEY</FormLabel>
-                <FormDescription>
-                  API key for your Linkwarden account.
-                </FormDescription>
-                <FormControl>
-                  <Input placeholder="••••••••••••••" {...field} type="text" />
+                  <Input
+                    placeholder="••••••••••••••"
+                    {...field}
+                    type="password"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -229,9 +234,9 @@ const OptionsForm = () => {
           {/* <FormField
             control={control}
             name="syncBookmarks"
-            render={({field}) => (
+            render={({ field }) => (
               <FormItem>
-                <FormLabel>Sync Bookmarks</FormLabel>
+                <FormLabel>Sync Bookmarks (Experimental)</FormLabel>
                 <FormDescription>
                   Sync your bookmarks with Linkwarden.
                 </FormDescription>
