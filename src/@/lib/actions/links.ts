@@ -37,6 +37,8 @@ export async function postLink(
       },
     });
 
+    setState(null);
+
     return link;
   } else {
     return await axios.post(url, data);
