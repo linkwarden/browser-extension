@@ -1,5 +1,4 @@
 import captureScreenshot from '../screenshot.ts';
-// import captureFirefox from '../screenshot/firefox.ts';
 import { bookmarkFormValues } from '../validators/bookmarkForm.ts';
 import axios from 'axios';
 import { bookmarkMetadata } from '../cache.ts';
