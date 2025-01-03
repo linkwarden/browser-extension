@@ -6,7 +6,8 @@ import axios from 'axios';
 export async function postLink(
   baseUrl: string,
   uploadImage: boolean,
-  data: bookmarkFormValues
+  data: bookmarkFormValues,
+  setState: (state: 'capturing' | 'uploading' | null) => void
 ) {
   const url = `${baseUrl}/api/v1/links`;
 
@@ -15,7 +16,11 @@ export async function postLink(
     const { id } = link.data.response;
     const archiveUrl = `${baseUrl}/api/v1/archives/${id}?format=0`;
 
+    setState('capturing');
+
     const screenshot = await captureScreenshot();
+
+    setState('uploading');
 
     const formData = new FormData();
     formData.append('file', screenshot, 'screenshot.png');
