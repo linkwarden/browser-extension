@@ -83,6 +83,7 @@ const BookmarkForm = () => {
       return;
     },
     onError: (error) => {
+      console.error(error);
       if (error instanceof AxiosError) {
         toast({
           title: 'Error',
