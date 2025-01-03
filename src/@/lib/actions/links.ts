@@ -12,15 +12,13 @@ export async function postLink(
   const url = `${baseUrl}/api/v1/links`;
 
   if (uploadImage) {
+    setState('capturing');
+    const screenshot = await captureScreenshot();
+    setState('uploading');
+
     const link = await axios.post(url, data);
     const { id } = link.data.response;
     const archiveUrl = `${baseUrl}/api/v1/archives/${id}?format=0`;
-
-    setState('capturing');
-
-    const screenshot = await captureScreenshot();
-
-    setState('uploading');
 
     const formData = new FormData();
     formData.append('file', screenshot, 'screenshot.png');
