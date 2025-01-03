@@ -53,9 +53,10 @@ const BookmarkForm = () => {
   const [uploadImage, setUploadImage] = useState<boolean>(false);
   const [state, setState] = useState<'capturing' | 'uploading' | null>(null);
 
-  const handleCheckedChange = (state: boolean | 'indeterminate') => {
-    if (state === 'indeterminate') return;
-    setUploadImage(state);
+  const handleCheckedChange = (s: boolean | 'indeterminate') => {
+    if (s === 'indeterminate') return;
+    setUploadImage(s);
+    form.setValue('image', s ? 'png' : undefined);
   };
 
   const form = useForm<bookmarkFormValues>({
@@ -68,6 +69,7 @@ const BookmarkForm = () => {
       },
       tags: [],
       description: '',
+      image: undefined,
     },
   });
 
