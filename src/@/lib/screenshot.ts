@@ -12,34 +12,50 @@ const loadImage = (blob: Blob): Promise<HTMLImageElement> => {
 const drawImagesOnCanvas = async (
   canvas: HTMLCanvasElement,
   blobs: Blob[],
+  viewportWidth: number,
   viewportHeight: number,
-  totalHeight: number
+  totalHeight: number,
+  dpr: number
 ) => {
   const ctx = canvas.getContext('2d');
   if (!ctx) {
     throw new Error('Failed to get canvas context.');
   }
 
+  ctx.scale(dpr, dpr);
+
   let currentHeight = 0;
+
   for (let index = 0; index < blobs.length - 1; index++) {
     const img = await loadImage(blobs[index]);
-    ctx.drawImage(img, 0, currentHeight);
+    ctx.drawImage(
+      img,
+      0,
+      0,
+      img.width,
+      img.height,
+      0,
+      currentHeight,
+      viewportWidth,
+      viewportHeight
+    );
     currentHeight += viewportHeight;
   }
 
   const remainingHeight = totalHeight - currentHeight;
   if (remainingHeight > 0) {
     const lastImage = await loadImage(blobs[blobs.length - 1]);
-    const croppedHeight = viewportHeight - remainingHeight;
+    const cropTop = (viewportHeight - remainingHeight) * dpr;
+    const neededHeight = remainingHeight * dpr;
     ctx.drawImage(
       lastImage,
       0,
-      croppedHeight,
+      cropTop,
       lastImage.width,
-      remainingHeight,
+      neededHeight,
       0,
       currentHeight,
-      lastImage.width,
+      viewportWidth,
       remainingHeight
     );
   }
@@ -57,19 +73,17 @@ const drawImagesOnCanvas = async (
 
 async function executeScript(tabId: number, func: any, args: any[] = []) {
   if (typeof chrome.scripting !== 'undefined') {
-    return chrome.scripting
-      .executeScript({
-        target: { tabId },
-        func,
-        args,
-      })
-      .then((results) => results[0]?.result);
+    const results = await chrome.scripting.executeScript({
+      target: { tabId },
+      func,
+      args,
+    });
+    return results[0]?.result;
   } else {
-    return browser.tabs
-      .executeScript(tabId, {
-        code: `(${func})(${args.map((arg) => JSON.stringify(arg)).join(',')})`,
-      })
-      .then((results) => results[0]);
+    const results = await browser.tabs.executeScript(tabId, {
+      code: `(${func})(${args.map((arg) => JSON.stringify(arg)).join(',')})`,
+    });
+    return results[0];
   }
 }
 
@@ -108,8 +122,8 @@ async function captureFullPageScreenshot(): Promise<Blob> {
     const elements = Array.from(document.querySelectorAll('*'));
     const originalStyles = elements
       .filter((el) => {
-        const computedStyle = getComputedStyle(el);
-        return ['fixed', 'sticky'].includes(computedStyle.position);
+        const cs = getComputedStyle(el);
+        return ['fixed', 'sticky'].includes(cs.position);
       })
       .map((el) => ({
         selector: el.tagName.toLowerCase() + (el.id ? `#${el.id}` : ''),
@@ -117,8 +131,8 @@ async function captureFullPageScreenshot(): Promise<Blob> {
       }));
 
     elements.forEach((el) => {
-      const computedStyle = getComputedStyle(el);
-      if (['fixed', 'sticky'].includes(computedStyle.position)) {
+      const cs = getComputedStyle(el);
+      if (['fixed', 'sticky'].includes(cs.position)) {
         (el as any).style.position = 'relative';
       }
     });
@@ -138,7 +152,6 @@ async function captureFullPageScreenshot(): Promise<Blob> {
   };
 
   await executeScript(tab.id, addHideScrollbarClass);
-
   const originalStyles = await executeScript(tab.id, adjustFixedElements);
 
   const totalHeight = (await executeScript(
@@ -153,34 +166,50 @@ async function captureFullPageScreenshot(): Promise<Blob> {
     tab.id,
     () => window.innerWidth
   )) as number;
+  const dpr = (await executeScript(
+    tab.id,
+    () => window.devicePixelRatio
+  )) as number;
 
-  const fullPageBlobs: Blob[] = [];
-  let scrollPosition = 0;
+  const numShots = Math.ceil(totalHeight / viewportHeight);
 
-  while (scrollPosition < totalHeight) {
-    await executeScript(tab.id, (pos: any) => window.scrollTo(0, pos), [
-      scrollPosition,
-    ]);
+  const blobs: Blob[] = [];
+
+  for (let i = 0; i < numShots; i++) {
+    const currentScroll =
+      i < numShots - 1 ? i * viewportHeight : totalHeight - viewportHeight;
+
+    const finalScroll = currentScroll < 0 ? 0 : currentScroll;
+
+    await executeScript(
+      tab.id,
+      (pos: any) => {
+        document.documentElement.style.scrollBehavior = 'auto';
+        window.scrollTo(0, pos);
+      },
+      [finalScroll]
+    );
+
+    await new Promise((r) => setTimeout(r, 500));
 
     const dataUrl = await browser.tabs.captureVisibleTab(tab.windowId!, {
       format: 'png',
     });
     const blob = await fetch(dataUrl).then((res) => res.blob());
-    fullPageBlobs.push(blob);
-
-    scrollPosition += viewportHeight;
-    await new Promise((r) => setTimeout(r, 500));
+    blobs.push(blob);
   }
 
   const canvas = document.createElement('canvas');
-  canvas.width = viewportWidth;
-  canvas.height = totalHeight;
+  canvas.width = viewportWidth * dpr;
+  canvas.height = totalHeight * dpr;
 
   const resultBlob = await drawImagesOnCanvas(
     canvas,
-    fullPageBlobs,
+    blobs,
+    viewportWidth,
     viewportHeight,
-    totalHeight
+    totalHeight,
+    dpr
   );
 
   await executeScript(tab.id, removeHideScrollbarClass);
