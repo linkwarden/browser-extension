@@ -1,5 +1,4 @@
 import captureScreenshot from '../screenshot.ts';
-// import captureFirefox from '../screenshot/firefox.ts';
 import { bookmarkFormValues } from '../validators/bookmarkForm.ts';
 import axios from 'axios';
 import { bookmarkMetadata } from '../cache.ts';
@@ -23,7 +22,7 @@ export async function postLink(
         Authorization: `Bearer ${apiKey}`,
       },
     });
-    
+
     const { id } = link.data.response;
     const archiveUrl = `${baseUrl}/api/v1/archives/${id}?format=0`;
 
@@ -37,13 +36,19 @@ export async function postLink(
       },
     });
 
+    setState(null);
+
     return link;
   } else {
     return await axios.post(url, data);
   }
 }
 
-export async function postLinkFetch(baseUrl: string, data: bookmarkFormValues) {
+export async function postLinkFetch(
+  baseUrl: string,
+  data: bookmarkFormValues,
+  apiKey: string
+) {
   const url = `${baseUrl}/api/v1/links`;
 
   return await fetch(url, {
@@ -51,6 +56,7 @@ export async function postLinkFetch(baseUrl: string, data: bookmarkFormValues) {
     body: JSON.stringify(data),
     headers: {
       'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
     },
   });
 }
@@ -58,7 +64,8 @@ export async function postLinkFetch(baseUrl: string, data: bookmarkFormValues) {
 export async function updateLinkFetch(
   baseUrl: string,
   id: number,
-  data: bookmarkFormValues
+  data: bookmarkFormValues,
+  apiKey: string
 ) {
   const url = `${baseUrl}/api/v1/links/${id}`;
 
@@ -72,7 +79,11 @@ export async function updateLinkFetch(
   });
 }
 
-export async function deleteLinkFetch(baseUrl: string, id: number, apiKey: string) {
+export async function deleteLinkFetch(
+  baseUrl: string,
+  id: number,
+  apiKey: string
+) {
   const url = `${baseUrl}/api/v1/links/${id}`;
 
   return await fetch(url, {
@@ -83,7 +94,10 @@ export async function deleteLinkFetch(baseUrl: string, id: number, apiKey: strin
   });
 }
 
-export async function getLinksFetch(baseUrl: string, apiKey: string): Promise<{ response: bookmarkMetadata[] }> {
+export async function getLinksFetch(
+  baseUrl: string,
+  apiKey: string
+): Promise<{ response: bookmarkMetadata[] }> {
   const url = `${baseUrl}/api/v1/links`;
   const response = await fetch(url, {
     headers: {
