@@ -153,17 +153,9 @@ async function captureFullPageScreenshot(): Promise<Blob> {
     tab.id,
     () => window.innerWidth
   )) as number;
-  const devicePixelRatio = (await executeScript(
-    tab.id,
-    () => window.devicePixelRatio
-  )) as number;
 
   const fullPageBlobs: Blob[] = [];
   let scrollPosition = 0;
-
-  const scaledViewportHeight = viewportHeight * devicePixelRatio;
-  const scaledViewportWidth = viewportWidth * devicePixelRatio;
-  const scaledTotalHeight = totalHeight * devicePixelRatio;
 
   while (scrollPosition < totalHeight) {
     await executeScript(tab.id, (pos: any) => window.scrollTo(0, pos), [
@@ -181,14 +173,14 @@ async function captureFullPageScreenshot(): Promise<Blob> {
   }
 
   const canvas = document.createElement('canvas');
-  canvas.width = scaledViewportWidth;
-  canvas.height = scaledTotalHeight;
+  canvas.width = viewportWidth;
+  canvas.height = totalHeight;
 
   const resultBlob = await drawImagesOnCanvas(
     canvas,
     fullPageBlobs,
-    scaledViewportHeight,
-    scaledTotalHeight
+    viewportHeight,
+    totalHeight
   );
 
   await executeScript(tab.id, removeHideScrollbarClass);
