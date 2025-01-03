@@ -457,8 +457,8 @@ const BookmarkForm = () => {
             </div>
           ) : undefined}
           {duplicated && (
-            <p className="text-muted text-zinc-600">
-              This bookmark is already on Linkwarden
+            <p className="text-muted text-zinc-600 dark:text-zinc-400 mt-2">
+              You already have this link saved.
             </p>
           )}
           <div className="flex justify-between items-center mt-4">
