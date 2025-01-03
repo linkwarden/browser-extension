@@ -19,7 +19,6 @@ export async function getCsrfToken(url: string): Promise<string> {
   const token = await axios.get(`${url}/api/v1/auth/csrf`);
   const { csrfToken } = token.data;
   return csrfToken;
-
 }
 
 export async function getCsrfTokenFetch(url: string): Promise<string> {
@@ -28,9 +27,15 @@ export async function getCsrfTokenFetch(url: string): Promise<string> {
   return csrfToken;
 }
 
-export async function performLoginOrLogout(url: string, data: DataLogin | DataLogout) {
+export async function performLoginOrLogout(
+  url: string,
+  data: DataLogin | DataLogout
+) {
   const formBody = Object.entries(data)
-    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .map(
+      ([key, value]) =>
+        `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+    )
     .join('&');
 
   return await axios.post(url, formBody, {
@@ -40,23 +45,25 @@ export async function performLoginOrLogout(url: string, data: DataLogin | DataLo
   });
 }
 
-export async function performLoginOrLogoutFetch(url: string, data: DataLogin | DataLogout) {
-  const formBody = Object.entries(data)
-    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-    .join('&');
-
-  return await fetch(url, {
-    method: 'POST',
-    body: formBody,
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
+export async function getSession(
+  url: string,
+  username: string,
+  password: string
+) {
+  const session = await axios.post(
+    `${url}/api/v1/session`,
+    {
+      username,
+      password,
+      sessionName: 'Browser Extension',
     },
-  });
-}
-
-export async function getSession(url: string) {
-  const session = await axios.get(`${url}/api/v1/auth/session`);
-  return session.data.user;
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+  return session;
 }
 
 export async function getSessionFetch(url: string) {

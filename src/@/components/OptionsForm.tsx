@@ -26,44 +26,24 @@ import {
 import { Toaster } from './ui/Toaster.tsx';
 import { toast } from '../../hooks/use-toast.ts';
 import { AxiosError } from 'axios';
-import {
-  DataLogin,
-  DataLogout,
-  getCsrfToken,
-  getSession,
-  performLoginOrLogout,
-} from '../lib/auth/auth.ts';
-import { Checkbox } from './ui/CheckBox.tsx';
 import { clearBookmarksMetadata } from '../lib/cache.ts';
+import { getSession } from '../lib/auth/auth.ts';
+// import { Checkbox } from './ui/CheckBox.tsx';
 
-let HAD_PREVIOUS_SESSION = false;
 const OptionsForm = () => {
   const form = useForm<optionsFormValues>({
     resolver: zodResolver(optionsFormSchema),
     defaultValues: {
-      baseUrl: '',
+      baseUrl: 'https://cloud.linkwarden.app',
       username: '',
       password: '',
       syncBookmarks: false,
-      usingSSO: false,
+      defaultCollection: 'Unorganized',
     },
   });
 
   const { mutate: onReset, isLoading: resetLoading } = useMutation({
     mutationFn: async () => {
-      // For some reason (IDK how browser works!) cookies are shared across all tabs in the same browser
-      // session is shared with the extension. This means that if you log out of
-      // the extension, you will also be logged out of the website. This is not
-      // ideal, but I don't know how to fix it.
-      // If someone knows how to fix this, please let me know.
-      // For now, I will implement my own shady way to trick into thinking that
-      // this behaviour never happens. I will do this by making a request to the
-      // website to log out, and then make a request to the website to log in
-      // again. This will trick the website into thinking that the user is still
-      // logged in, but the extension will be logged out.
-      // This is by far no ideal as I'm making more request to the server, but at this
-      // scale I don't think it really matters. (onSubmit)
-
       const configured = await isConfigured();
 
       if (!configured) {
@@ -87,6 +67,8 @@ const OptionsForm = () => {
         baseUrl: '',
         username: '',
         password: '',
+        syncBookmarks: false,
+        defaultCollection: 'Unorganized',
       });
       await clearConfig();
       await clearBookmarksMetadata();
@@ -97,33 +79,25 @@ const OptionsForm = () => {
   const { mutate: onSubmit, isLoading } = useMutation({
     mutationFn: async (values: optionsFormValues) => {
       values.baseUrl = values.baseUrl.replace(/\/$/, '');
+      // Do API call to test the connection and save the values, cant do anymore...
+      const session = await getSession(
+        values.baseUrl,
+        values.username,
+        values.password
+      );
 
-      // Do API call to test the connection and save the values
-      const { username, password, usingSSO } = values;
-      if (usingSSO) {
-        const session = await getSession(values.baseUrl);
-        if (!session) {
-          throw new Error('Not logged in');
-        }
-        return values;
+      if (session.status !== 200) {
+        throw new Error('Invalid credentials');
       }
-      const csrfToken = await getCsrfToken(values.baseUrl);
 
-      const url = `${values.baseUrl}/api/v1/auth/callback/credentials`;
-      const data: DataLogin = {
-        username: username,
-        password: password,
-        redirect: false,
-        csrfToken: csrfToken,
-        callbackUrl: `${values.baseUrl}/login`,
-        json: true,
+      return {
+        ...values,
+        data: session.data as {
+          response: {
+            token: string;
+          };
+        },
       };
-
-      const session = await getSession(values.baseUrl);
-      HAD_PREVIOUS_SESSION = !!session;
-
-      await performLoginOrLogout(url, data);
-      return values;
     },
     onError: (error) => {
       // Do proper errors of axios instance here
@@ -150,36 +124,19 @@ const OptionsForm = () => {
       }
     },
     onSuccess: async (values) => {
-      const { usingSSO } = values;
-      if (usingSSO) {
-        await saveConfig(values);
-        toast({
-          title: 'Saved',
-          description:
-            'Your settings have been saved, you can now close this tab.',
-          variant: 'default',
-        });
-      } else {
-        await saveConfig(values);
+      await saveConfig({
+        baseUrl: values.baseUrl,
+        defaultCollection: values.defaultCollection,
+        syncBookmarks: values.syncBookmarks,
+        apiKey: values.data.response.token,
+      });
 
-        if (!HAD_PREVIOUS_SESSION) {
-          const url = `${values.baseUrl}/api/v1/auth/signout`;
-
-          const data: DataLogout = {
-            csrfToken: await getCsrfToken(values.baseUrl),
-            callbackUrl: `${values.baseUrl}/dashboard`,
-            json: true,
-          };
-          // If there was no previous session, we need to log out again, so we don't confuse the user
-          await performLoginOrLogout(url, data);
-        }
-        toast({
-          title: 'Saved',
-          description:
-            'Your settings have been saved, you can now close this tab.',
-          variant: 'default',
-        });
-      }
+      toast({
+        title: 'Saved',
+        description:
+          'Your settings have been saved, you can now close this tab.',
+        variant: 'default',
+      });
     },
   });
 
@@ -209,7 +166,7 @@ const OptionsForm = () => {
               <FormItem>
                 <FormLabel>URL</FormLabel>
                 <FormDescription>
-                  The address of your Linkwarden instance.
+                  The address of the Linkwarden instance.
                 </FormDescription>
                 <FormControl>
                   <Input
@@ -221,17 +178,34 @@ const OptionsForm = () => {
               </FormItem>
             )}
           />
+          {/* Commenting this since it has bugs (duplicate created when you pass another collection other than the default "Unorganized" collection) */}
+          {/* <FormField
+            control={control}
+            name="defaultCollection"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Default collection</FormLabel>
+                <FormDescription>
+                  Default collection to add bookmarks to.
+                </FormDescription>
+                <FormControl>
+                  <Input placeholder="Unorganized" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          /> */}
           <FormField
             control={control}
             name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Username/Email</FormLabel>
+                <FormLabel>Username or Email</FormLabel>
                 <FormDescription>
-                  Username for your Linkwarden account.
+                  Your Linkwarden Username or Email.
                 </FormDescription>
                 <FormControl>
-                  <Input placeholder="Username..." {...field} />
+                  <Input placeholder="johnny" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -247,7 +221,11 @@ const OptionsForm = () => {
                   Password for your Linkwarden account.
                 </FormDescription>
                 <FormControl>
-                  <Input placeholder="Password" {...field} type="password" />
+                  <Input
+                    placeholder="••••••••••••••"
+                    {...field}
+                    type="password"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -256,9 +234,9 @@ const OptionsForm = () => {
           {/* <FormField
             control={control}
             name="syncBookmarks"
-            render={({field}) => (
+            render={({ field }) => (
               <FormItem>
-                <FormLabel>Sync Bookmarks</FormLabel>
+                <FormLabel>Sync Bookmarks (Experimental)</FormLabel>
                 <FormDescription>
                   Sync your bookmarks with Linkwarden.
                 </FormDescription>
@@ -272,29 +250,6 @@ const OptionsForm = () => {
               </FormItem>
             )}
           /> */}
-          <FormField
-            control={control}
-            name="usingSSO"
-            render={({ field }) => (
-              <FormItem>
-                <div className="flex gap-1 items-center">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <FormLabel>Use SSO (Leave Unchecked as Default)</FormLabel>
-                </div>
-
-                <FormDescription>
-                  Enable the use of Single Sign-On instead of regular session
-                  (Make sure you're already logged in to Linkwarden).
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <div className="flex justify-between">
             <div>
               {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
