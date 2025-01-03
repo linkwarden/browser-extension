@@ -60,6 +60,55 @@ async function captureFullPageScreenshot(): Promise<Blob> {
     throw new Error('Unable to get the current tab.');
   }
 
+  const hideScrollbarsCSS = `
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+`;
+
+  const addHideScrollbarClassCode = `
+  (() => {
+    const style = document.createElement('style');
+    style.id = 'hide-scrollbar-style';
+    style.textContent = \`${hideScrollbarsCSS}\`;
+    document.head.appendChild(style);
+
+    const html = document.documentElement;
+    const body = document.body;
+
+    html.classList.add('hide-scrollbar');
+    body.classList.add('hide-scrollbar');
+
+    return 'Scrollbars hidden.';
+  })();
+`;
+
+  const removeHideScrollbarClassCode = `
+  (() => {
+    const style = document.getElementById('hide-scrollbar-style');
+    if (style) {
+      style.remove();
+    }
+
+    const html = document.documentElement;
+    const body = document.body;
+
+    html.classList.remove('hide-scrollbar');
+    body.classList.remove('hide-scrollbar');
+
+    return 'Scrollbars restored.';
+  })();
+`;
+
+  // Hide scrollbars
+  await browser.tabs.executeScript(tab.id, {
+    code: addHideScrollbarClassCode,
+  });
+
   const totalHeight = await browser.tabs
     .executeScript(tab.id, {
       code: 'document.documentElement.scrollHeight',
@@ -129,12 +178,19 @@ async function captureFullPageScreenshot(): Promise<Blob> {
   canvas.width = viewportWidth;
   canvas.height = totalHeight;
 
-  return await drawImagesOnCanvas(
+  const resultBlob = await drawImagesOnCanvas(
     canvas,
     fullPageBlobs,
     viewportHeight,
     totalHeight
   );
+
+  // Restore scrollbars
+  await browser.tabs.executeScript(tab.id, {
+    code: removeHideScrollbarClassCode,
+  });
+
+  return resultBlob;
 }
 
 export default captureFullPageScreenshot;
