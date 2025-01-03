@@ -24,7 +24,16 @@
     "48": "./48.png",
     "128": "./128.png"
   },
-  "permissions": ["storage", "activeTab", "tabs", "bookmarks", "contextMenus", "http://*/*", "https://*/*"],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs",
+    "bookmarks",
+    "contextMenus",
+    "<all_urls>",
+    "http://*/*",
+    "https://*/*"
+  ],
   "commands": {
     "_execute_action": {
       "suggested_key": {
