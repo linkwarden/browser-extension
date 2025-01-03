@@ -26,11 +26,13 @@
   },
   "permissions": [
     "storage",
+    "scripting",
     "activeTab",
     "tabs",
     "bookmarks",
     "commands",
-    "contextMenus"
+    "contextMenus",
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "./background.js",

@@ -37,12 +37,23 @@ import {
   CommandItem,
 } from './ui/Command.tsx';
 import { saveLinksInCache } from '../lib/cache.ts';
+import { Checkbox } from './ui/CheckBox.tsx';
+import { Label } from './ui/Label.tsx';
 
 let configured = false;
 let duplicated = false;
 const BookmarkForm = () => {
   const [openOptions, setOpenOptions] = useState<boolean>(false);
   const [openCollections, setOpenCollections] = useState<boolean>(false);
+  const [uploadImage, setUploadImage] = useState<boolean>(false);
+  const [state, setState] = useState<'capturing' | 'uploading' | null>(null);
+
+  const handleCheckedChange = (s: boolean | 'indeterminate') => {
+    if (s === 'indeterminate') return;
+    setUploadImage(s);
+    form.setValue('image', s ? 'png' : undefined);
+  };
+
   const form = useForm<bookmarkFormValues>({
     resolver: zodResolver(bookmarkFormSchema),
     defaultValues: {
@@ -53,6 +64,7 @@ const BookmarkForm = () => {
       },
       tags: [],
       description: '',
+      image: undefined,
     },
   });
 
@@ -60,7 +72,45 @@ const BookmarkForm = () => {
     mutationFn: async (values: bookmarkFormValues) => {
       const config = await getConfig();
 
-      await postLink(config.baseUrl, values, config.apiKey);
+      if (config.usingSSO) {
+        const session = await getSession(config.baseUrl);
+        if (!session) {
+          return;
+        }
+        await postLink(config.baseUrl, uploadImage, values, setState, config.apiKey);
+      } else {
+        const csrfToken = await getCsrfToken(config.baseUrl);
+        const session = await getSession(config.baseUrl);
+
+        HAD_PREVIOUS_SESSION = !!session;
+
+        if (!HAD_PREVIOUS_SESSION) {
+          await performLoginOrLogout(
+            `${config.baseUrl}/api/v1/auth/callback/credentials`,
+            {
+              username: config.username,
+              password: config.password,
+              redirect: false,
+              csrfToken,
+              callbackUrl: `${config.baseUrl}/login`,
+              json: true,
+            }
+          );
+        }
+
+        await postLink(config.baseUrl, uploadImage, values, setState, config.apiKey);
+
+        if (!HAD_PREVIOUS_SESSION) {
+          const url = `${config.baseUrl}/api/v1/auth/signout`;
+          await performLoginOrLogout(url, {
+            username: config.username,
+            password: config.password,
+            redirect: false,
+            csrfToken,
+            callbackUrl: `${config.baseUrl}/login`,
+            json: true,
+          });
+        }
 
       return;
     },
@@ -335,68 +385,13 @@ const BookmarkForm = () => {
                         </Command>
                       </PopoverContent>
                     ) : undefined}
-
-                    {/* <PopoverContent
-                      className={`min-w-full p-0 overflow-y-auto ${
-                        !openOptions ? 'max-h-[100px]' : 'max-h-[200px]'
-                      }`}
-                    >
-                      <Command className="flex-grow min-w-full dropdown-content">
-                        <CommandInput
-                          className="min-w-[280px]"
-                          placeholder="Search collection..."
-                        />
-                        <CommandEmpty>No Collection found.</CommandEmpty>
-                        {Array.isArray(collections?.response) && (
-                          <CommandGroup className="w-full">
-                            {isLoading ? (
-                              <CommandItem
-                                value="Getting collections..."
-                                key="Getting collections..."
-                                onSelect={() => {
-                                  form.setValue('collection', {
-                                    name: 'Unorganized',
-                                  });
-                                  setOpenCollections(false);
-                                }}
-                              >
-                                Unorganized
-                              </CommandItem>
-                            ) : (
-                              collections.response?.map(
-                                (collection: {
-                                  name: string;
-                                  id: number;
-                                  ownerId: number;
-                                }) => (
-                                  <CommandItem
-                                    value={collection.name}
-                                    key={collection.id}
-                                    onSelect={() => {
-                                      form.setValue('collection', {
-                                        ownerId: collection.ownerId,
-                                        id: collection.id,
-                                        name: collection.name,
-                                      });
-                                      setOpenCollections(false);
-                                    }}
-                                  >
-                                    {collection.name}
-                                  </CommandItem>
-                                )
-                              )
-                            )}
-                          </CommandGroup>
-                        )}
-                      </Command>
-                    </PopoverContent> */}
                   </Popover>
                 </div>
                 <FormMessage />
               </FormItem>
             )}
           />
-          {openOptions ? (
+          {openOptions && (
             <div className="details list-none space-y-5 pt-2">
               {tagsError ? <p>There was an error...</p> : null}
               <FormField
@@ -454,6 +449,13 @@ const BookmarkForm = () => {
                   </FormItem>
                 )}
               />
+              <Label className="flex items-center gap-2 w-fit cursor-pointer">
+                <Checkbox
+                  checked={uploadImage}
+                  onCheckedChange={handleCheckedChange}
+                />
+                Upload image from browser
+              </Label>
             </div>
           ) : undefined}
           {duplicated && (
@@ -478,6 +480,42 @@ const BookmarkForm = () => {
         </form>
       </Form>
       <Toaster />
+      {state && (
+        <div className="fixed inset-0 bg-black backdrop-blur-md bg-opacity-50 flex items-center justify-center">
+          <div className="text-white p-4 rounded-md flex flex-col items-center w-fit">
+            <svg
+              className="animate-spin h-10 w-10"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+
+            <p className="text-xl mt-1">
+              {state === 'capturing'
+                ? 'Capturing the page...'
+                : 'Uploading image...'}
+            </p>
+            <p className="text-xs text-center max-w-xs">
+              Please do not close this window, this may take a few seconds
+              depending on the size of the page.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

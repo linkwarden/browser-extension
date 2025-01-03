@@ -18,7 +18,6 @@ export async function getCurrentTabInfo(): Promise<{ title: string | undefined; 
   return { url, title };
 }
 
-
 export function getBrowser() {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   //@ts-ignore
