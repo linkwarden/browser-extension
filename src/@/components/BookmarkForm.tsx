@@ -574,10 +574,10 @@ const BookmarkForm = () => {
       </Form>
       <Toaster />
       {state && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="text-white p-4 rounded-md flex gap-2 items-center w-fit">
+        <div className="fixed inset-0 bg-black backdrop-blur-md bg-opacity-50 flex items-center justify-center">
+          <div className="text-white p-4 rounded-md flex flex-col items-center w-fit">
             <svg
-              className="animate-spin h-5 w-5"
+              className="animate-spin h-10 w-10"
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -597,9 +597,15 @@ const BookmarkForm = () => {
               ></path>
             </svg>
 
-            {state === 'capturing'
-              ? 'Capturing the page...'
-              : 'Uploading image...'}
+            <p className="text-xl mt-1">
+              {state === 'capturing'
+                ? 'Capturing the page...'
+                : 'Uploading image...'}
+            </p>
+            <p className="text-xs text-center max-w-xs">
+              Please do not close this window, this may take a few seconds
+              depending on the size of the page.
+            </p>
           </div>
         </div>
       )}
