@@ -354,11 +354,11 @@ const BookmarkForm = () => {
                           {loadingCollections
                             ? 'Loading'
                             : field.value?.name
-                              ? collections.response?.find(
+                            ? collections.response?.find(
                                 (collection: { name: string }) =>
                                   collection.name === field.value?.name
                               )?.name || 'Unorganized'
-                              : 'Select a collection...'}
+                            : 'Select a collection...'}
                           <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </FormControl>
@@ -366,10 +366,11 @@ const BookmarkForm = () => {
 
                     {!openOptions && openCollections ? (
                       <div
-                        className={`fade-up min-w-full p-0 overflow-y-auto ${openCollections
-                          ? 'fixed inset-0 w-full h-full z-50 bg-white'
-                          : ''
-                          }`}
+                        className={`fade-up min-w-full p-0 overflow-y-auto ${
+                          openCollections
+                            ? 'fixed inset-0 w-full h-full z-50 bg-white'
+                            : ''
+                        }`}
                       >
                         <Button
                           className="absolute top-1 right-1 bg-transparent hover:bg-transparent hover:opacity-50 transition-colors ease-in-out duration-200"
@@ -481,61 +482,6 @@ const BookmarkForm = () => {
                         </Command>
                       </PopoverContent>
                     ) : undefined}
-
-                    {/* <PopoverContent
-                      className={`min-w-full p-0 overflow-y-auto ${
-                        !openOptions ? 'max-h-[100px]' : 'max-h-[200px]'
-                      }`}
-                    >
-                      <Command className="flex-grow min-w-full dropdown-content">
-                        <CommandInput
-                          className="min-w-[280px]"
-                          placeholder="Search collection..."
-                        />
-                        <CommandEmpty>No Collection found.</CommandEmpty>
-                        {Array.isArray(collections?.response) && (
-                          <CommandGroup className="w-full">
-                            {isLoading ? (
-                              <CommandItem
-                                value="Getting collections..."
-                                key="Getting collections..."
-                                onSelect={() => {
-                                  form.setValue('collection', {
-                                    name: 'Unorganized',
-                                  });
-                                  setOpenCollections(false);
-                                }}
-                              >
-                                Unorganized
-                              </CommandItem>
-                            ) : (
-                              collections.response?.map(
-                                (collection: {
-                                  name: string;
-                                  id: number;
-                                  ownerId: number;
-                                }) => (
-                                  <CommandItem
-                                    value={collection.name}
-                                    key={collection.id}
-                                    onSelect={() => {
-                                      form.setValue('collection', {
-                                        ownerId: collection.ownerId,
-                                        id: collection.id,
-                                        name: collection.name,
-                                      });
-                                      setOpenCollections(false);
-                                    }}
-                                  >
-                                    {collection.name}
-                                  </CommandItem>
-                                )
-                              )
-                            )}
-                          </CommandGroup>
-                        )}
-                      </Command>
-                    </PopoverContent> */}
                   </Popover>
                 </div>
                 <FormMessage />
@@ -600,10 +546,13 @@ const BookmarkForm = () => {
                   </FormItem>
                 )}
               />
-              <div className='flex items-center gap-2'>
-                <Checkbox checked={uploadImage} onCheckedChange={handleCheckedChange} />
-                <Label>Upload image from browser</Label>
-              </div>
+              <Label className="flex items-center gap-2 w-fit cursor-pointer">
+                <Checkbox
+                  checked={uploadImage}
+                  onCheckedChange={handleCheckedChange}
+                />
+                Upload image from browser
+              </Label>
             </div>
           )}
           <div className="flex justify-between items-center mt-4">

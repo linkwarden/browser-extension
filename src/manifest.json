@@ -31,7 +31,8 @@
     "tabs",
     "bookmarks",
     "commands",
-    "contextMenus"
+    "contextMenus",
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js",
@@ -40,9 +41,7 @@
   "omnibox": {
     "keyword": "lk"
   },
-  "host_permissions": [
-    "*://*/*"
-  ],
+  "host_permissions": ["*://*/*"],
   "commands": {
     "_execute_action": {
       "suggested_key": {
