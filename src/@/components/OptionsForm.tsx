@@ -1,3 +1,5 @@
+// ./OptionsForm.tsx
+
 import {
   Form,
   FormControl,
@@ -28,15 +30,23 @@ import { toast } from '../../hooks/use-toast.ts';
 import { AxiosError } from 'axios';
 import { clearBookmarksMetadata } from '../lib/cache.ts';
 import { getSession } from '../lib/auth/auth.ts';
-// import { Checkbox } from './ui/CheckBox.tsx';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/Select.tsx'; // Import the Select component
 
 const OptionsForm = () => {
   const form = useForm<optionsFormValues>({
     resolver: zodResolver(optionsFormSchema),
     defaultValues: {
       baseUrl: 'https://cloud.linkwarden.app',
+      method: 'username', // Default to 'username'
       username: '',
       password: '',
+      apiKey: '',
       syncBookmarks: false,
       defaultCollection: 'Unorganized',
     },
@@ -65,8 +75,10 @@ const OptionsForm = () => {
       // Reset the form
       form.reset({
         baseUrl: '',
+        method: 'username',
         username: '',
         password: '',
+        apiKey: '',
         syncBookmarks: false,
         defaultCollection: 'Unorganized',
       });
@@ -79,33 +91,50 @@ const OptionsForm = () => {
   const { mutate: onSubmit, isLoading } = useMutation({
     mutationFn: async (values: optionsFormValues) => {
       values.baseUrl = values.baseUrl.replace(/\/$/, '');
-      // Do API call to test the connection and save the values, cant do anymore...
-      const session = await getSession(
-        values.baseUrl,
-        values.username,
-        values.password
-      );
+      // Do API call to test the connection and save the values
 
-      if (session.status !== 200) {
-        throw new Error('Invalid credentials');
+      if (values.method === 'apiKey') {
+        return {
+          ...values,
+          data: {
+            response: {
+              token: values.apiKey,
+            },
+          } as {
+            response: {
+              token: string;
+            };
+          },
+        };
+      } else {
+        // Handle Username/Password authentication
+        const session = await getSession(
+          values.baseUrl,
+          values.username,
+          values.password
+        );
+
+        if (session.status !== 200) {
+          throw new Error('Invalid credentials');
+        }
+
+        return {
+          ...values,
+          data: session.data as {
+            response: {
+              token: string;
+            };
+          },
+        };
       }
-
-      return {
-        ...values,
-        data: session.data as {
-          response: {
-            token: string;
-          };
-        },
-      };
     },
     onError: (error) => {
-      // Do proper errors of axios instance here
+      // Handle errors appropriately
       if (error instanceof AxiosError) {
         if (error.response?.status === 401) {
           toast({
             title: 'Error',
-            description: 'Invalid credentials',
+            description: 'Invalid credentials or API Key',
             variant: 'destructive',
           });
         } else {
@@ -128,7 +157,10 @@ const OptionsForm = () => {
         baseUrl: values.baseUrl,
         defaultCollection: values.defaultCollection,
         syncBookmarks: values.syncBookmarks,
-        apiKey: values.data.response.token,
+        apiKey:
+          values.method === 'apiKey' && values.apiKey
+            ? values.apiKey
+            : values.data.response.token,
       });
 
       toast({
@@ -150,13 +182,14 @@ const OptionsForm = () => {
     })();
   }, [form]);
 
-  const { handleSubmit, control } = form;
+  const { handleSubmit, control, watch } = form;
+  const method = watch('method'); // Watch the 'method' field
 
   return (
     <div>
       <Form {...form}>
         <form
-          onSubmit={handleSubmit((e) => onSubmit(e))}
+          onSubmit={handleSubmit((data) => onSubmit(data))}
           className="space-y-3 p-2"
         >
           <FormField
@@ -178,8 +211,101 @@ const OptionsForm = () => {
               </FormItem>
             )}
           />
-          {/* Commenting this since it has bugs (duplicate created when you pass another collection other than the default "Unorganized" collection) */}
-          {/* <FormField
+
+          {/* Authentication Method Select */}
+          <FormField
+            control={control}
+            name="method"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Method</FormLabel>
+                <FormDescription>
+                  Choose your preferred authentication method.
+                </FormDescription>
+                <FormControl>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full justify-between bg-neutral-100 dark:bg-neutral-900 outline-none focus:outline-none ring-0 focus:ring-0">
+                      <SelectValue placeholder="Select authentication method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="username">
+                        Username and Password
+                      </SelectItem>
+                      <SelectItem value="apiKey">API Key</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Conditionally render API Key or Username/Password fields */}
+          {method === 'apiKey' ? (
+            <FormField
+              control={control}
+              name="apiKey"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>API Key</FormLabel>
+                  <FormDescription>
+                    Enter your Linkwarden API Key.
+                  </FormDescription>
+                  <FormControl>
+                    <Input
+                      placeholder="Your API Key"
+                      {...field}
+                      type="password"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ) : (
+            <>
+              <FormField
+                control={control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username or Email</FormLabel>
+                    <FormDescription>
+                      Your Linkwarden Username or Email.
+                    </FormDescription>
+                    <FormControl>
+                      <Input placeholder="johnny" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormDescription>
+                      Password for your Linkwarden account.
+                    </FormDescription>
+                    <FormControl>
+                      <Input
+                        placeholder="••••••••••••••"
+                        {...field}
+                        type="password"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
+          )}
+
+          {/* Commented out fields */}
+          {/* 
+          <FormField
             control={control}
             name="defaultCollection"
             render={({ field }) => (
@@ -194,44 +320,11 @@ const OptionsForm = () => {
                 <FormMessage />
               </FormItem>
             )}
-          /> */}
-          <FormField
-            control={control}
-            name="username"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Username or Email</FormLabel>
-                <FormDescription>
-                  Your Linkwarden Username or Email.
-                </FormDescription>
-                <FormControl>
-                  <Input placeholder="johnny" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
           />
+          */}
+
+          {/* 
           <FormField
-            control={control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormDescription>
-                  Password for your Linkwarden account.
-                </FormDescription>
-                <FormControl>
-                  <Input
-                    placeholder="••••••••••••••"
-                    {...field}
-                    type="password"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {/* <FormField
             control={control}
             name="syncBookmarks"
             render={({ field }) => (
@@ -249,7 +342,9 @@ const OptionsForm = () => {
                 <FormMessage />
               </FormItem>
             )}
-          /> */}
+          />
+          */}
+
           <div className="flex justify-between">
             <div>
               {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
@@ -257,7 +352,7 @@ const OptionsForm = () => {
               <Button
                 type="button"
                 className="mb-2"
-                onClick={onReset as never}
+                onClick={() => onReset()}
                 disabled={resetLoading}
               >
                 Reset
