@@ -34,12 +34,9 @@ export async function clearConfig() {
     CONFIG_KEY,
     JSON.stringify({
       baseUrl: '',
-      username: '',
-      password: '',
-      syncBookmarks: false,
-      usingSSO: false,
       apiKey: '',
       defaultCollection: 'Unorganized',
+      syncBookmarks: false,
     })
   );
 }
