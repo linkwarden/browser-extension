@@ -16,7 +16,7 @@ import { Input } from './ui/Input.tsx';
 import { Button } from './ui/Button.tsx';
 import { TagInput } from './TagInput.tsx';
 import { Textarea } from './ui/Textarea.tsx';
-import { checkDuplicatedItem, cn, getCurrentTabInfo } from '../lib/utils.ts';
+import { checkDuplicatedItem, getCurrentTabInfo } from '../lib/utils.ts';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { getConfig, isConfigured } from '../lib/config.ts';
@@ -216,10 +216,9 @@ const BookmarkForm = () => {
                           variant="outline"
                           role="combobox"
                           aria-expanded={openCollections}
-                          className={cn(
-                            'w-full justify-between',
-                            !field.value?.name && 'text-muted-foreground'
-                          )}
+                          className={
+                            'w-full justify-between bg-neutral-100 dark:bg-neutral-900'
+                          }
                         >
                           {loadingCollections
                             ? 'Loading'
