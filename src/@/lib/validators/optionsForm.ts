@@ -6,6 +6,9 @@ export const optionsFormSchema = z.object({
   password: z.string(),
   syncBookmarks: z.boolean().default(false),
   defaultCollection: z.string().optional().default('Unorganized'),
+  useApiKey: z.boolean().default(false),
+  apiKey: z.string().optional(),
+  method: z.enum(['username', 'apiKey']).default('username'),
 });
 
 export type optionsFormValues = z.infer<typeof optionsFormSchema>;
