@@ -37,27 +37,27 @@ export const TagInput: FC<TagInputProps> = ({ value, onChange, tags }) => {
   }
 
   return (
-    <div className='min-w-full inset-x-0'>
+    <div className="min-w-full inset-x-0">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
-            variant='outline'
-            role='combobox'
+            variant="outline"
+            role="combobox"
             aria-expanded={open}
-            className='w-full justify-between'
+            className="w-full justify-between bg-neutral-100 dark:bg-neutral-900"
           >
             {Array.isArray(value) && value.length > 0
               ? value.map((tag) => tag.name).join(', ')
               : 'Select tags...'}
-            <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <div className='min-w-full inset-x-0'>
-          <PopoverContent className='min-w-full p-0 overflow-y-auto max-h-[200px]'>
-            <Command className='flex-grow min-w-full'>
+        <div className="min-w-full inset-x-0">
+          <PopoverContent className="min-w-full p-0 overflow-y-auto max-h-[200px]">
+            <Command className="flex-grow min-w-full">
               <CommandInput
-                className='min-w-[280px]'
-                placeholder='Search tag or add tag (Enter)'
+                className="min-w-[280px]"
+                placeholder="Search tag or add tag (Enter)"
                 value={inputValue}
                 onValueChange={setInputValue}
                 onKeyDown={(e) => {
@@ -68,16 +68,16 @@ export const TagInput: FC<TagInputProps> = ({ value, onChange, tags }) => {
               />
               <CommandEmpty>No tag found.</CommandEmpty>
               {Array.isArray(tags) && (
-                <CommandGroup className='w-full'>
+                <CommandGroup className="w-full">
                   {tags
                     .filter((tag) =>
                       tag.name
                         .toLowerCase()
-                        .includes(inputValue.trim().toLowerCase()),
+                        .includes(inputValue.trim().toLowerCase())
                     )
                     .map((tag: { name: string }) => (
                       <CommandItem
-                        className='w-full'
+                        className="w-full"
                         key={tag.name}
                         onSelect={() => {
                           if (Array.isArray(value)) {
@@ -94,9 +94,9 @@ export const TagInput: FC<TagInputProps> = ({ value, onChange, tags }) => {
                           className={cn(
                             'mr-2 h-4 w-4',
                             Array.isArray(value) &&
-                            value.some((v) => v.name === tag.name)
+                              value.some((v) => v.name === tag.name)
                               ? 'opacity-100'
-                              : 'opacity-0',
+                              : 'opacity-0'
                           )}
                         />
                         {tag.name}
