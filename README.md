@@ -7,14 +7,23 @@ collect, organize and archive webpages.
 **Features**
 
 - Add and organize new links to Linkwarden with a single click.
+- Upload screenshots of the current page to Linkwarden.
+- Sign in using API key or Username/Password.
 
 ![Image](/assets/linkwarden-extension.png)
 
 ## Installation
 
-Chrome, Brave and other Chromium based browsers: [Chrome Web Store](https://chrome.google.com/webstore/detail/linkwarden/pnidmkljnhbjfffciajlcpeldoljnidn)
+You can get the extension from both the Chrome Web Store and Firefox Add-ons.
 
-Firefox: [Mozilla Addon Store](https://addons.mozilla.org/en-US/firefox/addon/linkwarden)
+<p align="center">
+  <a href="https://chrome.google.com/webstore/detail/linkwarden/pnidmkljnhbjfffciajlcpeldoljnidn"><img src="/assets/chrome.png" alt="Chrome Web Store" style="height: 58px; margin-right: 20px;"></a>
+  <a href="https://addons.mozilla.org/en-US/firefox/addon/linkwarden"><img src="/assets/firefox.png" alt="Firefox Add-ons" style="height: 58px;"></a>
+</p>
+
+## Issues and Feature Requests
+
+We decided to keep the issues and feature requests in the main repository to keep everything in one place. Please report any issues or feature requests from the official repository with the `browser extension` label [here](https://github.com/linkwarden/linkwarden).
 
 ## Build From Source
 
