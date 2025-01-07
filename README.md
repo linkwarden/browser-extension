@@ -16,10 +16,8 @@ collect, organize and archive webpages.
 
 You can get the extension from both the Chrome Web Store and Firefox Add-ons:
 
-<p>
-  <a href="https://chrome.google.com/webstore/detail/linkwarden/pnidmkljnhbjfffciajlcpeldoljnidn"><img src="/assets/chrome.png" alt="Chrome Web Store" style="height: 58px; margin-right: 20px;"></a>
-  <a href="https://addons.mozilla.org/en-US/firefox/addon/linkwarden"><img src="/assets/firefox.png" alt="Firefox Add-ons" style="height: 58px;"></a>
-</p>
+<a href="https://chrome.google.com/webstore/detail/linkwarden/pnidmkljnhbjfffciajlcpeldoljnidn"><img src="/assets/chrome.png" alt="Chrome Web Store"></a>
+<a href="https://addons.mozilla.org/en-US/firefox/addon/linkwarden"><img src="/assets/firefox.png" alt="Firefox Add-ons"></a>
 
 ## Issues and Feature Requests
 
