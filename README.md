@@ -4,7 +4,7 @@ Extension for [Linkwarden](https://github.com/linkwarden/linkwarden), a self-hos
 manager to
 collect, organize and archive webpages.
 
-**Features**
+## Features
 
 - Add and organize new links to Linkwarden with a single click.
 - Upload screenshots of the current page to Linkwarden.
@@ -14,7 +14,7 @@ collect, organize and archive webpages.
 
 ## Installation
 
-You can get the extension from both the Chrome Web Store and Firefox Add-ons:
+You can get the browser extension from both the Chrome Web Store and Firefox Add-ons:
 
 <a href="https://chrome.google.com/webstore/detail/linkwarden/pnidmkljnhbjfffciajlcpeldoljnidn"><img src="/assets/chrome.png" alt="Chrome Web Store"></a>
 <a href="https://addons.mozilla.org/en-US/firefox/addon/linkwarden"><img src="/assets/firefox.png" alt="Firefox Add-ons"></a>
