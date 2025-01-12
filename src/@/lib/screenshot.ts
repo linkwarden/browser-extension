@@ -151,8 +151,31 @@ async function captureFullPageScreenshot(): Promise<Blob> {
     });
   };
 
+  const addDisableSmoothScrollbarClass = () => {
+    const style = document.createElement('style');
+    style.id = 'disable-smooth-scroll-style';
+    style.textContent = `
+      .disable-smooth-scroll {
+        scroll-behavior: auto !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    document.documentElement.classList.add('disable-smooth-scroll');
+    document.body.classList.add('disable-smooth-scroll');
+  };
+
+  const removeDisableSmoothScrollbarClass = () => {
+    const style = document.getElementById('disable-smooth-scroll-style');
+    if (style) style.remove();
+
+    document.documentElement.classList.remove('disable-smooth-scroll');
+    document.body.classList.remove('disable-smooth-scroll');
+  };
+
   await executeScript(tab.id, addHideScrollbarClass);
   const originalStyles = await executeScript(tab.id, adjustFixedElements);
+  await executeScript(tab.id, addDisableSmoothScrollbarClass);
 
   const totalHeight = (await executeScript(
     tab.id,
@@ -214,6 +237,7 @@ async function captureFullPageScreenshot(): Promise<Blob> {
 
   await executeScript(tab.id, removeHideScrollbarClass);
   await executeScript(tab.id, restoreFixedElements, [originalStyles]);
+  await executeScript(tab.id, removeDisableSmoothScrollbarClass);
 
   return resultBlob;
 }
