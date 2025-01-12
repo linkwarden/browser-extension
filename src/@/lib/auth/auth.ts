@@ -15,12 +15,6 @@ export interface DataLogout {
   json: boolean;
 }
 
-export async function getCsrfToken(url: string): Promise<string> {
-  const token = await axios.get(`${url}/api/v1/auth/csrf`);
-  const { csrfToken } = token.data;
-  return csrfToken;
-}
-
 export async function getCsrfTokenFetch(url: string): Promise<string> {
   const token = await fetch(`${url}/api/v1/auth/csrf`);
   const { csrfToken } = await token.json();
