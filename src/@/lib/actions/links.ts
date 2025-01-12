@@ -40,7 +40,12 @@ export async function postLink(
 
     return link;
   } else {
-    return await axios.post(url, data);
+    return await axios.post(url, data, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
   }
 }
 
