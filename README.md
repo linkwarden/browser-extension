@@ -8,6 +8,7 @@ collect, organize and archive webpages.
 
 - Add and organize new links to Linkwarden with a single click.
 - Upload screenshots of the current page to Linkwarden.
+- Save all tabs in the current window to Linkwarden.
 - Sign in using API key or Username/Password.
 
 ![Image](/assets/linkwarden-extension.png)
