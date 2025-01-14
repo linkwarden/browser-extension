@@ -185,7 +185,6 @@ const browser = getBrowser();
 
 // This is for the context menus!
 // Example taken from: https://github.com/GoogleChrome/chrome-extensions-samples/blob/main/api-samples/contextMenus/basic/sample.js
-
 browser.contextMenus.onClicked.addListener(async (info, tab) => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
@@ -203,14 +202,37 @@ async function genericOnClick(
     return;
   }
   switch (info.menuItemId) {
-    case 'radio':
-      // Radio item function
-      console.log('Radio item clicked. Status:', info.checked);
+    case 'save-all-tabs': {
+      const tabs = await browser.tabs.query({ currentWindow: true });
+      const config = await getConfig();
+
+      for (const tab of tabs) {
+        if (
+          tab.url &&
+          !tab.url.startsWith('chrome://') &&
+          !tab.url.startsWith('about:')
+        ) {
+          try {
+            await postLinkFetch(
+              config.baseUrl,
+              {
+                url: tab.url,
+                name: tab.title || '',
+                description: tab.title || '',
+                collection: {
+                  name: config.defaultCollection,
+                },
+                tags: [],
+              },
+              config.apiKey
+            );
+          } catch (error) {
+            console.error(`Failed to save tab: ${tab.url}`, error);
+          }
+        }
+      }
       break;
-    case 'checkbox':
-      // Checkbox item function
-      console.log('Checkbox item clicked. Status:', info.checked);
-      break;
+    }
     default:
       // Handle cases where sync is enabled or not
       if (syncBookmarks) {
@@ -267,6 +289,11 @@ browser.runtime.onInstalled.addListener(function () {
       id: context,
     });
   }
+  browser.contextMenus.create({
+    id: 'save-all-tabs',
+    title: 'Save all tabs to Linkwarden',
+    contexts: ['page'],
+  });
 });
 
 // Omnibox implementation
