@@ -1,13 +1,12 @@
 # Linkwarden Browser Extension
 
-Extension for [Linkwarden](https://github.com/linkwarden/linkwarden), a self-hosted, open-source collaborative bookmark
-manager to
-collect, organize and archive webpages.
+The Official Browser Extension for [Linkwarden](https://github.com/linkwarden/linkwarden).
 
 ## Features
 
 - Add and organize new links to Linkwarden with a single click.
 - Upload screenshots of the current page to Linkwarden.
+- Save all tabs in the current window to Linkwarden.
 - Sign in using API key or Username/Password.
 
 ![Image](/assets/linkwarden-extension.png)
