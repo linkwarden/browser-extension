@@ -1,8 +1,6 @@
 # Linkwarden Browser Extension
 
-Extension for [Linkwarden](https://github.com/linkwarden/linkwarden), a self-hosted, open-source collaborative bookmark
-manager to
-collect, organize and archive webpages.
+The Official Browser Extension for [Linkwarden](https://github.com/linkwarden/linkwarden).
 
 ## Features
 
