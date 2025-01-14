@@ -213,19 +213,20 @@ async function genericOnClick(
           !tab.url.startsWith('about:')
         ) {
           try {
-            await postLinkFetch(
-              config.baseUrl,
-              {
-                url: tab.url,
-                name: tab.title || '',
-                description: tab.title || '',
-                collection: {
-                  name: config.defaultCollection,
+            if (new URL(tab.url))
+              await postLinkFetch(
+                config.baseUrl,
+                {
+                  url: tab.url,
+                  name: tab.title || '',
+                  description: tab.title || '',
+                  collection: {
+                    name: config.defaultCollection,
+                  },
+                  tags: [],
                 },
-                tags: [],
-              },
-              config.apiKey
-            );
+                config.apiKey
+              );
           } catch (error) {
             console.error(`Failed to save tab: ${tab.url}`, error);
           }
