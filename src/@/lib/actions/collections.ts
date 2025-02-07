@@ -44,19 +44,19 @@ export async function getCollections(baseUrl: string, apiKey: string) {
 
   // Create a map for quick lookups
   const collectionsMap = new Map(
-    response.data.response.map(collection => [collection.id, collection])
+    response.data.response.map((collection) => [collection.id, collection])
   );
 
   // Format the collection names with full parent structure
-  const formattedCollections = response.data.response.map(collection => ({
+  const formattedCollections = response.data.response.map((collection) => ({
     ...collection,
-    name: buildFullPath(collection, collectionsMap)
+    pathname: buildFullPath(collection, collectionsMap),
   }));
 
   return {
     ...response,
     data: {
-      response: formattedCollections
-    }
+      response: formattedCollections,
+    },
   };
 }
