@@ -166,7 +166,7 @@ const BookmarkForm = () => {
       const response = await getCollections(config.baseUrl, config.apiKey);
 
       return response.data.response.sort((a, b) => {
-        return a.name.localeCompare(b.name);
+        return a.pathname.localeCompare(b.pathname);
       });
     },
     enabled: configured,
@@ -274,11 +274,12 @@ const BookmarkForm = () => {
                                     name: string;
                                     id: number;
                                     ownerId: number;
+                                    pathname: string;
                                   }) => (
                                     <CommandItem
                                       value={collection.name}
                                       key={collection.id}
-                                      className="cursor-pointer"
+                                      className="cursor-pointer flex flex-col items-start justify-start"
                                       onSelect={() => {
                                         form.setValue('collection', {
                                           ownerId: collection.ownerId,
@@ -288,7 +289,10 @@ const BookmarkForm = () => {
                                         setOpenCollections(false);
                                       }}
                                     >
-                                      {collection.name}
+                                      <p>{collection.name}</p>
+                                      <p className="text-xs text-neutral-500">
+                                        {collection.pathname}
+                                      </p>
                                     </CommandItem>
                                   )
                                 )
