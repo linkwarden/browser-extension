@@ -6,13 +6,10 @@ import { useEffect, useState } from 'react';
 import { getConfig, isConfigured } from '../../@/lib/config.ts';
 import Modal from '../../@/components/Modal.tsx';
 import { ModeToggle } from '../../@/components/ModeToggle.tsx';
-import { checkLinkExists } from '../../@/lib/actions/links.ts';
 
 function App() {
   const [isAllConfigured, setIsAllConfigured] = useState<boolean>();
   const [baseUrl, setBaseUrl] = useState<string>();
-  const [alreadyAdded, setAlreadyAdded] = useState<boolean>(false);
-  const [dismissedAlreadyAdded, setDismissedAlreadyAdded] = useState<boolean>(false);
 
   useEffect(() => {
     (async () => {
@@ -20,10 +17,8 @@ function App() {
       const cachedConfig = await getConfig();
       setBaseUrl(cachedConfig.baseUrl);
       setIsAllConfigured(cachedOptions);
-      setAlreadyAdded(await checkLinkExists(cachedConfig.baseUrl, cachedConfig.apiKey));
     })();
   }, []);
-
 
   return (
     <WholeContainer>
@@ -45,7 +40,7 @@ function App() {
                 alt="Linkwarden Logo"
               />
             </a>
-            { alreadyAdded ? (<h1 className="text-lg">Link already added</h1>) : (<h1 className="text-lg">Add Link</h1>) }
+            <h1 className="text-lg">Add Link</h1>
           </div>
           <div className="flex items-center justify-center space-x-2">
             <ModeToggle />
@@ -57,7 +52,7 @@ function App() {
             </p>
           </div>
         </div>
-        { alreadyAdded && !dismissedAlreadyAdded ? (<button onClick={() => setDismissedAlreadyAdded(true)}>Dismiss</button>) : (<BookmarkForm />) }
+        <BookmarkForm />
         <Modal open={!isAllConfigured} />
       </Container>
     </WholeContainer>
