@@ -124,8 +124,10 @@ export async function checkLinkExists(
   }
 
   const url =
-    `${baseUrl}/api/v1/search?cursor=0&sort=0&searchQueryString=` +
-    encodeURIComponent(`url:${tabInfo.url}`);
+    `${baseUrl}/api/v1/links?cursor=0&sort=0&searchQueryString=` +
+    encodeURIComponent(`${tabInfo.url}`);
+
+  console.log('Checking if link exists at:', url);
 
   const response = await fetch(url, {
     headers: {
@@ -135,7 +137,9 @@ export async function checkLinkExists(
 
   const data = await response.json();
 
-  const exists = data.data.links.length > 0;
+  console.log('Link exists response:', data);
+
+  const exists = data.response.length > 0;
 
   return exists;
 }
