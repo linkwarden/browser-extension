@@ -2,6 +2,7 @@ import captureScreenshot from '../screenshot.ts';
 import { bookmarkFormValues } from '../validators/bookmarkForm.ts';
 import axios from 'axios';
 import { bookmarkMetadata } from '../cache.ts';
+import { getCurrentTabInfo } from '../utils.ts';
 
 export async function postLink(
   baseUrl: string,
@@ -110,4 +111,35 @@ export async function getLinksFetch(
     },
   });
   return await response.json();
+}
+
+export async function checkLinkExists(
+  baseUrl: string,
+  apiKey: string
+): Promise<boolean> {
+  const tabInfo = await getCurrentTabInfo();
+  if (!tabInfo.url) {
+    console.error('No URL found for current tab');
+    return false;
+  }
+
+  const url =
+    `${baseUrl}/api/v1/links?cursor=0&sort=0&searchQueryString=` +
+    encodeURIComponent(`${tabInfo.url}`);
+
+  console.log('Checking if link exists at:', url);
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+    },
+  });
+
+  const data = await response.json();
+
+  console.log('Link exists response:', data);
+
+  const exists = data.response.length > 0;
+
+  return exists;
 }
