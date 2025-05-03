@@ -2,6 +2,7 @@ import { getBrowser, getCurrentTabInfo } from '../../@/lib/utils.ts';
 // import BookmarkTreeNode = chrome.bookmarks.BookmarkTreeNode;
 import { getConfig, isConfigured } from '../../@/lib/config.ts';
 import {
+  checkLinkExists,
   // deleteLinkFetch,
   // updateLinkFetch,
   postLinkFetch,
@@ -295,6 +296,32 @@ browser.runtime.onInstalled.addListener(function () {
     title: 'Save all tabs to Linkwarden',
     contexts: ['page'],
   });
+});
+
+browser.tabs.onActivated.addListener(async ({ tabId }) => {
+  const cachedConfig = await getConfig();
+  const linkExists = await checkLinkExists(
+    cachedConfig.baseUrl,
+    cachedConfig.apiKey
+  );
+  if (linkExists) {
+    if (browser.action) {
+      browser.action.setBadgeText({ tabId, text: '✓' });
+      browser.action.setBadgeBackgroundColor({ tabId, color: '#4688F1' });
+    } else {
+      browser.browserAction.setBadgeText({ tabId, text: '✓' });
+      browser.browserAction.setBadgeBackgroundColor({
+        tabId,
+        color: '#4688F1',
+      });
+    }
+  } else {
+    if (browser.action) {
+      browser.action.setBadgeText({ tabId, text: '' });
+    } else {
+      browser.browserAction.setBadgeText({ tabId, text: '' });
+    }
+  }
 });
 
 // Omnibox implementation
