@@ -298,17 +298,29 @@ browser.runtime.onInstalled.addListener(function () {
   });
 });
 
-browser.tabs.onActivated.addListener(async (_tabInfo) => {
+browser.tabs.onActivated.addListener(async ({ tabId }) => {
   const cachedConfig = await getConfig();
   const linkExists = await checkLinkExists(
     cachedConfig.baseUrl,
     cachedConfig.apiKey
   );
   if (linkExists) {
-    browser.browserAction.setBadgeText({ text: '✓' });
-    browser.browserAction.setBadgeBackgroundColor({ color: '#4688F1' });
+    if (browser.action) {
+      browser.action.setBadgeText({ tabId, text: '✓' });
+      browser.action.setBadgeBackgroundColor({ tabId, color: '#4688F1' });
+    } else {
+      browser.browserAction.setBadgeText({ tabId, text: '✓' });
+      browser.browserAction.setBadgeBackgroundColor({
+        tabId,
+        color: '#4688F1',
+      });
+    }
   } else {
-    browser.browserAction.setBadgeText({ text: '' });
+    if (browser.action) {
+      browser.action.setBadgeText({ tabId, text: '' });
+    } else {
+      browser.browserAction.setBadgeText({ tabId, text: '' });
+    }
   }
 });
 

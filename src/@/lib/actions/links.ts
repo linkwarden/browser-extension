@@ -122,14 +122,20 @@ export async function checkLinkExists(
     console.error('No URL found for current tab');
     return false;
   }
-  const safeUrl = encodeURIComponent(tabInfo.url);
-  const url = `${baseUrl}/api/v1/links?searchQueryString=${safeUrl}&searchByUrl=true`;
+
+  const url =
+    `${baseUrl}/api/v1/search?cursor=0&sort=0&searchQueryString=` +
+    encodeURIComponent(`url:${tabInfo.url}`);
+
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${apiKey}`,
     },
   });
+
   const data = await response.json();
-  const exists = data.response.length > 0;
+
+  const exists = data.data.links.length > 0;
+
   return exists;
 }
