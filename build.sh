@@ -13,8 +13,8 @@ if [ "$1" = "--firefox" ]; then
    cp firefox/manifest.json dist/manifest.json
 else
    # Copy to dist/manifest.json
-   echo "Built for Chrome(ium)..."
-   cp src/manifest.json dist/manifest.json
+   echo "Built for Chromium..."
+   cp chromium/manifest.json dist/manifest.json
 fi
 
 # Done (for now...)
