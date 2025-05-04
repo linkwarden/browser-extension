@@ -124,7 +124,7 @@ export async function checkLinkExists(
   }
 
   const url =
-    `${baseUrl}/api/v1/links?cursor=0&sort=0&searchQueryString=` +
+    `${baseUrl}/api/v1/links?cursor=0&sort=0&searchByUrl=true&searchQueryString=` +
     encodeURIComponent(`${tabInfo.url}`);
 
   console.log('Checking if link exists at:', url);
