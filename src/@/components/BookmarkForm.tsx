@@ -42,8 +42,14 @@ import { Label } from './ui/Label.tsx';
 
 let configured = false;
 let duplicated = false;
+
+// Remember the status of the keepOptionsDetailsOpen configuration checkbox
+// so that the next invocation of the bookmark form will have the
+// correct behaviour without any lag
+let keepOptionsDetailsOpen = false;
+
 const BookmarkForm = () => {
-  const [openOptions, setOpenOptions] = useState<boolean>(false);
+  const [openOptions, setOpenOptions] = useState<boolean>(keepOptionsDetailsOpen);
   const [openCollections, setOpenCollections] = useState<boolean>(false);
   const [uploadImage, setUploadImage] = useState<boolean>(false);
   const [state, setState] = useState<'capturing' | 'uploading' | null>(null);
@@ -124,6 +130,10 @@ const BookmarkForm = () => {
         form.setValue('collection', {
           name: config.defaultCollection,
         });
+        if (openOptions !== config.keepOptionsDetailsOpen) {
+          keepOptionsDetailsOpen = config.keepOptionsDetailsOpen;
+          setOpenOptions(config.keepOptionsDetailsOpen);
+        }
       });
     });
     const getConfigUse = async () => {

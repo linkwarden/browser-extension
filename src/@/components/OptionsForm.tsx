@@ -47,6 +47,7 @@ const OptionsForm = () => {
       username: '',
       password: '',
       apiKey: '',
+      keepOptionsDetailsOpen: false,
       syncBookmarks: false,
       defaultCollection: 'Unorganized',
     },
@@ -79,6 +80,7 @@ const OptionsForm = () => {
         username: '',
         password: '',
         apiKey: '',
+        keepOptionsDetailsOpen: false,
         syncBookmarks: false,
         defaultCollection: 'Unorganized',
       });
@@ -157,6 +159,7 @@ const OptionsForm = () => {
         baseUrl: values.baseUrl,
         defaultCollection: values.defaultCollection,
         syncBookmarks: values.syncBookmarks,
+        keepOptionsDetailsOpen: values.keepOptionsDetailsOpen,
         apiKey:
           values.method === 'apiKey' && values.apiKey
             ? values.apiKey
@@ -303,6 +306,27 @@ const OptionsForm = () => {
             </>
           )}
 
+          <FormField
+            control={control}
+            name="keepOptionsDetailsOpen"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Keep details open</FormLabel>
+                <FormDescription>
+                  <FormControl>
+                    <input type="checkbox"
+                      checked={field.value}
+                      onChange={field.onChange}
+                      className="mr-2"
+                    /> 
+                  </FormControl>
+                  When saving a link, always open the details panel 
+                </FormDescription>
+                
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           {/* Commented out fields */}
           {/* 
           <FormField

@@ -5,6 +5,7 @@ export const configSchema = z.object({
   defaultCollection: z.string().optional().default('Unorganized'),
   apiKey: z.string(),
   syncBookmarks: z.boolean().optional().default(false),
+  keepOptionsDetailsOpen: z.boolean().optional().default(false),
 });
 
 export type configType = z.infer<typeof configSchema>;
