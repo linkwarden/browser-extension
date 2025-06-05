@@ -37,6 +37,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/Select.tsx'; // Import the Select component
+import { Checkbox } from './ui/CheckBox.tsx';
+import { Label } from './ui/Label.tsx';
 
 const OptionsForm = () => {
   const form = useForm<optionsFormValues>({
@@ -47,6 +49,7 @@ const OptionsForm = () => {
       username: '',
       password: '',
       apiKey: '',
+      keepOptionsDetailsOpen: false,
       syncBookmarks: false,
       defaultCollection: 'Unorganized',
     },
@@ -79,6 +82,7 @@ const OptionsForm = () => {
         username: '',
         password: '',
         apiKey: '',
+        keepOptionsDetailsOpen: false,
         syncBookmarks: false,
         defaultCollection: 'Unorganized',
       });
@@ -157,6 +161,7 @@ const OptionsForm = () => {
         baseUrl: values.baseUrl,
         defaultCollection: values.defaultCollection,
         syncBookmarks: values.syncBookmarks,
+        keepOptionsDetailsOpen: values.keepOptionsDetailsOpen,
         apiKey:
           values.method === 'apiKey' && values.apiKey
             ? values.apiKey
@@ -303,6 +308,21 @@ const OptionsForm = () => {
             </>
           )}
 
+          <FormField
+            control={control}
+            name="keepOptionsDetailsOpen"
+            render={({ field }) => (
+              <FormItem>
+                <Label className="flex items-center gap-2 w-fit cursor-pointer">
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                  Show more options by default
+                </Label>
+              </FormItem>
+            )}
+          />
           {/* Commented out fields */}
           {/* 
           <FormField

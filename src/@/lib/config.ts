@@ -5,6 +5,7 @@ const DEFAULTS: configType = {
   baseUrl: '',
   apiKey: '',
   defaultCollection: 'Unorganized',
+  keepOptionsDetailsOpen: false,
   syncBookmarks: false,
 };
 
@@ -36,6 +37,7 @@ export async function clearConfig() {
       baseUrl: '',
       apiKey: '',
       defaultCollection: 'Unorganized',
+      keepOptionsDetailsOpen: false,
       syncBookmarks: false,
     })
   );
