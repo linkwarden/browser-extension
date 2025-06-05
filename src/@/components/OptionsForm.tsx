@@ -37,6 +37,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/Select.tsx'; // Import the Select component
+import { Checkbox } from './ui/CheckBox.tsx';
+import { Label } from './ui/Label.tsx';
 
 const OptionsForm = () => {
   const form = useForm<optionsFormValues>({
@@ -311,19 +313,13 @@ const OptionsForm = () => {
             name="keepOptionsDetailsOpen"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Keep details open</FormLabel>
-                <FormDescription>
-                  <FormControl>
-                    <input type="checkbox"
-                      checked={field.value}
-                      onChange={field.onChange}
-                      className="mr-2"
-                    /> 
-                  </FormControl>
-                  When saving a link, always open the details panel 
-                </FormDescription>
-                
-                <FormMessage />
+                <Label className="flex items-center gap-2 w-fit cursor-pointer">
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                  Show more options by default
+                </Label>
               </FormItem>
             )}
           />
