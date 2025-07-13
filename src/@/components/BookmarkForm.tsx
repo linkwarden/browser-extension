@@ -251,6 +251,7 @@ const BookmarkForm = () => {
                           <CommandInput
                             className="min-w-[280px]"
                             placeholder="Search Collection..."
+                            autoFocus={true}
                           />
                           <CommandEmpty>No Collection found.</CommandEmpty>
                           {Array.isArray(collections) && (
