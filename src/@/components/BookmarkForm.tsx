@@ -27,7 +27,7 @@ import { Toaster } from './ui/Toaster.tsx';
 import { getCollections } from '../lib/actions/collections.ts';
 import { getTags } from '../lib/actions/tags.ts';
 import { X } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/Popover.tsx';
+import { Popover, PopoverTrigger } from './ui/Popover.tsx';
 import { CaretSortIcon } from '@radix-ui/react-icons';
 import {
   Command,
@@ -233,7 +233,7 @@ const BookmarkForm = () => {
                       </FormControl>
                     </PopoverTrigger>
 
-                    {!openOptions && openCollections ? (
+                    {openCollections ? (
                       <div
                         className={`fade-up min-w-full p-0 overflow-y-auto ${
                           openCollections
@@ -301,59 +301,6 @@ const BookmarkForm = () => {
                           )}
                         </Command>
                       </div>
-                    ) : openOptions && openCollections ? (
-                      <PopoverContent
-                        className={`min-w-full p-0 overflow-y-auto max-h-[200px]`}
-                      >
-                        <Command className="flex-grow min-w-full dropdown-content">
-                          <CommandInput
-                            className="min-w-[280px]"
-                            placeholder="Search collection..."
-                          />
-                          <CommandEmpty>No Collection found.</CommandEmpty>
-                          {Array.isArray(collections) && (
-                            <CommandGroup className="w-full">
-                              {isLoading ? (
-                                <CommandItem
-                                  value="Getting collections..."
-                                  key="Getting collections..."
-                                  onSelect={() => {
-                                    form.setValue('collection', {
-                                      name: 'Unorganized',
-                                    });
-                                    setOpenCollections(false);
-                                  }}
-                                >
-                                  Unorganized
-                                </CommandItem>
-                              ) : (
-                                collections?.map(
-                                  (collection: {
-                                    name: string;
-                                    id: number;
-                                    ownerId: number;
-                                  }) => (
-                                    <CommandItem
-                                      value={collection.name}
-                                      key={collection.id}
-                                      onSelect={() => {
-                                        form.setValue('collection', {
-                                          ownerId: collection.ownerId,
-                                          id: collection.id,
-                                          name: collection.name,
-                                        });
-                                        setOpenCollections(false);
-                                      }}
-                                    >
-                                      {collection.name}
-                                    </CommandItem>
-                                  )
-                                )
-                              )}
-                            </CommandGroup>
-                          )}
-                        </Command>
-                      </PopoverContent>
                     ) : undefined}
                   </Popover>
                 </div>
