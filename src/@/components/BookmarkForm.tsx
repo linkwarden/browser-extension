@@ -223,11 +223,11 @@ const BookmarkForm = () => {
                           {loadingCollections
                             ? 'Loading'
                             : field.value?.name
-                            ? collections?.find(
+                              ? collections?.find(
                                 (collection: { name: string }) =>
                                   collection.name === field.value?.name
                               )?.name || form.getValues('collection')?.name
-                            : 'Select a collection...'}
+                              : 'Select a collection...'}
                           <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </FormControl>
@@ -235,11 +235,10 @@ const BookmarkForm = () => {
 
                     {!openOptions && openCollections ? (
                       <div
-                        className={`fade-up min-w-full p-0 overflow-y-auto ${
-                          openCollections
+                        className={`fade-up min-w-full p-0 overflow-y-auto ${openCollections
                             ? 'fixed inset-0 w-full h-full z-50 bg-white'
                             : ''
-                        }`}
+                          }`}
                       >
                         <Button
                           className="absolute top-1 right-1 bg-transparent hover:bg-transparent hover:opacity-50 transition-colors ease-in-out duration-200"

@@ -48,6 +48,7 @@ const OptionsForm = () => {
       password: '',
       apiKey: '',
       syncBookmarks: false,
+      linkAddedIndicator: false,
       defaultCollection: 'Unorganized',
     },
   });
@@ -157,6 +158,8 @@ const OptionsForm = () => {
         baseUrl: values.baseUrl,
         defaultCollection: values.defaultCollection,
         syncBookmarks: values.syncBookmarks,
+        linkAddedIndicator: values.linkAddedIndicator,
+
         apiKey:
           values.method === 'apiKey' && values.apiKey
             ? values.apiKey
@@ -232,6 +235,11 @@ const OptionsForm = () => {
                         Username and Password
                       </SelectItem>
                       <SelectItem value="apiKey">API Key</SelectItem>
+                    </SelectContent>
+                     <SelectContent>
+                      <SelectItem value="linkAddedIndicator">
+                        EnabledLinkAddedIndiactor
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </FormControl>
