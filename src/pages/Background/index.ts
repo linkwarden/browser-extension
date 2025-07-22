@@ -214,7 +214,7 @@ async function genericOnClick(
           !tab.url.startsWith('about:')
         ) {
           try {
-            if (new URL(tab.url))
+            if (new URL(tab.url)) {
               await postLinkFetch(
                 config.baseUrl,
                 {
@@ -228,6 +228,7 @@ async function genericOnClick(
                 },
                 config.apiKey
               );
+            }
           } catch (error) {
             console.error(`Failed to save tab: ${tab.url}`, error);
           }
@@ -300,6 +301,7 @@ browser.runtime.onInstalled.addListener(function () {
 
 browser.tabs.onActivated.addListener(async ({ tabId }) => {
   const cachedConfig = await getConfig();
+  if (!cachedConfig.linkAddedIndicator) return;
   const linkExists = await checkLinkExists(
     cachedConfig.baseUrl,
     cachedConfig.apiKey

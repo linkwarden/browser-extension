@@ -7,6 +7,7 @@ export const optionsFormSchema = z.object({
   syncBookmarks: z.boolean().default(false),
   defaultCollection: z.string().optional().default('Unorganized'),
   useApiKey: z.boolean().default(false),
+  linkAddedIndicator: z.boolean().default(false),
   apiKey: z.string().optional(),
   method: z.enum(['username', 'apiKey']).default('username'),
 });

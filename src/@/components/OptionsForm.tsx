@@ -37,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/Select.tsx'; // Import the Select component
+import { Checkbox } from './ui/CheckBox.tsx';
 
 const OptionsForm = () => {
   const form = useForm<optionsFormValues>({
@@ -81,6 +82,7 @@ const OptionsForm = () => {
         password: '',
         apiKey: '',
         syncBookmarks: false,
+        linkAddedIndicator: false,
         defaultCollection: 'Unorganized',
       });
       await clearConfig();
@@ -159,7 +161,6 @@ const OptionsForm = () => {
         defaultCollection: values.defaultCollection,
         syncBookmarks: values.syncBookmarks,
         linkAddedIndicator: values.linkAddedIndicator,
-
         apiKey:
           values.method === 'apiKey' && values.apiKey
             ? values.apiKey
@@ -215,6 +216,27 @@ const OptionsForm = () => {
             )}
           />
 
+          <FormField
+            control={control}
+            name="linkAddedIndicator"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Link added indicator</FormLabel>
+                <FormDescription>
+                  Show if the domain has already been saved to linkwarden, this
+                  makes a api request on every tab switch.
+                </FormDescription>
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {/* Authentication Method Select */}
           <FormField
             control={control}
@@ -235,11 +257,6 @@ const OptionsForm = () => {
                         Username and Password
                       </SelectItem>
                       <SelectItem value="apiKey">API Key</SelectItem>
-                    </SelectContent>
-                     <SelectContent>
-                      <SelectItem value="linkAddedIndicator">
-                        EnabledLinkAddedIndiactor
-                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </FormControl>
