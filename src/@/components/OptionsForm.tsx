@@ -37,12 +37,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/Select.tsx'; // Import the Select component
-import { ModeToggle } from './ModeToggle.tsx';
+import { useTheme } from './ThemeProvider.tsx';
 
 const OptionsForm = () => {
+  const { setTheme } = useTheme();
   const form = useForm<optionsFormValues>({
     resolver: zodResolver(optionsFormSchema),
     defaultValues: {
+      theme: 'system',
       baseUrl: 'https://cloud.linkwarden.app',
       method: 'username', // Default to 'username'
       username: '',
@@ -75,6 +77,7 @@ const OptionsForm = () => {
     onSuccess: async () => {
       // Reset the form
       form.reset({
+        theme: 'system',
         baseUrl: '',
         method: 'username',
         username: '',
@@ -83,6 +86,7 @@ const OptionsForm = () => {
         syncBookmarks: false,
         defaultCollection: 'Unorganized',
       });
+      setTheme('system');
       await clearConfig();
       await clearBookmarksMetadata();
       return;
@@ -158,6 +162,8 @@ const OptionsForm = () => {
         baseUrl: values.baseUrl,
         defaultCollection: values.defaultCollection,
         syncBookmarks: values.syncBookmarks,
+        theme: values.theme,
+        method: values.method,
         apiKey:
           values.method === 'apiKey' && values.apiKey
             ? values.apiKey
@@ -179,7 +185,16 @@ const OptionsForm = () => {
       const configured = await isConfigured();
       if (configured) {
         const cachedOptions = await getConfig();
-        form.reset(cachedOptions);
+        form.reset({
+          theme: cachedOptions.theme || 'system',
+          baseUrl: cachedOptions.baseUrl,
+          method: cachedOptions.method || 'username',
+          username: '',
+          password: '',
+          apiKey: cachedOptions.method === 'apiKey' ? cachedOptions.apiKey : '',
+          syncBookmarks: cachedOptions.syncBookmarks,
+          defaultCollection: cachedOptions.defaultCollection,
+        });
       }
     })();
   }, [form]);
@@ -194,6 +209,38 @@ const OptionsForm = () => {
           onSubmit={handleSubmit((data) => onSubmit(data))}
           className="space-y-3 p-2"
         >
+          <FormField
+            control={control}
+            name="theme"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Theme</FormLabel>
+                <FormDescription>
+                  Choose your preferred theme appearance.
+                </FormDescription>
+                <FormControl>
+                  <Select
+                    value={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setTheme(value as 'light' | 'dark' | 'system');
+                    }}
+                  >
+                    <SelectTrigger className="w-full justify-between bg-neutral-100 dark:bg-neutral-900 outline-none focus:outline-none ring-0 focus:ring-0">
+                      <SelectValue placeholder="Select theme" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="light">Light</SelectItem>
+                      <SelectItem value="dark">Dark</SelectItem>
+                      <SelectItem value="system">System</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={control}
             name="baseUrl"
@@ -367,18 +414,6 @@ const OptionsForm = () => {
         </form>
       </Form>
 
-      {/* Theme Selector Section */}
-      <div className="mt-6 p-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-medium">Theme</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Choose your preferred theme appearance
-            </p>
-          </div>
-          <ModeToggle />
-        </div>
-      </div>
 
       <Toaster />
     </div>
