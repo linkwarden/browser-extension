@@ -11,14 +11,41 @@ export async function postLink(
   setState: (state: 'capturing' | 'uploading' | null) => void,
   apiKey: string
 ) {
+  console.log('🔗 PostLink called with data:', data);
   const url = `${baseUrl}/api/v1/links`;
+
+  // Ensure tags is always an array and format correctly for API
+  // API expects full tag objects with {id, name}, not just IDs
+  const formattedTags = (data.tags || [])
+    .filter(tag => tag && (tag.id || tag.name)) // Ensure tag has either ID or name
+    .map(tag => ({
+      id: tag.id,
+      name: tag.name
+    }));
+
+  const formattedData = {
+    ...data,
+    tags: formattedTags, // Send full tag objects as API expects
+    collection: data.collection?.id ? { id: data.collection.id } : data.collection, // Handle collection ID
+  };
+
+  // Debug logging
+  console.log('🔍 Original tags data:', data.tags);
+  console.log('🔍 Tags validation:', data.tags?.map(tag => ({ name: tag.name, id: tag.id, hasId: !!tag.id, hasName: !!tag.name })));
+  console.log('🔍 Formatted tags data (full objects):', formattedData.tags);
+  console.log('🔍 Sending data to API:', JSON.stringify(formattedData, null, 2));
+
+  // Temporary alert for debugging (remove after testing)
+  if (formattedData.tags && formattedData.tags.length > 0) {
+    console.warn('⚠️ ALERT: About to send tags:', formattedData.tags.map(t => `${t.name}(${t.id})`).join(', '));
+  }
 
   if (uploadImage) {
     setState('capturing');
     const screenshot = await captureScreenshot();
     setState('uploading');
 
-    const link = await axios.post(url, data, {
+    const link = await axios.post(url, formattedData, {
       headers: {
         Authorization: `Bearer ${apiKey}`,
       },
@@ -41,7 +68,7 @@ export async function postLink(
 
     return link;
   } else {
-    return await axios.post(url, data, {
+    return await axios.post(url, formattedData, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
