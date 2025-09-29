@@ -33,6 +33,19 @@ function buildFullPath(
   return paths.join(' > ');
 }
 
+export async function createCollection(baseUrl: string, apiKey: string, data: { name: string }) {
+  const url = `${baseUrl}/api/v1/collections`;
+
+  const response = await axios.post<{ response: ResponseCollections }>(url, data, {
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  return response.data.response;
+}
+
 export async function getCollections(baseUrl: string, apiKey: string) {
   const url = `${baseUrl}/api/v1/collections`;
 

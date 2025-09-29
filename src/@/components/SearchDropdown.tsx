@@ -16,6 +16,7 @@ interface SearchItem {
   name: string;
   ownerId?: number;
   pathname?: string; // For collections
+  [key: string]: any; // Allow dynamic property access
 }
 
 interface SearchDropdownProps {
@@ -69,7 +70,7 @@ export const SearchDropdown: FC<SearchDropdownProps> = ({
       setIsCreating(false);
       toast({
         title: 'Success',
-        description: `${type === 'collection' ? 'Collection' : 'Tag'} "${newItem[displayKey]}" created successfully!`,
+        description: `${type === 'collection' ? 'Collection' : 'Tag'} "${newItem.name}" created successfully!`,
         duration: 3000,
       });
     },
