@@ -10,7 +10,15 @@
       "Bash(git commit -m \"$(cat <<''EOF''\nchore: update package author to Florian Fackler\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git reset:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npm run build:*)",
+      "Bash(pkill:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run copy-manifest:*)",
+      "Bash(cat:*)",
+      "Bash(npm run build:firefox:*)",
+      "Bash(npm run build:chromium:*)",
+      "Bash(npm run dev:firefox:*)"
     ],
     "deny": [],
     "ask": []
