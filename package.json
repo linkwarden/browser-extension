@@ -10,8 +10,12 @@
   "license": "MIT",
   "description": "Linkwarden browser extension",
   "scripts": {
-    "dev": "vite",
+    "dev": "tsc && vite build --watch",
+    "dev:firefox": "BROWSER=firefox npm run dev",
+    "dev:chromium": "BROWSER=chromium npm run dev",
     "build": "tsc && vite build",
+    "build:firefox": "BROWSER=firefox npm run build",
+    "build:chromium": "BROWSER=chromium npm run build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
