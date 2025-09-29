@@ -2,7 +2,10 @@
   "name": "linkwarden-extension",
   "private": true,
   "version": "0.0.1",
-  "author": "Jordan Higuera Higuera <jordan_higuera@hotmail.com>",
+  "author": [
+    "Jordan Higuera Higuera <jordan_higuera@hotmail.com>",
+    "Florian Fackler <florian@fackler.cloud>"
+  ],
   "type": "module",
   "license": "MIT",
   "description": "Linkwarden browser extension",
