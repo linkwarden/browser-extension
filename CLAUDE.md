@@ -8,6 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `npm run dev` - Start development server with hot reload
 - `npm run build` - Build the extension (TypeScript compilation + Vite build)
+- `npm run debug` - **NEW**: Development build with watch mode and automatic manifest copying
 - `npm run lint` - Run ESLint with TypeScript support
 - `npm run preview` - Preview the built extension
 
@@ -53,18 +54,27 @@ This is a browser extension for Linkwarden (bookmark manager) with cross-browser
 ### Key Features
 
 - Add current page to Linkwarden with collection/tag selection
+- **Enhanced Collection Management**: Create new collections directly from search dropdown
+- **Smart Tag System**: Create and manage tags with search functionality and auto-completion
+- **Improved Search UX**: Magnifying glass icons and intuitive search interface
 - Screenshot capture and upload
 - Save all tabs in current window
 - Context menu integration
 - Omnibox search ("lk" keyword)
 - Badge indicator for already-saved pages
+- **Theme Support**: Light, dark, and system theme modes
 - Cross-browser bookmark sync (experimental, mostly commented out)
 
 ### File Organization
 
 - `src/@/` - Main application code with path alias
 - `src/@/components/` - React components including shadcn/ui components
+  - `SearchDropdown.tsx` - **NEW**: Generic dropdown component with search for collections/tags
+  - `BookmarkForm.tsx` - Enhanced with SearchDropdown integration
+  - `OptionsForm.tsx` - Updated with theme selector
 - `src/@/lib/` - Business logic, API calls, utilities, validators
+  - `actions/collections.ts` - Collection API with creation support
+  - `actions/tags.ts` - **NEW**: Tag API with creation functionality
 - `src/hooks/` - Custom React hooks
 - `src/pages/` - Extension-specific pages (Background, Popup, Options)
 
@@ -75,3 +85,27 @@ This is a browser extension for Linkwarden (bookmark manager) with cross-browser
 - Vite config handles multiple entry points for extension pages
 - Browser API compatibility handled through `getBrowser()` utility
 - Extension permissions include storage, tabs, bookmarks, contextMenus, and host permissions
+
+## Recent Enhancements
+
+### SearchDropdown Component
+- **Reusable Architecture**: Single component handles both collections and tags
+- **Search Functionality**: Magnifying glass icon with real-time filtering
+- **Creation Support**: Create new collections and tags directly from search
+- **Multi-select Support**: Tags support multiple selection with checkmarks
+- **Keyboard Navigation**: Enter to create, Escape to close
+
+### UI/UX Improvements
+- **Theme Integration**: Comprehensive light/dark/system theme support
+- **Enhanced Search**: Improved search experience with visual feedback
+- **Better Responsiveness**: Optimized for various screen sizes
+- **Accessible Components**: Using Radix UI for better accessibility
+
+### Development Workflow
+- **Hot Reloading**: `npm run debug` provides watch mode development
+- **Automatic Manifest**: Custom Vite plugin copies Firefox manifest automatically
+- **Better Build Process**: Enhanced cross-browser compatibility
+
+### Authors
+- Jordan Higuera Higuera <jordan_higuera@hotmail.com>
+- Florian Fackler <florian@fackler.cloud>
