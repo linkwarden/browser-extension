@@ -10,12 +10,49 @@ export function cn(...inputs: ClassValue[]) {
 export interface TabInfo {
   url: string;
   title: string;
+  description?: string;
 }
 
-export async function getCurrentTabInfo(): Promise<{ title: string | undefined; url: string | undefined }> {
+export async function getCurrentTabInfo(): Promise<{ title: string | undefined; url: string | undefined; description: string | undefined }> {
   const tabs = await getBrowser().tabs.query({ active: true, currentWindow: true });
   const { url, title } = tabs[0];
-  return { url, title };
+
+  let description: string | undefined;
+
+  try {
+    // Try to execute script to get meta description
+    if (tabs[0].id) {
+      const results = await getBrowser().scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        function: function() {
+          // Get meta description from the page
+          const metaDescription = document.querySelector('meta[name="description"]') as HTMLMetaElement;
+          if (metaDescription) {
+            return metaDescription.getAttribute('content');
+          } else {
+            // Fallback: try og:description
+            const ogDescription = document.querySelector('meta[property="og:description"]') as HTMLMetaElement;
+            if (ogDescription) {
+              return ogDescription.getAttribute('content');
+            } else {
+              // Last fallback: try twitter:description
+              const twitterDescription = document.querySelector('meta[name="twitter:description"]') as HTMLMetaElement;
+              return twitterDescription ? twitterDescription.getAttribute('content') : null;
+            }
+          }
+        }
+      } as any);
+
+      if (results && results[0] && results[0].result) {
+        description = results[0].result;
+      }
+    }
+  } catch (error) {
+    // Silently fail if content script execution fails
+    console.warn('Could not extract meta description:', error);
+  }
+
+  return { url, title, description };
 }
 
 export function getBrowser() {
