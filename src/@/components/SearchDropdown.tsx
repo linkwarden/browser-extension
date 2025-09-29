@@ -50,17 +50,29 @@ export const SearchDropdown: FC<SearchDropdownProps> = ({
 
   const { mutate: createNewItem } = useMutation({
     mutationFn: async (name: string) => {
+      console.log(`🔄 Starting ${type} creation for:`, name);
       const config = await getConfig();
+
+      let result;
       if (type === 'collection') {
-        return await createCollection(config.baseUrl, config.apiKey, { name: name.trim() });
+        console.log('🏗️ Creating collection...');
+        result = await createCollection(config.baseUrl, config.apiKey, { name: name.trim() });
       } else {
-        return await createTag(config.baseUrl, config.apiKey, { name: name.trim() });
+        console.log('🏷️ Creating tag...');
+        result = await createTag(config.baseUrl, config.apiKey, { name: name.trim() });
       }
+
+      console.log(`✅ Created ${type} result:`, result);
+      return result;
     },
     onSuccess: (newItem) => {
+      console.log(`Created new ${type}:`, newItem);
+
       if (multiple) {
         const currentValues = Array.isArray(value) ? value : [];
-        onChange([...currentValues, newItem]);
+        const updatedValues = [...currentValues, newItem];
+        console.log(`Updated ${type} values:`, updatedValues);
+        onChange(updatedValues);
       } else {
         onChange(newItem);
       }
@@ -119,7 +131,7 @@ export const SearchDropdown: FC<SearchDropdownProps> = ({
     }
   };
 
-  // Filter items based on search query
+  // Filter and sort items based on search query
   const filteredItems = items?.filter((item: SearchItem) => {
     const searchValue = item[searchKey] || item.name;
     const pathValue = item.pathname || '';
@@ -127,6 +139,18 @@ export const SearchDropdown: FC<SearchDropdownProps> = ({
       searchValue.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pathValue.toLowerCase().includes(searchQuery.toLowerCase())
     );
+  }).sort((a, b) => {
+    // Sort by name first, then by pathname if available
+    const aName = (a[searchKey] || a.name || '').toLowerCase();
+    const bName = (b[searchKey] || b.name || '').toLowerCase();
+    const nameComparison = aName.localeCompare(bName);
+
+    // If names are equal and we have pathnames, sort by pathname
+    if (nameComparison === 0 && a.pathname && b.pathname) {
+      return a.pathname.toLowerCase().localeCompare(b.pathname.toLowerCase());
+    }
+
+    return nameComparison;
   }) || [];
 
   const showCreateOption = searchQuery.trim() &&
