@@ -6,6 +6,8 @@ const DEFAULTS: configType = {
   apiKey: '',
   defaultCollection: 'Unorganized',
   syncBookmarks: false,
+  theme: 'system',
+  method: 'username',
 };
 
 const CONFIG_KEY = 'linkwarden_config';
@@ -37,6 +39,8 @@ export async function clearConfig() {
       apiKey: '',
       defaultCollection: 'Unorganized',
       syncBookmarks: false,
+      theme: 'system',
+      method: 'username',
     })
   );
 }
