@@ -58,6 +58,9 @@ const BookmarkForm = () => {
 
   const { mutate: onSubmit, isLoading } = useMutation({
     mutationFn: async (values: bookmarkFormValues) => {
+      console.log('🚀 Starting bookmark submission with values:', values);
+      console.log('📋 Tags in form before submission:', values.tags);
+
       const config = await getConfig();
 
       await postLink(
@@ -71,12 +74,19 @@ const BookmarkForm = () => {
       return;
     },
     onError: (error) => {
-      console.error(error);
+      console.error('Full error object:', error);
       if (error instanceof AxiosError) {
+        console.error('Axios error details:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
         toast({
           title: 'Error',
           description:
             error.response?.data.response ||
+            error.response?.data.message ||
+            error.message ||
             'There was an error while trying to save the link. Please try again.',
           variant: 'destructive',
         });
@@ -106,10 +116,11 @@ const BookmarkForm = () => {
   const { handleSubmit, control } = form;
 
   useEffect(() => {
-    getCurrentTabInfo().then(({ url, title }) => {
+    getCurrentTabInfo().then(({ url, title, description }) => {
       getConfig().then((config) => {
         form.setValue('url', url ? url : '');
         form.setValue('name', title ? title : '');
+        form.setValue('description', description ? description : '');
         form.setValue('collection', {
           name: config.defaultCollection,
         });
@@ -156,7 +167,19 @@ const BookmarkForm = () => {
       const response = await getCollections(config.baseUrl, config.apiKey);
 
       return response.data.response.sort((a, b) => {
-        return a.pathname.localeCompare(b.pathname);
+        // Sort collections by name first, then by pathname
+        const aName = (a.name || '').toLowerCase();
+        const bName = (b.name || '').toLowerCase();
+        const nameComparison = aName.localeCompare(bName);
+
+        // If names are equal, sort by pathname
+        if (nameComparison === 0) {
+          const aPath = (a.pathname || '').toLowerCase();
+          const bPath = (b.pathname || '').toLowerCase();
+          return aPath.localeCompare(bPath);
+        }
+
+        return nameComparison;
       });
     },
     enabled: configured,
@@ -175,7 +198,10 @@ const BookmarkForm = () => {
       const response = await getTags(config.baseUrl, config.apiKey);
 
       return response.data.response.sort((a, b) => {
-        return a.name.localeCompare(b.name);
+        // Sort tags by name (case-insensitive)
+        const aName = (a.name || '').toLowerCase();
+        const bName = (b.name || '').toLowerCase();
+        return aName.localeCompare(bName);
       });
     },
     enabled: configured,
