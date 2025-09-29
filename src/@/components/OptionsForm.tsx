@@ -168,6 +168,7 @@ const OptionsForm = () => {
         description:
           'Your settings have been saved, you can now close this tab.',
         variant: 'default',
+        duration: 3000,
       });
     },
   });

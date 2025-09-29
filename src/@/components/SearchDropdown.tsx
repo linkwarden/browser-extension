@@ -70,6 +70,7 @@ export const SearchDropdown: FC<SearchDropdownProps> = ({
       toast({
         title: 'Success',
         description: `${type === 'collection' ? 'Collection' : 'Tag'} "${newItem[displayKey]}" created successfully!`,
+        duration: 3000,
       });
     },
     onError: (error) => {
