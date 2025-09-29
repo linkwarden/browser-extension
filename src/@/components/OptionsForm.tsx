@@ -37,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/Select.tsx'; // Import the Select component
+import { ModeToggle } from './ModeToggle.tsx';
 
 const OptionsForm = () => {
   const form = useForm<optionsFormValues>({
@@ -365,6 +366,20 @@ const OptionsForm = () => {
           </div>
         </form>
       </Form>
+
+      {/* Theme Selector Section */}
+      <div className="mt-6 p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-medium">Theme</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Choose your preferred theme appearance
+            </p>
+          </div>
+          <ModeToggle />
+        </div>
+      </div>
+
       <Toaster />
     </div>
   );
