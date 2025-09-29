@@ -7,16 +7,21 @@ import { copyFileSync, mkdirSync } from 'fs';
 const copyManifest = () => {
   return {
     name: 'copy-manifest',
-    writeBundle() {
+    writeBundle(options) {
       try {
-        mkdirSync('dist', { recursive: true });
-
-        // Check environment variable or default to chromium
+        // Get browser from environment variable or default to chromium
         const browser = process.env.BROWSER || 'chromium';
-        const manifestPath = `${browser}/manifest.json`;
 
-        copyFileSync(manifestPath, 'dist/manifest.json');
-        console.log(`Manifest copied successfully for ${browser}`);
+        // Determine output directory from Vite's outDir setting
+        const outDir = options.dir || 'dist';
+
+        mkdirSync(outDir, { recursive: true });
+
+        const manifestPath = `${browser}/manifest.json`;
+        const outputPath = `${outDir}/manifest.json`;
+
+        copyFileSync(manifestPath, outputPath);
+        console.log(`Manifest copied successfully for ${browser} to ${outDir}`);
       } catch (error) {
         console.error('Error copying manifest:', error);
       }
@@ -24,23 +29,34 @@ const copyManifest = () => {
   };
 };
 
-export default defineConfig({
-  plugins: [react(), copyManifest()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-  build: {
-    rollupOptions: {
-      input: {
-        main: path.resolve(__dirname, 'index.html'),
-        options: path.resolve(__dirname, 'src/pages/Options/options.html'),
-        background: path.resolve(__dirname, 'src/pages/Background/index.ts'),
-      },
-      output: {
-        entryFileNames: '[name].js',
+export default defineConfig(({ command }) => {
+  // Get browser from environment variable or default to chromium
+  const browser = process.env.BROWSER || 'chromium';
+
+  // Set output directory based on browser
+  const outDir = browser === 'firefox' ? 'dist-firefox' :
+                 browser === 'chromium' ? 'dist-chromium' :
+                 'dist';
+
+  return {
+    plugins: [react(), copyManifest()],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
       },
     },
-  },
+    build: {
+      outDir,
+      rollupOptions: {
+        input: {
+          main: path.resolve(__dirname, 'index.html'),
+          options: path.resolve(__dirname, 'src/pages/Options/options.html'),
+          background: path.resolve(__dirname, 'src/pages/Background/index.ts'),
+        },
+        output: {
+          entryFileNames: '[name].js',
+        },
+      },
+    },
+  };
 });
