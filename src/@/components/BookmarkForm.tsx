@@ -33,7 +33,6 @@ import { Label } from './ui/Label.tsx';
 let configured = false;
 let duplicated = false;
 const BookmarkForm = () => {
-  const [openOptions, setOpenOptions] = useState<boolean>(false);
   const [uploadImage, setUploadImage] = useState<boolean>(false);
   const [state, setState] = useState<'capturing' | 'uploading' | null>(null);
 
@@ -215,83 +214,72 @@ const BookmarkForm = () => {
               </FormItem>
             )}
           />
-          {openOptions && (
-            <div className="details list-none space-y-5 pt-2">
-              {tagsError ? <p>There was an error...</p> : null}
-              <FormField
-                control={control}
-                name="tags"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tags</FormLabel>
-                    <FormControl>
-                      <SearchDropdown
-                        value={(field.value || []) as any}
-                        onChange={field.onChange}
-                        items={(tags || []) as any}
-                        loading={loadingTags}
-                        onRefetch={refetchTags}
-                        placeholder="Select tags..."
-                        type="tags"
-                        multiple={true}
-                        displayKey="name"
-                        searchKey="name"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+          <div className="details list-none space-y-5 pt-2">
+            {tagsError ? <p>There was an error...</p> : null}
+            <FormField
+              control={control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tags</FormLabel>
+                  <FormControl>
+                    <SearchDropdown
+                      value={(field.value || []) as any}
+                      onChange={field.onChange}
+                      items={(tags || []) as any}
+                      loading={loadingTags}
+                      onRefetch={refetchTags}
+                      placeholder="Select tags..."
+                      type="tags"
+                      multiple={true}
+                      displayKey="name"
+                      searchKey="name"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Google..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Description..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Label className="flex items-center gap-2 w-fit cursor-pointer">
+              <Checkbox
+                checked={uploadImage}
+                onCheckedChange={handleCheckedChange}
               />
-              <FormField
-                control={control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Google..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Description..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Label className="flex items-center gap-2 w-fit cursor-pointer">
-                <Checkbox
-                  checked={uploadImage}
-                  onCheckedChange={handleCheckedChange}
-                />
-                Upload image from browser
-              </Label>
-            </div>
-          )}
+              Upload image from browser
+            </Label>
+          </div>
           {duplicated && (
             <p className="text-muted text-zinc-600 dark:text-zinc-400 mt-2">
               You already have this link saved.
             </p>
           )}
-          <div className="flex justify-between items-center mt-4">
-            <div
-              className="inline-flex select-none items-center justify-center rounded-md text-sm font-medium ring-offset-background
-               transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
-               focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
-               hover:bg-accent hover:text-accent-foreground hover:cursor-pointer p-2"
-              onClick={() => setOpenOptions((prevState) => !prevState)}
-            >
-              {openOptions ? 'Hide' : 'More'} Options
-            </div>
+          <div className="flex justify-end items-center mt-4">
             <Button disabled={isLoading} type="submit">
               Save
             </Button>
