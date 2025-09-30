@@ -35,6 +35,7 @@ let duplicated = false;
 const BookmarkForm = () => {
   const [uploadImage, setUploadImage] = useState<boolean>(false);
   const [state, setState] = useState<'capturing' | 'uploading' | null>(null);
+  const [isSaved, setIsSaved] = useState<boolean>(false);
 
   const handleCheckedChange = (s: boolean | 'indeterminate') => {
     if (s === 'indeterminate') return;
@@ -74,6 +75,7 @@ const BookmarkForm = () => {
       return;
     },
     onError: (error) => {
+      setIsSaved(false); // Reset saved state on error so user can try again
       console.error('Full error object:', error);
       if (error instanceof AxiosError) {
         console.error('Axios error details:', {
@@ -101,6 +103,7 @@ const BookmarkForm = () => {
       return;
     },
     onSuccess: () => {
+      setIsSaved(true);
       setTimeout(() => {
         window.close();
         // I want to show some confirmation before it's closed...
@@ -306,8 +309,8 @@ const BookmarkForm = () => {
             </p>
           )}
           <div className="flex justify-end items-center mt-4">
-            <Button disabled={isLoading} type="submit">
-              Save
+            <Button disabled={isLoading || isSaved} type="submit">
+              {isLoading ? 'Saving...' : isSaved ? 'Saved!' : 'Save'}
             </Button>
           </div>
         </form>
