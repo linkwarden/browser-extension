@@ -18,7 +18,10 @@
       "Bash(cat:*)",
       "Bash(npm run build:firefox:*)",
       "Bash(npm run build:chromium:*)",
-      "Bash(npm run dev:firefox:*)"
+      "Bash(npm run dev:firefox:*)",
+      "Bash(git remote add:*)",
+      "Bash(git fetch:*)",
+      "Bash(git rebase:*)"
     ],
     "deny": [],
     "ask": []
