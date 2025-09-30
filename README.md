@@ -130,4 +130,4 @@ src/
 ## Authors
 
 - Jordan Higuera Higuera <jordan_higuera@hotmail.com>
-- Florian Fackler <florian@fackler.cloud>
+- Florian Fackler <github@fackler.xyz>

@@ -120,7 +120,7 @@ This structural difference was why collections worked but tags failed - collecti
 
 ## Contributors
 - Jordan Higuera Higuera <jordan_higuera@hotmail.com>
-- Florian Fackler <florian@fackler.cloud>
+- Florian Fackler <github@fackler.xyz>
 
 ## Links
 - [Linkwarden](https://linkwarden.app/)
