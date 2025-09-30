@@ -52,7 +52,6 @@ const OptionsForm = () => {
       apiKey: '',
       syncBookmarks: false,
       defaultCollection: 'Unorganized',
-      cacheRefreshInterval: 60,
     },
   });
 
@@ -86,7 +85,6 @@ const OptionsForm = () => {
         apiKey: '',
         syncBookmarks: false,
         defaultCollection: 'Unorganized',
-        cacheRefreshInterval: 60,
       });
       setTheme('system');
       await clearConfig();
@@ -166,7 +164,6 @@ const OptionsForm = () => {
         syncBookmarks: values.syncBookmarks,
         theme: values.theme,
         method: values.method,
-        cacheRefreshInterval: values.cacheRefreshInterval,
         apiKey:
           values.method === 'apiKey' && values.apiKey
             ? values.apiKey
@@ -197,7 +194,6 @@ const OptionsForm = () => {
           apiKey: cachedOptions.method === 'apiKey' ? cachedOptions.apiKey : '',
           syncBookmarks: cachedOptions.syncBookmarks,
           defaultCollection: cachedOptions.defaultCollection,
-          cacheRefreshInterval: cachedOptions.cacheRefreshInterval || 60,
         });
       }
     })();
@@ -265,29 +261,7 @@ const OptionsForm = () => {
             )}
           />
 
-          <FormField
-            control={control}
-            name="cacheRefreshInterval"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Cache Refresh Interval (seconds)</FormLabel>
-                <FormDescription>
-                  How often to refresh collections and tags in the background (15-600 seconds).
-                </FormDescription>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min={15}
-                    max={600}
-                    placeholder="60"
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || 60)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {/* Cache refresh interval removed - using frontend 60-second caching instead */}
 
           {/* Authentication Method Select */}
           <FormField

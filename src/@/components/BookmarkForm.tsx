@@ -24,7 +24,9 @@ import { postLink } from '../lib/actions/links.ts';
 import { AxiosError } from 'axios';
 import { toast } from '../../hooks/use-toast.ts';
 import { Toaster } from './ui/Toaster.tsx';
-import { saveLinksInCache, getCollectionsFromCache, getTagsFromCache, refreshCollectionsAndTagsCache } from '../lib/cache.ts';
+import { getCollections } from '../lib/actions/collections.ts';
+import { getTags } from '../lib/actions/tags.ts';
+import { saveLinksInCache, getCachedCollections, getCachedTags, saveCachedCollections, saveCachedTags, setCacheTimestamp, isCacheValid } from '../lib/cache.ts';
 import { Checkbox } from './ui/CheckBox.tsx';
 import { Label } from './ui/Label.tsx';
 
@@ -133,9 +135,8 @@ const BookmarkForm = () => {
       setConfigured(isConf);
       setDuplicated(isDup);
 
-      // Cache initialization is handled by background worker
       if (isConf) {
-        console.log('🚀 Extension configured, popup ready to load cached data');
+        console.log('🚀 Extension configured, ready to load data');
       }
     };
     getConfigUse();
@@ -166,49 +167,104 @@ const BookmarkForm = () => {
     isLoading: loadingCollections,
     data: collections,
     error: collectionError,
-    refetch: originalRefetchCollections,
+    refetch: refetchCollections,
   } = useQuery(['collections'], async () => {
-    console.log('🔍 BookmarkForm: Fetching collections from cache...');
-    return await getCollectionsFromCache();
+    console.log('🔍 BookmarkForm: Fetching collections...');
+
+    // Check if we have valid cached data (less than 60 seconds old)
+    const isValid = await isCacheValid(60000); // 60 seconds
+
+    if (isValid) {
+      const cachedCollections = await getCachedCollections();
+      if (cachedCollections.length > 0) {
+        console.log(`📦 Using cached collections: ${cachedCollections.length} items`);
+        return cachedCollections;
+      }
+    }
+
+    // Cache is invalid or empty, fetch fresh data
+    console.log('🌐 Fetching fresh collections from API...');
+    const config = await getConfig();
+    const response = await getCollections(config.baseUrl, config.apiKey);
+
+    const sortedCollections = response.data.response.sort((a, b) => {
+      const aName = (a.name || '').toLowerCase();
+      const bName = (b.name || '').toLowerCase();
+      const nameComparison = aName.localeCompare(bName);
+
+      if (nameComparison === 0) {
+        const aPath = (a.pathname || '').toLowerCase();
+        const bPath = (b.pathname || '').toLowerCase();
+        return aPath.localeCompare(bPath);
+      }
+
+      return nameComparison;
+    });
+
+    // Cache the results
+    await saveCachedCollections(sortedCollections);
+    await setCacheTimestamp(Date.now());
+
+    console.log(`✅ Fresh collections loaded and cached: ${sortedCollections.length} items`);
+    return sortedCollections;
   }, {
     enabled: configured,
-    initialData: [], // Start with empty array to prevent loading state
-    staleTime: Infinity, // Data is always fresh (background worker handles updates)
-    cacheTime: Infinity, // Keep in cache indefinitely
-    refetchOnMount: false, // Don't refetch when component mounts
-    refetchOnWindowFocus: false, // Don't refetch on window focus
-    refetchOnReconnect: false, // Don't refetch on reconnect
+    staleTime: 60000, // Consider data fresh for 60 seconds
+    cacheTime: 300000, // Keep in React Query cache for 5 minutes
   });
-
-  // Custom refetch function that refreshes cache
-  const refetchCollections = async () => {
-    await refreshCollectionsAndTagsCache();
-    return await originalRefetchCollections();
-  };
 
   const {
     isLoading: loadingTags,
     data: tags,
     error: tagsError,
-    refetch: originalRefetchTags,
+    refetch: refetchTags,
   } = useQuery(['tags'], async () => {
-    console.log('🔍 BookmarkForm: Fetching tags from cache...');
-    return await getTagsFromCache();
+    console.log('🔍 BookmarkForm: Fetching tags...');
+
+    // Check if we have valid cached data (less than 60 seconds old)
+    const isValid = await isCacheValid(60000); // 60 seconds
+
+    if (isValid) {
+      const cachedTags = await getCachedTags();
+      if (cachedTags.length > 0) {
+        console.log(`📦 Using cached tags: ${cachedTags.length} items`);
+        return cachedTags;
+      }
+    }
+
+    // Cache is invalid or empty, fetch fresh data
+    console.log('🌐 Fetching fresh tags from API...');
+    const config = await getConfig();
+    const response = await getTags(config.baseUrl, config.apiKey);
+
+    const sortedTags = response.data.response.sort((a, b) => {
+      const aName = (a.name || '').toLowerCase();
+      const bName = (b.name || '').toLowerCase();
+      return aName.localeCompare(bName);
+    });
+
+    // Cache the results
+    await saveCachedTags(sortedTags);
+    await setCacheTimestamp(Date.now());
+
+    console.log(`✅ Fresh tags loaded and cached: ${sortedTags.length} items`);
+    return sortedTags;
   }, {
     enabled: configured,
-    initialData: [], // Start with empty array to prevent loading state
-    staleTime: Infinity, // Data is always fresh (background worker handles updates)
-    cacheTime: Infinity, // Keep in cache indefinitely
-    refetchOnMount: false, // Don't refetch when component mounts
-    refetchOnWindowFocus: false, // Don't refetch on window focus
-    refetchOnReconnect: false, // Don't refetch on reconnect
+    staleTime: 60000, // Consider data fresh for 60 seconds
+    cacheTime: 300000, // Keep in React Query cache for 5 minutes
   });
 
-  // Custom refetch function that refreshes cache
-  const refetchTags = async () => {
-    await refreshCollectionsAndTagsCache();
-    return await originalRefetchTags();
-  };
+  // Debug: Log current state
+  console.log('🔍 BookmarkForm render state:', {
+    configured,
+    loadingCollections,
+    loadingTags,
+    collectionsCount: collections?.length || 0,
+    tagsCount: tags?.length || 0,
+    collections,
+    tags
+  });
 
   return (
     <div>

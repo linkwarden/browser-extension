@@ -8,7 +8,6 @@ const DEFAULTS: configType = {
   syncBookmarks: false,
   theme: 'system',
   method: 'username',
-  cacheRefreshInterval: 60,
 };
 
 const CONFIG_KEY = 'linkwarden_config';
@@ -42,7 +41,6 @@ export async function clearConfig() {
       syncBookmarks: false,
       theme: 'system',
       method: 'username',
-      cacheRefreshInterval: 60,
     })
   );
 }

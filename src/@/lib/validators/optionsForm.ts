@@ -10,7 +10,6 @@ export const optionsFormSchema = z.object({
   useApiKey: z.boolean().default(false),
   apiKey: z.string().optional(),
   method: z.enum(['username', 'apiKey']).default('username'),
-  cacheRefreshInterval: z.number().min(15).max(600).default(60),
 });
 
 export type optionsFormValues = z.infer<typeof optionsFormSchema>;

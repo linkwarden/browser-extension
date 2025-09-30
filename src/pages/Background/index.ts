@@ -14,7 +14,6 @@ import {
   // getBookmarkMetadataByUrl,
   getBookmarksMetadata,
   saveBookmarkMetadata,
-  refreshCollectionsAndTagsCache,
 } from '../../@/lib/cache.ts';
 import ContextType = chrome.contextMenus.ContextType;
 import OnClickData = chrome.contextMenus.OnClickData;
@@ -402,63 +401,5 @@ browser.omnibox.onInputEntered.addListener(
   }
 );
 
-// Periodic cache refresh for collections and tags
-let cacheRefreshInterval: NodeJS.Timeout | null = null;
-
-// Function to start periodic cache refresh
-async function startPeriodicCacheRefresh() {
-  // Clear any existing interval
-  if (cacheRefreshInterval) {
-    clearInterval(cacheRefreshInterval);
-  }
-
-  // Initial cache refresh on startup
-  console.log('🚀 Starting periodic cache refresh...');
-  await refreshCollectionsAndTagsCache();
-
-  // Get refresh interval from config
-  const config = await getConfig();
-  const refreshIntervalSeconds = config.cacheRefreshInterval || 60;
-  const refreshIntervalMs = refreshIntervalSeconds * 1000;
-
-  // Set up interval to refresh based on user configuration
-  cacheRefreshInterval = setInterval(async () => {
-    try {
-      const configured = await isConfigured();
-      if (configured) {
-        await refreshCollectionsAndTagsCache();
-      } else {
-        console.log('⏸️ Cache refresh skipped: Extension not configured');
-      }
-    } catch (error) {
-      console.error('❌ Error in periodic cache refresh:', error);
-    }
-  }, refreshIntervalMs);
-
-  console.log(`✅ Periodic cache refresh started (every ${refreshIntervalSeconds} seconds)`);
-}
-
-// Function to stop periodic cache refresh
-// function stopPeriodicCacheRefresh() {
-//   if (cacheRefreshInterval) {
-//     clearInterval(cacheRefreshInterval);
-//     cacheRefreshInterval = null;
-//     console.log('⏹️ Periodic cache refresh stopped');
-//   }
-// }
-
-// Start cache refresh when extension loads
-browser.runtime.onStartup.addListener(startPeriodicCacheRefresh);
-browser.runtime.onInstalled.addListener(startPeriodicCacheRefresh);
-
-// Listen for configuration changes to restart cache refresh
-browser.storage.onChanged.addListener(async (changes) => {
-  // Check if configuration-related storage changed
-  if (changes['linkwarden_config']) {
-    console.log('⚙️ Configuration changed, restarting cache refresh...');
-    await startPeriodicCacheRefresh();
-  }
-});
-
-// Start cache refresh immediately when background script loads
-startPeriodicCacheRefresh();
+// Background worker now handles only context menus, omnibox, and tab management
+// Collections and tags caching is handled by frontend with 60-second cache
