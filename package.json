@@ -1,7 +1,7 @@
 {
   "name": "linkwarden-extension",
   "private": true,
-  "version": "1.4.0",
+  "version": "1.4.1",
   "author": [
     "Jordan Higuera Higuera <jordan_higuera@hotmail.com>",
     "Florian Fackler <florian@fackler.cloud>"
