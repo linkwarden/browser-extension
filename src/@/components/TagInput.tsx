@@ -110,34 +110,4 @@ export const TagInput: FC<TagInputProps> = ({ value, onChange, tags }) => {
       </Popover>
     </div>
   );
-
-  /*
-    return (
-      <div>
-        <div className='flex space-x-2'>
-          <Input value={inputValue} onChange={e => setInputValue(e.target.value)} />
-          <Button type='button' onClick={handleAddTag} onKeyDown={handleAddTag}>Add</Button>
-        </div>
-        <div className='flex flex-wrap mt-2'>
-          {tags.map(tagObj => (
-            <span
-              key={tagObj.name}
-              className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2 mb-2'
-            >
-              {tagObj.name}
-              <button
-                type='button'
-                className='flex-shrink-0 ml-1.5 h-4 w-4 rounded-full inline-flex items-center justify-center text-blue-400 hover:bg-blue-200 hover:text-blue-500 focus:outline-none focus:bg-blue-500 focus:text-white'
-                onClick={() => handleRemoveTag(tagObj.name)}
-              >
-                <span className='sr-only'>Remove tag</span>
-                <svg className='h-2 w-2' stroke='currentColor' fill='none' viewBox='0 0 8 8'>
-                  <path strokeLinecap='round' strokeWidth='1.5' d='M1 1l6 6m0-6L1 7' />
-                </svg>
-              </button>
-            </span>
-          ))}
-        </div>
-      </div>
-    );*/
 };

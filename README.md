@@ -17,17 +17,6 @@ The Unofficial Browser Extension for [Linkwarden](https://github.com/linkwarden/
 
 ![Image](/assets/linkwarden-extension.png)
 
-## Installation
-
-You can get the browser extension from both the Chrome Web Store and Firefox Add-ons:
-
-<a href="https://chrome.google.com/webstore/detail/linkwarden/pnidmkljnhbjfffciajlcpeldoljnidn"><img src="/assets/chrome.png" alt="Chrome Web Store"></a>
-<a href="https://addons.mozilla.org/en-US/firefox/addon/linkwarden"><img src="/assets/firefox.png" alt="Firefox Add-ons"></a>
-
-## Issues and Feature Requests
-
-We decided to keep the issues and feature requests in the main repository to keep everything in one place. Please report any issues or feature requests from the unofficial repository, starting the title with "[Browser Extension]" [here](https://github.com/linkwarden/linkwarden/issues/new/choose).
-
 ## Build From Source
 
 ### Requirements
@@ -104,6 +93,7 @@ The extension uses an intelligent frontend caching system for optimal performanc
 - **User-Triggered**: Caching is triggered by user actions (opening popup) rather than background processes
 
 **Cache Flow:**
+
 1. User opens popup → Check cache validity
 2. If cache valid (< 60s old) → Use cached data instantly
 3. If cache invalid → Fetch fresh data from API → Update cache
