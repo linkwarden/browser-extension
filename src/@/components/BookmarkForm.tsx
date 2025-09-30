@@ -24,18 +24,16 @@ import { postLink } from '../lib/actions/links.ts';
 import { AxiosError } from 'axios';
 import { toast } from '../../hooks/use-toast.ts';
 import { Toaster } from './ui/Toaster.tsx';
-import { getCollections } from '../lib/actions/collections.ts';
-import { getTags } from '../lib/actions/tags.ts';
-import { saveLinksInCache } from '../lib/cache.ts';
+import { saveLinksInCache, getCollectionsFromCache, getTagsFromCache, refreshCollectionsAndTagsCache } from '../lib/cache.ts';
 import { Checkbox } from './ui/CheckBox.tsx';
 import { Label } from './ui/Label.tsx';
 
-let configured = false;
-let duplicated = false;
 const BookmarkForm = () => {
   const [uploadImage, setUploadImage] = useState<boolean>(false);
   const [state, setState] = useState<'capturing' | 'uploading' | null>(null);
   const [isSaved, setIsSaved] = useState<boolean>(false);
+  const [configured, setConfigured] = useState<boolean>(false);
+  const [duplicated, setDuplicated] = useState<boolean>(false);
 
   const handleCheckedChange = (s: boolean | 'indeterminate') => {
     if (s === 'indeterminate') return;
@@ -130,8 +128,15 @@ const BookmarkForm = () => {
       });
     });
     const getConfigUse = async () => {
-      configured = await isConfigured();
-      duplicated = await checkDuplicatedItem();
+      const isConf = await isConfigured();
+      const isDup = await checkDuplicatedItem();
+      setConfigured(isConf);
+      setDuplicated(isDup);
+
+      // Cache initialization is handled by background worker
+      if (isConf) {
+        console.log('🚀 Extension configured, popup ready to load cached data');
+      }
     };
     getConfigUse();
   }, [form]);
@@ -161,54 +166,49 @@ const BookmarkForm = () => {
     isLoading: loadingCollections,
     data: collections,
     error: collectionError,
-    refetch: refetchCollections,
-  } = useQuery({
-    queryKey: ['collections'],
-    queryFn: async () => {
-      const config = await getConfig();
-
-      const response = await getCollections(config.baseUrl, config.apiKey);
-
-      return response.data.response.sort((a, b) => {
-        // Sort collections by name first, then by pathname
-        const aName = (a.name || '').toLowerCase();
-        const bName = (b.name || '').toLowerCase();
-        const nameComparison = aName.localeCompare(bName);
-
-        // If names are equal, sort by pathname
-        if (nameComparison === 0) {
-          const aPath = (a.pathname || '').toLowerCase();
-          const bPath = (b.pathname || '').toLowerCase();
-          return aPath.localeCompare(bPath);
-        }
-
-        return nameComparison;
-      });
-    },
+    refetch: originalRefetchCollections,
+  } = useQuery(['collections'], async () => {
+    console.log('🔍 BookmarkForm: Fetching collections from cache...');
+    return await getCollectionsFromCache();
+  }, {
     enabled: configured,
+    initialData: [], // Start with empty array to prevent loading state
+    staleTime: Infinity, // Data is always fresh (background worker handles updates)
+    cacheTime: Infinity, // Keep in cache indefinitely
+    refetchOnMount: false, // Don't refetch when component mounts
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnReconnect: false, // Don't refetch on reconnect
   });
+
+  // Custom refetch function that refreshes cache
+  const refetchCollections = async () => {
+    await refreshCollectionsAndTagsCache();
+    return await originalRefetchCollections();
+  };
 
   const {
     isLoading: loadingTags,
     data: tags,
     error: tagsError,
-    refetch: refetchTags,
-  } = useQuery({
-    queryKey: ['tags'],
-    queryFn: async () => {
-      const config = await getConfig();
-
-      const response = await getTags(config.baseUrl, config.apiKey);
-
-      return response.data.response.sort((a, b) => {
-        // Sort tags by name (case-insensitive)
-        const aName = (a.name || '').toLowerCase();
-        const bName = (b.name || '').toLowerCase();
-        return aName.localeCompare(bName);
-      });
-    },
+    refetch: originalRefetchTags,
+  } = useQuery(['tags'], async () => {
+    console.log('🔍 BookmarkForm: Fetching tags from cache...');
+    return await getTagsFromCache();
+  }, {
     enabled: configured,
+    initialData: [], // Start with empty array to prevent loading state
+    staleTime: Infinity, // Data is always fresh (background worker handles updates)
+    cacheTime: Infinity, // Keep in cache indefinitely
+    refetchOnMount: false, // Don't refetch when component mounts
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnReconnect: false, // Don't refetch on reconnect
   });
+
+  // Custom refetch function that refreshes cache
+  const refetchTags = async () => {
+    await refreshCollectionsAndTagsCache();
+    return await originalRefetchTags();
+  };
 
   return (
     <div>
