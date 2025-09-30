@@ -124,4 +124,4 @@ This structural difference was why collections worked but tags failed - collecti
 
 ## Links
 - [Linkwarden](https://linkwarden.app/)
-- [GitHub Repository](https://github.com/linkwarden/linkwarden-browser-extension)
+- [GitHub Repository](https://github.com/lilaflo/linkwarden-browser-extension)

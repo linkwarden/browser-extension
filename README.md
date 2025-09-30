@@ -42,7 +42,7 @@ We decided to keep the issues and feature requests in the main repository to kee
 Clone this repository by running the following in your terminal:
 
 ```
-git clone https://github.com/linkwarden/browser-extension.git
+git clone https://github.com/lilaflo/linkwarden-browser-extension.git
 ```
 
 ### Step 2: Build
