@@ -1,8 +1,6 @@
 import { getBrowser, getStorageItem, setStorageItem } from './utils.ts';
 import { bookmarkFormValues } from './validators/bookmarkForm.ts';
 import { deleteLinkFetch, getLinksFetch, postLinkFetch, updateLinkFetch } from './actions/links.ts';
-import { getCollections } from './actions/collections.ts';
-import { getTags } from './actions/tags.ts';
 import BookmarkTreeNode = chrome.bookmarks.BookmarkTreeNode;
 import { getConfig } from './config.ts';
 
@@ -257,75 +255,8 @@ export async function isCacheValid(maxAgeMs: number = 60000): Promise<boolean> {
   return (now - cacheTimestamp) < maxAgeMs;
 }
 
-export async function refreshCollectionsAndTagsCache() {
-  try {
-    const config = await getConfig();
-    const configured = config.baseUrl && config.apiKey;
-
-    if (!configured) {
-      console.log('🔄 Cache refresh skipped: Extension not configured');
-      return;
-    }
-
-    console.log('🔄 Refreshing collections and tags cache...');
-
-    // Fetch collections and tags in parallel
-    const [collectionsResponse, tagsResponse] = await Promise.all([
-      getCollections(config.baseUrl, config.apiKey),
-      getTags(config.baseUrl, config.apiKey)
-    ]);
-
-    // Sort collections and tags
-    const sortedCollections = collectionsResponse.data.response.sort((a, b) => {
-      const aName = (a.name || '').toLowerCase();
-      const bName = (b.name || '').toLowerCase();
-      const nameComparison = aName.localeCompare(bName);
-
-      if (nameComparison === 0) {
-        const aPath = (a.pathname || '').toLowerCase();
-        const bPath = (b.pathname || '').toLowerCase();
-        return aPath.localeCompare(bPath);
-      }
-
-      return nameComparison;
-    });
-
-    const sortedTags = tagsResponse.data.response.sort((a, b) => {
-      const aName = (a.name || '').toLowerCase();
-      const bName = (b.name || '').toLowerCase();
-      return aName.localeCompare(bName);
-    });
-
-    // Save to cache
-    await Promise.all([
-      saveCachedCollections(sortedCollections),
-      saveCachedTags(sortedTags),
-      setCacheTimestamp(Date.now())
-    ]);
-
-    console.log(`✅ Cache refreshed: ${sortedCollections.length} collections, ${sortedTags.length} tags`);
-  } catch (error) {
-    console.error('❌ Failed to refresh cache:', error);
-  }
-}
-
-export async function getCollectionsFromCache(): Promise<Collection[]> {
-  // Always return cached data immediately for instant popup loading
-  // Background worker handles refreshing periodically
-  const cachedCollections = await getCachedCollections();
-
-  console.log(`📦 Using cached collections: ${cachedCollections.length} items`);
-  return cachedCollections;
-}
-
-export async function getTagsFromCache(): Promise<Tag[]> {
-  // Always return cached data immediately for instant popup loading
-  // Background worker handles refreshing periodically
-  const cachedTags = await getCachedTags();
-
-  console.log(`📦 Using cached tags: ${cachedTags.length} items`);
-  return cachedTags;
-}
+// Cache functions for frontend 60-second caching
+// No background worker refresh - all caching happens in frontend on user action
 
 
 
