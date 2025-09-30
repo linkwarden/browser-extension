@@ -5,6 +5,36 @@ All notable changes to the Linkwarden Browser Extension will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2024-12-30
+
+### 🚀 Performance Improvements
+- **Frontend Caching System**: Implemented intelligent 60-second caching for collections and tags
+- **Instant Popup Loading**: Eliminated loading delays for subsequent popup opens within cache window
+- **User-Triggered Caching**: Replaced background worker with user-action triggered API calls
+
+### 🔧 Architecture Changes
+- **Removed Background Worker**: Eliminated periodic cache refresh system running every 60 seconds
+- **Simplified State Management**: Streamlined caching logic with React Query integration
+- **Browser Storage Integration**: Enhanced cache persistence across popup sessions
+
+### ✨ User Experience
+- **Smart Cache Validation**: Automatically checks cache age before deciding to fetch fresh data
+- **Zero Loading on Repeat Opens**: Instant popup display when cache is valid (< 60 seconds)
+- **Automatic Refresh**: Fresh data fetching after 60-second cache expiry
+
+### 🛠️ Technical Details
+- Cache stored in browser storage with timestamp validation
+- React Query handles both API calls and local caching
+- Automatic sorting and persistence of collections and tags
+- Removed cache refresh interval configuration from options UI
+
+### 📦 Removed Features
+- Background worker periodic refresh system
+- Cache refresh interval configuration option
+- Complex background/frontend coordination logic
+
+---
+
 ## [1.4.0] - 2024-12-29
 
 ### 🎉 Major Features

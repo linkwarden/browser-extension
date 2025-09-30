@@ -12,6 +12,7 @@ The Official Browser Extension for [Linkwarden](https://github.com/linkwarden/li
 - **Dynamic Tag System**: Create, search, and manage tags with intelligent auto-completion
 - **Theme Support**: Light, dark, and system theme modes available
 - **Enhanced Search**: Magnifying glass search interface for collections and tags
+- **Smart Caching**: 60-second frontend caching for instant popup loading
 - **Improved UI**: Streamlined interface with better responsiveness and user experience
 
 ![Image](/assets/linkwarden-extension.png)
@@ -75,6 +76,8 @@ This starts a watch mode that automatically rebuilds the extension when files ch
 
 ### Recent Improvements
 
+- **Frontend Caching System**: Implemented 60-second intelligent caching for collections and tags
+- **Instant Popup Loading**: No loading delays for subsequent popup opens within cache window
 - **SearchDropdown Component**: Reusable dropdown component with search functionality for both collections and tags
 - **Tag Creation API**: Added ability to create new tags directly from the extension
 - **Enhanced UI Components**: Improved styling and responsiveness
@@ -90,16 +93,33 @@ This starts a watch mode that automatically rebuilds the extension when files ch
 - **Tailwind CSS** for styling
 - **Zod** for schema validation
 
+### Caching System
+
+The extension uses an intelligent frontend caching system for optimal performance:
+
+- **60-Second Cache Window**: Collections and tags are cached for 60 seconds after first load
+- **Instant Subsequent Opens**: Within the cache window, popup opens instantly with no loading indicators
+- **Automatic Refresh**: After 60 seconds, data is automatically refreshed from the API
+- **Browser Storage Persistence**: Cache persists across popup sessions using browser storage
+- **User-Triggered**: Caching is triggered by user actions (opening popup) rather than background processes
+
+**Cache Flow:**
+1. User opens popup → Check cache validity
+2. If cache valid (< 60s old) → Use cached data instantly
+3. If cache invalid → Fetch fresh data from API → Update cache
+4. Data is sorted and stored in browser storage for next use
+
 ### Project Structure
 
 ```
 src/
 ├── @/components/          # Reusable UI components
 │   ├── SearchDropdown.tsx # Enhanced search dropdown
-│   ├── BookmarkForm.tsx   # Main bookmark form
+│   ├── BookmarkForm.tsx   # Main bookmark form with caching
 │   └── ui/               # Base UI components
 ├── lib/
 │   ├── actions/          # API functions
+│   ├── cache.ts          # Frontend caching system
 │   ├── config.ts         # Configuration management
 │   └── utils.ts          # Utility functions
 └── pages/                # Extension pages
