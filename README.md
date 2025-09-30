@@ -1,6 +1,6 @@
 # Linkwarden Browser Extension
 
-The Official Browser Extension for [Linkwarden](https://github.com/linkwarden/linkwarden).
+The Unofficial Browser Extension for [Linkwarden](https://github.com/linkwarden/linkwarden).
 
 ## Features
 
@@ -26,7 +26,7 @@ You can get the browser extension from both the Chrome Web Store and Firefox Add
 
 ## Issues and Feature Requests
 
-We decided to keep the issues and feature requests in the main repository to keep everything in one place. Please report any issues or feature requests from the official repository, starting the title with "[Browser Extension]" [here](https://github.com/linkwarden/linkwarden/issues/new/choose).
+We decided to keep the issues and feature requests in the main repository to keep everything in one place. Please report any issues or feature requests from the unofficial repository, starting the title with "[Browser Extension]" [here](https://github.com/linkwarden/linkwarden/issues/new/choose).
 
 ## Build From Source
 
