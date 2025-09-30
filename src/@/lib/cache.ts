@@ -1,6 +1,8 @@
 import { getBrowser, getStorageItem, setStorageItem } from './utils.ts';
 import { bookmarkFormValues } from './validators/bookmarkForm.ts';
 import { deleteLinkFetch, getLinksFetch, postLinkFetch, updateLinkFetch } from './actions/links.ts';
+import { getCollections } from './actions/collections.ts';
+import { getTags } from './actions/tags.ts';
 import BookmarkTreeNode = chrome.bookmarks.BookmarkTreeNode;
 import { getConfig } from './config.ts';
 
@@ -197,9 +199,133 @@ function logBookmarks(bookmarks: BookmarkTreeNode[], accumulator: bookmarkMetada
   }
 }
 
+// Collections and Tags Cache
+const COLLECTIONS_CACHE_KEY = 'lw_collections_cache';
+const TAGS_CACHE_KEY = 'lw_tags_cache';
+const CACHE_TIMESTAMP_KEY = 'lw_cache_timestamp';
 
+interface Collection {
+  id: number;
+  name: string;
+  ownerId: number;
+  pathname?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
+interface Tag {
+  id: number;
+  name: string;
+  ownerId: number;
+  createdAt: string;
+  updatedAt: string;
+  _count: {
+    links: number;
+  };
+}
 
+export async function getCachedCollections(): Promise<Collection[]> {
+  const cachedCollections = await getStorageItem(COLLECTIONS_CACHE_KEY);
+  return cachedCollections ? JSON.parse(cachedCollections) : [];
+}
+
+export async function getCachedTags(): Promise<Tag[]> {
+  const cachedTags = await getStorageItem(TAGS_CACHE_KEY);
+  return cachedTags ? JSON.parse(cachedTags) : [];
+}
+
+export async function saveCachedCollections(collections: Collection[]) {
+  return await setStorageItem(COLLECTIONS_CACHE_KEY, JSON.stringify(collections));
+}
+
+export async function saveCachedTags(tags: Tag[]) {
+  return await setStorageItem(TAGS_CACHE_KEY, JSON.stringify(tags));
+}
+
+export async function getCacheTimestamp(): Promise<number> {
+  const timestamp = await getStorageItem(CACHE_TIMESTAMP_KEY);
+  return timestamp ? parseInt(timestamp) : 0;
+}
+
+export async function setCacheTimestamp(timestamp: number) {
+  return await setStorageItem(CACHE_TIMESTAMP_KEY, timestamp.toString());
+}
+
+export async function isCacheValid(maxAgeMs: number = 60000): Promise<boolean> {
+  const cacheTimestamp = await getCacheTimestamp();
+  const now = Date.now();
+  return (now - cacheTimestamp) < maxAgeMs;
+}
+
+export async function refreshCollectionsAndTagsCache() {
+  try {
+    const config = await getConfig();
+    const configured = config.baseUrl && config.apiKey;
+
+    if (!configured) {
+      console.log('🔄 Cache refresh skipped: Extension not configured');
+      return;
+    }
+
+    console.log('🔄 Refreshing collections and tags cache...');
+
+    // Fetch collections and tags in parallel
+    const [collectionsResponse, tagsResponse] = await Promise.all([
+      getCollections(config.baseUrl, config.apiKey),
+      getTags(config.baseUrl, config.apiKey)
+    ]);
+
+    // Sort collections and tags
+    const sortedCollections = collectionsResponse.data.response.sort((a, b) => {
+      const aName = (a.name || '').toLowerCase();
+      const bName = (b.name || '').toLowerCase();
+      const nameComparison = aName.localeCompare(bName);
+
+      if (nameComparison === 0) {
+        const aPath = (a.pathname || '').toLowerCase();
+        const bPath = (b.pathname || '').toLowerCase();
+        return aPath.localeCompare(bPath);
+      }
+
+      return nameComparison;
+    });
+
+    const sortedTags = tagsResponse.data.response.sort((a, b) => {
+      const aName = (a.name || '').toLowerCase();
+      const bName = (b.name || '').toLowerCase();
+      return aName.localeCompare(bName);
+    });
+
+    // Save to cache
+    await Promise.all([
+      saveCachedCollections(sortedCollections),
+      saveCachedTags(sortedTags),
+      setCacheTimestamp(Date.now())
+    ]);
+
+    console.log(`✅ Cache refreshed: ${sortedCollections.length} collections, ${sortedTags.length} tags`);
+  } catch (error) {
+    console.error('❌ Failed to refresh cache:', error);
+  }
+}
+
+export async function getCollectionsFromCache(): Promise<Collection[]> {
+  // Always return cached data immediately for instant popup loading
+  // Background worker handles refreshing periodically
+  const cachedCollections = await getCachedCollections();
+
+  console.log(`📦 Using cached collections: ${cachedCollections.length} items`);
+  return cachedCollections;
+}
+
+export async function getTagsFromCache(): Promise<Tag[]> {
+  // Always return cached data immediately for instant popup loading
+  // Background worker handles refreshing periodically
+  const cachedTags = await getCachedTags();
+
+  console.log(`📦 Using cached tags: ${cachedTags.length} items`);
+  return cachedTags;
+}
 
 
 
