@@ -2,10 +2,7 @@
   "name": "linkwarden-extension",
   "private": true,
   "version": "1.4.1",
-  "author": [
-    "Jordan Higuera Higuera <jordan_higuera@hotmail.com>",
-    "Florian Fackler <github@fackler.xyz>"
-  ],
+  "author": "Florian Fackler <github@fackler.xyz>",
   "type": "module",
   "license": "MIT",
   "description": "Linkwarden browser extension",
@@ -16,7 +13,6 @@
     "build": "tsc && vite build",
     "build:firefox": "BROWSER=firefox npm run build",
     "build:chromium": "BROWSER=chromium npm run build",
-    "debug": "tsc && vite build --watch",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
