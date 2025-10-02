@@ -29,7 +29,7 @@ import { Toaster } from './ui/Toaster.tsx';
 import { toast } from '../../hooks/use-toast.ts';
 import { AxiosError } from 'axios';
 import { clearBookmarksMetadata } from '../lib/cache.ts';
-import { getSession } from '../lib/auth/auth.ts';
+import { getSession, checkServerAvailability } from '../lib/auth/auth.ts';
 import {
   Select,
   SelectContent,
@@ -96,8 +96,16 @@ const OptionsForm = () => {
   const { mutate: onSubmit, isLoading } = useMutation({
     mutationFn: async (values: optionsFormValues) => {
       values.baseUrl = values.baseUrl.replace(/\/$/, '');
-      // Do API call to test the connection and save the values
 
+      // Check if server is available before proceeding
+      console.debug('Checking server availability:', values.baseUrl);
+      const isServerAvailable = await checkServerAvailability(values.baseUrl);
+
+      if (!isServerAvailable) {
+        throw new Error('Server is not available. Please check the URL and ensure the Linkwarden instance is running.');
+      }
+
+      // Do API call to test the connection and save the values
       if (values.method === 'apiKey') {
         return {
           ...values,
@@ -135,12 +143,28 @@ const OptionsForm = () => {
     },
     onError: (error) => {
       // Handle errors appropriately
-      if (error instanceof AxiosError) {
+      console.debug('OptionsForm save error:', error);
+
+      if (error instanceof Error && error.message.includes('Server is not available')) {
+        toast({
+          title: 'Server Not Available',
+          description: 'Cannot connect to the Linkwarden server. Please check the URL and ensure the server is running.',
+          variant: 'destructive',
+          duration: 5000,
+        });
+      } else if (error instanceof AxiosError) {
         if (error.response?.status === 401) {
           toast({
             title: 'Error',
             description: 'Invalid credentials or API Key',
             variant: 'destructive',
+          });
+        } else if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+          toast({
+            title: 'Network Error',
+            description: 'Cannot connect to the server. Please check the URL and your network connection.',
+            variant: 'destructive',
+            duration: 5000,
           });
         } else {
           toast({

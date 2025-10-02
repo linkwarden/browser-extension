@@ -65,3 +65,18 @@ export async function getSessionFetch(url: string) {
   const sessionJson = await session.json();
   return sessionJson.user;
 }
+
+export async function checkServerAvailability(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${url}/api/v1/auth/csrf`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    return response.ok;
+  } catch (error) {
+    console.debug('Server availability check failed:', error);
+    return false;
+  }
+}
