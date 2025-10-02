@@ -24,8 +24,8 @@ The Unofficial Browser Extension for [Linkwarden](https://github.com/linkwarden/
 
 #### Requirements
 
-- Node.js 18.x or later
-- npm 9.x or later
+- Node.js 24.x or later (configured via mise)
+- npm 10.x or later
 - Git
 
 #### Build Steps
@@ -67,12 +67,12 @@ npm run dev:firefox  # Firefox
 
 ### Technology Stack
 
-- **React 18** with TypeScript
-- **Vite** for build tooling with custom multi-entry configuration
-- **TanStack Query** for API state management
-- **Radix UI** for accessible components
-- **Tailwind CSS** for styling
-- **React Hook Form** + **Zod** for form validation
+- **React 19** with TypeScript
+- **Vite 4** for build tooling with custom multi-entry configuration
+- **TanStack Query v5** for API state management
+- **Radix UI v2** for accessible components
+- **Tailwind CSS 4** for styling
+- **React Hook Form** + **Zod v4** for form validation
 - **Axios** for HTTP requests to Linkwarden API
 
 ### Build Commands
