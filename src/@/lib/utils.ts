@@ -24,34 +24,38 @@ export async function getCurrentTabInfo(): Promise<{ title: string | undefined; 
     if (tabs[0].id) {
       // Type assertion to handle Chrome/Firefox API differences
       const browser = getBrowser() as any;
-      const results = await browser.scripting.executeScript({
-        target: { tabId: tabs[0].id },
-        func: () => {
-          // Get meta description from the page
-          const metaDescription = document.querySelector('meta[name="description"]') as HTMLMetaElement;
-          if (metaDescription) {
-            return metaDescription.getAttribute('content');
-          } else {
-            // Fallback: try og:description
-            const ogDescription = document.querySelector('meta[property="og:description"]') as HTMLMetaElement;
-            if (ogDescription) {
-              return ogDescription.getAttribute('content');
+
+      // Check if scripting API is available (Manifest V3)
+      if (browser.scripting && browser.scripting.executeScript) {
+        const results = await browser.scripting.executeScript({
+          target: { tabId: tabs[0].id },
+          func: () => {
+            // Get meta description from the page
+            const metaDescription = document.querySelector('meta[name="description"]') as HTMLMetaElement;
+            if (metaDescription) {
+              return metaDescription.getAttribute('content');
             } else {
-              // Last fallback: try twitter:description
-              const twitterDescription = document.querySelector('meta[name="twitter:description"]') as HTMLMetaElement;
-              return twitterDescription ? twitterDescription.getAttribute('content') : null;
+              // Fallback: try og:description
+              const ogDescription = document.querySelector('meta[property="og:description"]') as HTMLMetaElement;
+              if (ogDescription) {
+                return ogDescription.getAttribute('content');
+              } else {
+                // Last fallback: try twitter:description
+                const twitterDescription = document.querySelector('meta[name="twitter:description"]') as HTMLMetaElement;
+                return twitterDescription ? twitterDescription.getAttribute('content') : null;
+              }
             }
           }
-        }
-      });
+        });
 
-      if (results && results[0] && results[0].result) {
-        description = results[0].result;
+        if (results && results[0] && results[0].result) {
+          description = results[0].result;
+        }
       }
     }
   } catch (error) {
     // Silently fail if content script execution fails
-    console.warn('Could not extract meta description:', error);
+    console.debug('Could not extract meta description:', error);
   }
 
   return { url, title, description };
