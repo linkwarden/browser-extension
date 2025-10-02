@@ -22,9 +22,11 @@ export async function getCurrentTabInfo(): Promise<{ title: string | undefined; 
   try {
     // Try to execute script to get meta description
     if (tabs[0].id) {
-      const results = await getBrowser().scripting.executeScript({
+      // Type assertion to handle Chrome/Firefox API differences
+      const browser = getBrowser() as any;
+      const results = await browser.scripting.executeScript({
         target: { tabId: tabs[0].id },
-        function: function() {
+        func: () => {
           // Get meta description from the page
           const metaDescription = document.querySelector('meta[name="description"]') as HTMLMetaElement;
           if (metaDescription) {
@@ -41,7 +43,7 @@ export async function getCurrentTabInfo(): Promise<{ title: string | undefined; 
             }
           }
         }
-      } as any);
+      });
 
       if (results && results[0] && results[0].result) {
         description = results[0].result;
