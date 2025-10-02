@@ -15,9 +15,7 @@ import {
   getBookmarksMetadata,
   saveBookmarkMetadata,
 } from '../../@/lib/cache.ts';
-import ContextType = chrome.contextMenus.ContextType;
 import OnClickData = chrome.contextMenus.OnClickData;
-import OnInputEnteredDisposition = chrome.omnibox.OnInputEnteredDisposition;
 // import {
 //   getCsrfTokenFetch,
 //   getSessionFetch,
@@ -274,7 +272,7 @@ async function genericOnClick(
 }
 browser.runtime.onInstalled.addListener(function () {
   // Create one test item for each context type.
-  const contexts: ContextType[] = [
+  const contexts = [
     'page',
     'selection',
     'link',
@@ -282,7 +280,7 @@ browser.runtime.onInstalled.addListener(function () {
     'image',
     'video',
     'audio',
-  ];
+  ] as const;
   for (const context of contexts) {
     const title: string = 'Add link to Linkwarden';
     browser.contextMenus.create({
@@ -367,7 +365,7 @@ browser.omnibox.onInputChanged.addListener(
 // This part was taken https://github.com/sissbruecker/linkding-extension/blob/master/src/background.js Thanks to @sissbruecker
 
 browser.omnibox.onInputEntered.addListener(
-  async (content: string, disposition: OnInputEnteredDisposition) => {
+  async (content: string, disposition: any) => {
     if (!(await isConfigured()) || !content) {
       return;
     }

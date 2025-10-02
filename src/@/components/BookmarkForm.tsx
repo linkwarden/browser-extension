@@ -57,7 +57,7 @@ const BookmarkForm = () => {
     },
   });
 
-  const { mutate: onSubmit, isLoading } = useMutation({
+  const { mutate: onSubmit, isPending } = useMutation({
     mutationFn: async (values: bookmarkFormValues) => {
       console.debug('🚀 Starting bookmark submission with values:', values);
       console.debug('📋 Tags in form before submission:', values.tags);
@@ -166,7 +166,7 @@ const BookmarkForm = () => {
   }, [form]);
 
   const {
-    isLoading: loadingCollections,
+    isPending: loadingCollections,
     data: collections,
     error: collectionError,
     refetch: refetchCollections,
@@ -214,11 +214,11 @@ const BookmarkForm = () => {
     },
     enabled: configured,
     staleTime: 60000, // Consider data fresh for 60 seconds
-    cacheTime: 300000, // Keep in React Query cache for 5 minutes
+    gcTime: 300000, // Keep in React Query cache for 5 minutes (renamed from cacheTime in v5)
   });
 
   const {
-    isLoading: loadingTags,
+    isPending: loadingTags,
     data: tags,
     error: tagsError,
     refetch: refetchTags,
@@ -258,7 +258,7 @@ const BookmarkForm = () => {
     },
     enabled: configured,
     staleTime: 60000, // Consider data fresh for 60 seconds
-    cacheTime: 300000, // Keep in React Query cache for 5 minutes
+    gcTime: 300000, // Keep in React Query cache for 5 minutes (renamed from cacheTime in v5)
   });
 
   // Debug: Log current state
@@ -373,8 +373,8 @@ const BookmarkForm = () => {
             </p>
           )}
           <div className="flex justify-end items-center mt-4">
-            <Button disabled={isLoading || isSaved} type="submit">
-              {isLoading ? 'Saving...' : isSaved ? 'Saved!' : 'Save'}
+            <Button disabled={isPending || isSaved} type="submit">
+              {isPending ? 'Saving...' : isSaved ? 'Saved!' : 'Save'}
             </Button>
           </div>
         </form>

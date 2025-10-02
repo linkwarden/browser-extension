@@ -118,7 +118,7 @@ export async function saveLinksInCache(baseUrl: string) {
   }
 }
 
-export async function createBookmarkInBrowser(bookmark: bookmarkMetadata): Promise<BookmarkTreeNode> {
+export async function createBookmarkInBrowser(bookmark: bookmarkMetadata): Promise<any> {
   const { url, name } = bookmark;
   return await browser.bookmarks.create({ url, title: name });
 }
@@ -135,7 +135,7 @@ export async function syncLocalBookmarks(baseUrl: string) {
     const [root] = await getCurrentBookmarks();
     const localBookmarks: bookmarkMetadata[] = [];
     if (!root.children) return;
-    logBookmarks(root.children, localBookmarks);
+    logBookmarks(root.children as any, localBookmarks);
 
     // Load cached bookmarks metadata
     const bookmarksMetadata = await getBookmarksMetadata();

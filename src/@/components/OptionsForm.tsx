@@ -55,7 +55,7 @@ const OptionsForm = () => {
     },
   });
 
-  const { mutate: onReset, isLoading: resetLoading } = useMutation({
+  const { mutate: onReset, isPending: resetLoading } = useMutation({
     mutationFn: async () => {
       const configured = await isConfigured();
 
@@ -93,7 +93,7 @@ const OptionsForm = () => {
     },
   });
 
-  const { mutate: onSubmit, isLoading } = useMutation({
+  const { mutate: onSubmit, isPending: isLoading } = useMutation({
     mutationFn: async (values: optionsFormValues) => {
       values.baseUrl = values.baseUrl.replace(/\/$/, '');
 
