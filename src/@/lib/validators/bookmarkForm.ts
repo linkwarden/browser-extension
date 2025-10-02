@@ -9,14 +9,12 @@ export const bookmarkFormSchema = z.object({
       name: z.string(),
     })
     .optional(),
-  tags: z
-    .array(
-      z.object({
-        id: z.number().optional(),
-        name: z.string(),
-      })
-    )
-    .default([]),
+  tags: z.array(
+    z.object({
+      id: z.number().optional(),
+      name: z.string(),
+    })
+  ),
   name: z.string(),
   description: z.string(),
   image: z.enum(['jpeg', 'png']).optional(),
