@@ -28,3 +28,4 @@ dist.pem
 *.sw?
 
 linkwarden.zip
+.claude/
