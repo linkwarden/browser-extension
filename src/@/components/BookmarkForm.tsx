@@ -59,8 +59,8 @@ const BookmarkForm = () => {
 
   const { mutate: onSubmit, isLoading } = useMutation({
     mutationFn: async (values: bookmarkFormValues) => {
-      console.log('🚀 Starting bookmark submission with values:', values);
-      console.log('📋 Tags in form before submission:', values.tags);
+      console.debug('🚀 Starting bookmark submission with values:', values);
+      console.debug('📋 Tags in form before submission:', values.tags);
 
       const config = await getConfig();
 
@@ -136,7 +136,9 @@ const BookmarkForm = () => {
       setDuplicated(isDup);
 
       if (isConf) {
-        console.log('🚀 Extension configured, ready to load data');
+        console.debug('🚀 Extension configured, ready to load data');
+      } else {
+        console.debug('⚠️ Extension not configured yet');
       }
     };
     getConfigUse();
@@ -168,46 +170,48 @@ const BookmarkForm = () => {
     data: collections,
     error: collectionError,
     refetch: refetchCollections,
-  } = useQuery(['collections'], async () => {
-    console.log('🔍 BookmarkForm: Fetching collections...');
+  } = useQuery({
+    queryKey: ['collections'],
+    queryFn: async () => {
+      console.debug('🔍 BookmarkForm: Fetching collections...');
 
-    // Check if we have valid cached data (less than 60 seconds old)
-    const isValid = await isCacheValid(60000); // 60 seconds
+      // Check if we have valid cached data (less than 60 seconds old)
+      const isValid = await isCacheValid(60000); // 60 seconds
 
-    if (isValid) {
-      const cachedCollections = await getCachedCollections();
-      if (cachedCollections.length > 0) {
-        console.log(`📦 Using cached collections: ${cachedCollections.length} items`);
-        return cachedCollections;
-      }
-    }
-
-    // Cache is invalid or empty, fetch fresh data
-    console.log('🌐 Fetching fresh collections from API...');
-    const config = await getConfig();
-    const response = await getCollections(config.baseUrl, config.apiKey);
-
-    const sortedCollections = response.data.response.sort((a, b) => {
-      const aName = (a.name || '').toLowerCase();
-      const bName = (b.name || '').toLowerCase();
-      const nameComparison = aName.localeCompare(bName);
-
-      if (nameComparison === 0) {
-        const aPath = (a.pathname || '').toLowerCase();
-        const bPath = (b.pathname || '').toLowerCase();
-        return aPath.localeCompare(bPath);
+      if (isValid) {
+        const cachedCollections = await getCachedCollections();
+        if (cachedCollections.length > 0) {
+          console.debug(`📦 Using cached collections: ${cachedCollections.length} items`);
+          return cachedCollections;
+        }
       }
 
-      return nameComparison;
-    });
+      // Cache is invalid or empty, fetch fresh data
+      console.debug('🌐 Fetching fresh collections from API...');
+      const config = await getConfig();
+      const response = await getCollections(config.baseUrl, config.apiKey);
 
-    // Cache the results
-    await saveCachedCollections(sortedCollections);
-    await setCacheTimestamp(Date.now());
+      const sortedCollections = response.data.response.sort((a, b) => {
+        const aName = (a.name || '').toLowerCase();
+        const bName = (b.name || '').toLowerCase();
+        const nameComparison = aName.localeCompare(bName);
 
-    console.log(`✅ Fresh collections loaded and cached: ${sortedCollections.length} items`);
-    return sortedCollections;
-  }, {
+        if (nameComparison === 0) {
+          const aPath = (a.pathname || '').toLowerCase();
+          const bPath = (b.pathname || '').toLowerCase();
+          return aPath.localeCompare(bPath);
+        }
+
+        return nameComparison;
+      });
+
+      // Cache the results
+      await saveCachedCollections(sortedCollections);
+      await setCacheTimestamp(Date.now());
+
+      console.debug(`✅ Fresh collections loaded and cached: ${sortedCollections.length} items`);
+      return sortedCollections;
+    },
     enabled: configured,
     staleTime: 60000, // Consider data fresh for 60 seconds
     cacheTime: 300000, // Keep in React Query cache for 5 minutes
@@ -218,50 +222,54 @@ const BookmarkForm = () => {
     data: tags,
     error: tagsError,
     refetch: refetchTags,
-  } = useQuery(['tags'], async () => {
-    console.log('🔍 BookmarkForm: Fetching tags...');
+  } = useQuery({
+    queryKey: ['tags'],
+    queryFn: async () => {
+      console.debug('🔍 BookmarkForm: Fetching tags...');
 
-    // Check if we have valid cached data (less than 60 seconds old)
-    const isValid = await isCacheValid(60000); // 60 seconds
+      // Check if we have valid cached data (less than 60 seconds old)
+      const isValid = await isCacheValid(60000); // 60 seconds
 
-    if (isValid) {
-      const cachedTags = await getCachedTags();
-      if (cachedTags.length > 0) {
-        console.log(`📦 Using cached tags: ${cachedTags.length} items`);
-        return cachedTags;
+      if (isValid) {
+        const cachedTags = await getCachedTags();
+        if (cachedTags.length > 0) {
+          console.debug(`📦 Using cached tags: ${cachedTags.length} items`);
+          return cachedTags;
+        }
       }
-    }
 
-    // Cache is invalid or empty, fetch fresh data
-    console.log('🌐 Fetching fresh tags from API...');
-    const config = await getConfig();
-    const response = await getTags(config.baseUrl, config.apiKey);
+      // Cache is invalid or empty, fetch fresh data
+      console.debug('🌐 Fetching fresh tags from API...');
+      const config = await getConfig();
+      const response = await getTags(config.baseUrl, config.apiKey);
 
-    const sortedTags = response.data.response.sort((a, b) => {
-      const aName = (a.name || '').toLowerCase();
-      const bName = (b.name || '').toLowerCase();
-      return aName.localeCompare(bName);
-    });
+      const sortedTags = response.data.response.sort((a, b) => {
+        const aName = (a.name || '').toLowerCase();
+        const bName = (b.name || '').toLowerCase();
+        return aName.localeCompare(bName);
+      });
 
-    // Cache the results
-    await saveCachedTags(sortedTags);
-    await setCacheTimestamp(Date.now());
+      // Cache the results
+      await saveCachedTags(sortedTags);
+      await setCacheTimestamp(Date.now());
 
-    console.log(`✅ Fresh tags loaded and cached: ${sortedTags.length} items`);
-    return sortedTags;
-  }, {
+      console.debug(`✅ Fresh tags loaded and cached: ${sortedTags.length} items`);
+      return sortedTags;
+    },
     enabled: configured,
     staleTime: 60000, // Consider data fresh for 60 seconds
     cacheTime: 300000, // Keep in React Query cache for 5 minutes
   });
 
   // Debug: Log current state
-  console.log('🔍 BookmarkForm render state:', {
+  console.debug('🔍 BookmarkForm render state:', {
     configured,
     loadingCollections,
     loadingTags,
     collectionsCount: collections?.length || 0,
     tagsCount: tags?.length || 0,
+    collectionError: collectionError ? String(collectionError) : null,
+    tagsError: tagsError ? String(tagsError) : null,
     collections,
     tags
   });
