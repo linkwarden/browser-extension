@@ -13,76 +13,101 @@ The Unofficial Browser Extension for [Linkwarden](https://github.com/linkwarden/
 - **Theme Support**: Light, dark, and system theme modes available
 - **Enhanced Search**: Magnifying glass search interface for collections and tags
 - **Smart Caching**: 60-second frontend caching for instant popup loading
-- **Improved UI**: Streamlined interface with better responsiveness and user experience
+- **Cross-Browser Support**: Built for both Chromium (Manifest V3) and Firefox (Manifest V2)
 
 ![Image](/assets/linkwarden-extension.png)
 
-## Build From Source
+## Installation
 
-### Requirements
+### From Source
 
-- LTS NodeJS 18.x.x
-- NPM Version 9.x.x
-- Bash
+#### Requirements
+
+- Node.js 18.x or later
+- npm 9.x or later
 - Git
 
-### Step 1: Clone this repo
+#### Build Steps
 
-Clone this repository by running the following in your terminal:
+1. **Clone the repository**
 
-```
+```bash
 git clone https://github.com/lilaflo/linkwarden-browser-extension.git
+cd linkwarden-browser-extension
 ```
 
-### Step 2: Build
+2. **Build for your browser**
 
-Head to the generated folder:
-
-```
-cd browser-extension
-```
-
-And run:
-
-```
+For Chromium-based browsers (Chrome, Edge, Brave, etc.):
+```bash
 chmod +x ./build.sh && ./build.sh
 ```
 
-After the above command, use the `/dist` folder as an unpacked extension in your browser.
+For Firefox:
+```bash
+chmod +x ./build.sh && ./build.sh --firefox
+```
 
-### Alternative Development Build
+3. **Load the extension**
 
-For development with hot reloading:
+The built extension will be in the `dist/` directory. Load it as an unpacked extension in your browser.
+
+#### Development Build
+
+For development with automatic rebuilds:
 
 ```bash
 npm install
-npm run debug
+npm run dev          # Chromium
+npm run dev:firefox  # Firefox
 ```
 
-This starts a watch mode that automatically rebuilds the extension when files change.
-
 ## Development
-
-### Recent Improvements
-
-- **Frontend Caching System**: Implemented 60-second intelligent caching for collections and tags
-- **Instant Popup Loading**: No loading delays for subsequent popup opens within cache window
-- **SearchDropdown Component**: Reusable dropdown component with search functionality for both collections and tags
-- **Tag Creation API**: Added ability to create new tags directly from the extension
-- **Enhanced UI Components**: Improved styling and responsiveness
-- **Firefox Compatibility**: Enhanced Firefox manifest and build process
-- **Theme Integration**: Better theme support throughout the application
 
 ### Technology Stack
 
 - **React 18** with TypeScript
-- **Vite** for build tooling
-- **TanStack Query** for state management
+- **Vite** for build tooling with custom multi-entry configuration
+- **TanStack Query** for API state management
 - **Radix UI** for accessible components
 - **Tailwind CSS** for styling
-- **Zod** for schema validation
+- **React Hook Form** + **Zod** for form validation
+- **Axios** for HTTP requests to Linkwarden API
 
-### Caching System
+### Build Commands
+
+```bash
+npm run dev              # Development build (Chromium) with watch mode
+npm run dev:firefox      # Development build (Firefox) with watch mode
+npm run dev:chromium     # Development build (Chromium) with watch mode
+npm run build            # Production build (Chromium)
+npm run build:firefox    # Production build (Firefox)
+npm run build:chromium   # Production build (Chromium)
+npm run lint             # Run ESLint with TypeScript support
+npm run preview          # Preview the built extension
+```
+
+### Architecture
+
+#### Extension Structure
+
+- **Background Script** (`src/pages/Background/index.ts`): Handles context menus, tab monitoring, omnibox integration ("lk" keyword), and badge indicators
+- **Popup** (`src/pages/Popup/`): Main extension popup UI for adding bookmarks
+- **Options Page** (`src/pages/Options/`): Configuration interface for API settings and theme selection
+
+#### Manifest Versions
+
+- **Chromium**: Manifest V3 with service worker background script
+- **Firefox**: Manifest V2 with persistent background script
+
+#### Data Flow
+
+1. **Configuration**: Stored in `browser.storage.local` via `src/@/lib/config.ts`
+2. **API Integration**: `src/@/lib/actions/` contains functions for links, collections, and tags
+3. **Caching**: `src/@/lib/cache.ts` manages 60-second intelligent caching for collections and tags
+4. **Browser APIs**: `src/@/lib/utils.ts` provides cross-browser compatibility layer
+
+#### Caching System
 
 The extension uses an intelligent frontend caching system for optimal performance:
 
@@ -93,7 +118,6 @@ The extension uses an intelligent frontend caching system for optimal performanc
 - **User-Triggered**: Caching is triggered by user actions (opening popup) rather than background processes
 
 **Cache Flow:**
-
 1. User opens popup → Check cache validity
 2. If cache valid (< 60s old) → Use cached data instantly
 3. If cache invalid → Fetch fresh data from API → Update cache
@@ -102,20 +126,40 @@ The extension uses an intelligent frontend caching system for optimal performanc
 ### Project Structure
 
 ```
-src/
-├── @/components/          # Reusable UI components
-│   ├── SearchDropdown.tsx # Enhanced search dropdown
-│   ├── BookmarkForm.tsx   # Main bookmark form with caching
-│   └── ui/               # Base UI components
-├── lib/
-│   ├── actions/          # API functions
-│   ├── cache.ts          # Frontend caching system
-│   ├── config.ts         # Configuration management
-│   └── utils.ts          # Utility functions
-└── pages/                # Extension pages
-    ├── Popup/            # Main popup interface
-    └── Options/          # Extension options page
+linkwarden-browser-extension/
+├── src/
+│   ├── @/                    # Main application code (path alias)
+│   │   ├── components/       # React components
+│   │   │   ├── ui/           # Base UI components (shadcn/ui)
+│   │   │   ├── BookmarkForm.tsx
+│   │   │   ├── OptionsForm.tsx
+│   │   │   └── SearchDropdown.tsx  # Reusable search dropdown
+│   │   └── lib/
+│   │       ├── actions/      # API functions
+│   │       │   ├── collections.ts
+│   │       │   ├── links.ts
+│   │       │   └── tags.ts
+│   │       ├── cache.ts      # Frontend caching system
+│   │       ├── config.ts     # Configuration management
+│   │       ├── utils.ts      # Utility functions
+│   │       └── validators.ts # Zod schemas
+│   └── pages/
+│       ├── Background/       # Background script
+│       ├── Options/          # Options page
+│       └── Popup/            # Popup interface
+├── chromium/
+│   └── manifest.json         # Manifest V3 for Chromium
+├── firefox/
+│   └── manifest.json         # Manifest V2 for Firefox
+├── build.sh                  # Build script for distribution
+└── vite.config.ts            # Vite configuration
 ```
+
+### Key Components
+
+- **SearchDropdown** (`src/@/components/SearchDropdown.tsx`): Reusable dropdown component with search functionality for both collections and tags, supporting creation of new items
+- **BookmarkForm** (`src/@/components/BookmarkForm.tsx`): Main bookmark form with integrated caching and SearchDropdown
+- **OptionsForm** (`src/@/components/OptionsForm.tsx`): Configuration form with theme selector
 
 ## Authors
 
