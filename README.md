@@ -8,6 +8,7 @@ The Unofficial Browser Extension for [Linkwarden](https://github.com/linkwarden/
 - **Screenshot Capture**: Upload screenshots of the current page to Linkwarden
 - **Bulk Tab Saving**: Save all tabs in the current window to Linkwarden
 - **Flexible Authentication**: Sign in using API key or Username/Password
+- **Server Validation**: Automatic server availability check when saving configuration
 - **Smart Collection Management**: Create and manage collections with enhanced search functionality
 - **Dynamic Tag System**: Create, search, and manage tags with intelligent auto-completion
 - **Theme Support**: Light, dark, and system theme modes available
