@@ -251,6 +251,7 @@ const BookmarkForm = () => {
                           <CommandInput
                             className="min-w-[280px]"
                             placeholder="Search Collection..."
+                            autoFocus
                           />
                           <CommandEmpty>No Collection found.</CommandEmpty>
                           {Array.isArray(collections) && (
@@ -309,6 +310,7 @@ const BookmarkForm = () => {
                           <CommandInput
                             className="min-w-[280px]"
                             placeholder="Search collection..."
+                            autoFocus
                           />
                           <CommandEmpty>No Collection found.</CommandEmpty>
                           {Array.isArray(collections) && (
