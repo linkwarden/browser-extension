@@ -14,6 +14,7 @@ import {
 } from './ui/Form.tsx';
 import { Input } from './ui/Input.tsx';
 import { Button } from './ui/Button.tsx';
+import { FolderSearch, Tags, SquareX, X, Ellipsis, Save } from 'lucide-react';
 import { TagInput } from './TagInput.tsx';
 import { Textarea } from './ui/Textarea.tsx';
 import { checkDuplicatedItem, getCurrentTabInfo } from '../lib/utils.ts';
@@ -26,7 +27,6 @@ import { toast } from '../../hooks/use-toast.ts';
 import { Toaster } from './ui/Toaster.tsx';
 import { getCollections } from '../lib/actions/collections.ts';
 import { getTags } from '../lib/actions/tags.ts';
-import { X } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/Popover.tsx';
 import { CaretSortIcon } from '@radix-ui/react-icons';
 import {
@@ -227,7 +227,10 @@ const BookmarkForm = () => {
             name="collection"
             render={({ field }) => (
               <FormItem className={`my-2`}>
-                <FormLabel>Collection</FormLabel>
+                <div className="flex items-center space-x-2">
+                  <FolderSearch className="h-4 w-4 text-muted-foreground" />
+                  <FormLabel>Collection (select or start typing…)</FormLabel>
+                </div>
                 <div className="min-w-full inset-x-0">
                   <Popover
                     open={openCollections}
@@ -394,7 +397,10 @@ const BookmarkForm = () => {
                 name="tags"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tags</FormLabel>
+                    <div className="flex items-center space-x-2">
+                      <Tags className="h-4 w-4 text-muted-foreground" />
+                      <FormLabel>Tags</FormLabel>
+                    </div>
                     {loadingTags ? (
                       <TagInput
                         onChange={field.onChange}
@@ -454,21 +460,32 @@ const BookmarkForm = () => {
             </div>
           )}
           {duplicated && (
-            <p className="text-muted text-zinc-600 dark:text-zinc-400 mt-2">
+            <p className="text-green-600 dark:text-green-400 mt-2 font-semibold">
               You already have this link saved.
             </p>
           )}
           <div className="flex justify-between items-center mt-4">
             <div
               className="inline-flex select-none items-center justify-center rounded-md text-sm font-medium ring-offset-background
-               transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
-               focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
-               hover:bg-accent hover:text-accent-foreground hover:cursor-pointer p-2"
+   transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+   focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
+   hover:bg-accent hover:text-accent-foreground hover:cursor-pointer p-2"
               onClick={() => setOpenOptions((prevState) => !prevState)}
             >
-              {openOptions ? 'Hide' : 'More'} Options
+              {openOptions ? (
+                <>
+                  <SquareX className="mr-1 h-4 w-4" />
+                  Hide Details
+                </>
+              ) : (
+                <>
+                  <Ellipsis className="mr-1 h-4 w-4" />
+                  Link Details
+                </>
+              )}
             </div>
             <Button disabled={isLoading} type="submit">
+              <Save className="mr-1 h-4 w-4" />
               Save
             </Button>
           </div>

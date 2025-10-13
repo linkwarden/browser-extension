@@ -6,6 +6,9 @@ import { useEffect, useState } from 'react';
 import { getConfig, isConfigured } from '../../@/lib/config.ts';
 import Modal from '../../@/components/Modal.tsx';
 import { ModeToggle } from '../../@/components/ModeToggle.tsx';
+import { Settings } from 'lucide-react';
+import { Button } from '../../@/components/ui/Button.tsx';
+
 
 function App() {
   const [isAllConfigured, setIsAllConfigured] = useState<boolean>();
@@ -40,16 +43,19 @@ function App() {
                 alt="Linkwarden Logo"
               />
             </a>
-            <h1 className="text-lg">Add Link</h1>
+            <h1 className="text-lg">Save this link</h1>
           </div>
           <div className="flex items-center justify-center space-x-2">
             <ModeToggle />
-            <p
-              className="text-blue-500 text-xs cursor-pointer hover:opacity-80 duration-200 ease-in-out w-fit"
+            <Button
+              variant="ghost"
+              size="icon"
+              className="ring-0 focus:ring-0 outline-none focus:outline-none ring-offset-0 focus:ring-offset-0 focus-visible:ring-offset-0 focus-visible:ring-0 focus-visible:outline-none"
               onClick={openOptions}
             >
-              Config
-            </p>
+              <Settings className="absolute h-[1.2rem] w-[1.2rem] transition-all"/>
+              <span className="sr-only">Open Options</span>
+            </Button>
           </div>
         </div>
         <BookmarkForm />
