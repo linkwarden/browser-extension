@@ -190,31 +190,28 @@ const BookmarkForm = () => {
     enabled: configured,
   });
 
-useEffect(() => {
-  const onKeyDown = (e: KeyboardEvent) => {
-    // Ignore if pop‑over or options already open
-    if (openCollections || openOptions)
-      return;
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      // Ignore if already open
+      if (openCollections) return;
 
-    // Skip modifier keys
-    if (e.ctrlKey || e.metaKey || e.altKey)
-      return;
+      // Skip modifier keys
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-    // Skip non‑printable keys (including whitespace)
-    if (e.key.trim().length !== 1)
-      return;
+      // Skip non‑printable keys (including whitespace)
+      if (e.key.trim().length !== 1) return;
 
-    // Skip if focus is on an editable element
-    const active = document.activeElement;
-    if (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName))
-      return;
+      // Skip if focus is on an editable element
+      const active = document.activeElement;
+      if (active && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName))
+        return;
 
-    setOpenCollections(true);
-  };
+      setOpenCollections(true);
+    };
 
-  window.addEventListener('keydown', onKeyDown);
-  return () => window.removeEventListener('keydown', onKeyDown);
-}, [openCollections, openOptions]); // <-- added openOptions
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [openCollections]);
 
   return (
     <div>
