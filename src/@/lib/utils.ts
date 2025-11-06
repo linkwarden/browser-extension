@@ -41,12 +41,12 @@ export async function getStorageItem(key: string) {
   }
 }
 
-export const checkDuplicatedItem = async () => {
+export const getCurrentLinkItem = async () => {
   const config = await getConfig();
   const currentTab = await getCurrentTabInfo();
   const { response } = await getLinksFetch(config.baseUrl, config.apiKey);
-  const formatLinks = response.map((link) => link.url);
-  return formatLinks.includes(currentTab.url ?? '');
+  const itemInfo = response.find((link) => link.url === currentTab.url);
+  return itemInfo || false;
 };
 
 export async function setStorageItem(key: string, value: string) {
