@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { getLinksFetch } from './actions/links.ts';
+import { getLinksFetch, checkLinkExists } from './actions/links.ts';
 import { getConfig } from './config.ts';
 
 export function cn(...inputs: ClassValue[]) {
@@ -12,10 +12,14 @@ export interface TabInfo {
   title: string;
 }
 
-export async function getCurrentTabInfo(): Promise<{ title: string | undefined; url: string | undefined }> {
+export async function getCurrentTabInfo(): Promise<{
+  id: number | undefined;
+  title: string | undefined;
+  url: string | undefined
+}> {
   const tabs = await getBrowser().tabs.query({ active: true, currentWindow: true });
-  const { url, title } = tabs[0];
-  return { url, title };
+  const { id, url, title } = tabs[0];
+  return { id, url, title };
 }
 
 export function getBrowser() {
@@ -56,4 +60,32 @@ export async function setStorageItem(key: string, value: string) {
 
 export function openOptions() {
   getBrowser().runtime.openOptionsPage();
+}
+
+export async function updateBadge(tabId: number | undefined) {
+  if (!tabId) return;
+
+  const cachedConfig = await getConfig();
+  const linkExists = await checkLinkExists(
+    cachedConfig.baseUrl,
+    cachedConfig.apiKey
+  );
+  if (linkExists) {
+    if (browser.action) {
+      browser.action.setBadgeText({ tabId, text: '✓' });
+      browser.action.setBadgeBackgroundColor({ tabId, color: '#4688F1' });
+    } else {
+      browser.browserAction.setBadgeText({ tabId, text: '✓' });
+      browser.browserAction.setBadgeBackgroundColor({
+        tabId,
+        color: '#4688F1',
+      });
+    }
+  } else {
+    if (browser.action) {
+      browser.action.setBadgeText({ tabId, text: '' });
+    } else {
+      browser.browserAction.setBadgeText({ tabId, text: '' });
+    }
+  }
 }

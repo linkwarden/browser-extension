@@ -16,7 +16,7 @@ import { Input } from './ui/Input.tsx';
 import { Button } from './ui/Button.tsx';
 import { TagInput } from './TagInput.tsx';
 import { Textarea } from './ui/Textarea.tsx';
-import { checkDuplicatedItem, getCurrentTabInfo } from '../lib/utils.ts';
+import { checkDuplicatedItem, getCurrentTabInfo, updateBadge } from '../lib/utils.ts';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { getConfig, isConfigured } from '../lib/config.ts';
@@ -103,6 +103,10 @@ const BookmarkForm = () => {
       return;
     },
     onSuccess: () => {
+      // Update badge to show link is saved
+      getCurrentTabInfo().then(({ id }) => {
+        updateBadge(id);
+      });
       setTimeout(() => {
         window.close();
         // I want to show some confirmation before it's closed...
@@ -117,7 +121,8 @@ const BookmarkForm = () => {
   const { handleSubmit, control } = form;
 
   useEffect(() => {
-    getCurrentTabInfo().then(({ url, title }) => {
+    getCurrentTabInfo().then(({ id, url, title }) => {
+      updateBadge(id);
       getConfig().then((config) => {
         form.setValue('url', url ? url : '');
         form.setValue('name', title ? title : '');
