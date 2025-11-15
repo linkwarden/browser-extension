@@ -324,8 +324,16 @@ async function checkAndUpdateTab(tabId) {
   }
 }
 
+// Listen for tab switches (to update icon for already-loaded tabs)
 browser.tabs.onActivated.addListener(async ({ tabId }) => {
   await checkAndUpdateTab(tabId);
+});
+
+// Listen for URL changes (navigation, page loads)
+browser.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
+  if (changeInfo.status === 'complete') {
+    await checkAndUpdateTab(tabId);
+  }
 });
 
 // Omnibox implementation
