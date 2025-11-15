@@ -336,6 +336,14 @@ browser.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
   }
 });
 
+// On extension startup - check current tab
+(async () => {
+  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+  if (tabs[0]?.url && tabs[0].id !== undefined) {
+    await checkAndUpdateTab(tabs[0].id);
+  }
+})();
+
 // Omnibox implementation
 
 browser.omnibox.onInputStarted.addListener(async () => {
