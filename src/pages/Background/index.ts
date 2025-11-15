@@ -298,7 +298,7 @@ browser.runtime.onInstalled.addListener(function () {
   });
 });
 
-browser.tabs.onActivated.addListener(async ({ tabId }) => {
+async function checkAndUpdateTab(tabId) {
   const cachedConfig = await getConfig();
   const linkExists = await checkLinkExists(
     cachedConfig.baseUrl,
@@ -322,6 +322,10 @@ browser.tabs.onActivated.addListener(async ({ tabId }) => {
       browser.browserAction.setBadgeText({ tabId, text: '' });
     }
   }
+}
+
+browser.tabs.onActivated.addListener(async ({ tabId }) => {
+  await checkAndUpdateTab(tabId);
 });
 
 // Omnibox implementation
