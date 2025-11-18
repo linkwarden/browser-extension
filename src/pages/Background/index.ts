@@ -298,7 +298,7 @@ browser.runtime.onInstalled.addListener(function () {
   });
 });
 
-async function checkAndUpdateTab(tabId) {
+async function checkAndUpdateTab(tabId: number) {
   const cachedConfig = await getConfig();
   const linkExists = await checkLinkExists(
     cachedConfig.baseUrl,
