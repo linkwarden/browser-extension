@@ -330,8 +330,8 @@ browser.tabs.onActivated.addListener(async ({ tabId }) => {
 });
 
 // Listen for URL changes (navigation, page loads)
-browser.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
-  if (changeInfo.status === 'complete') {
+browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab?.active) {
     await checkAndUpdateTab(tabId);
   }
 });
