@@ -326,21 +326,33 @@ async function checkAndUpdateTab(tabId: number) {
 
 // Listen for tab switches (to update icon for already-loaded tabs)
 browser.tabs.onActivated.addListener(async ({ tabId }) => {
-  await checkAndUpdateTab(tabId);
+  try {
+    await checkAndUpdateTab(tabId);
+  } catch (error) {
+    console.error(`Error checking tab ${tabId} on activation:`, error);
+  }
 });
 
 // Listen for URL changes (navigation, page loads)
 browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab?.active) {
-    await checkAndUpdateTab(tabId);
+  try {
+    if (changeInfo.status === 'complete' && tab?.active) {
+      await checkAndUpdateTab(tabId);
+    }
+  } catch (error) {
+    console.error(`Error checking tab ${tabId} on update:`, error);
   }
 });
 
 // On extension startup - check current tab
 (async () => {
-  const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-  if (tab?.id) {
-    await checkAndUpdateTab(tab.id);
+  try {
+    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    if (tab?.id) {
+      await checkAndUpdateTab(tab.id);
+    }
+  } catch (error) {
+    console.error(`Error checking tab on startup:`, error);
   }
 })();
 
