@@ -8,6 +8,14 @@ import {
   postLinkFetch,
 } from '../../@/lib/actions/links.ts';
 import {
+  getLinkByUrl,
+  getLinkHighlights,
+  postHighlight,
+  deleteHighlight,
+  createLinkForHighlight,
+} from '../../@/lib/actions/highlights.ts';
+import { HighlightCreateData } from '../../@/lib/types/highlight.ts';
+import {
   bookmarkMetadata,
   // deleteBookmarkMetadata,
   // getBookmarkMetadataByBookmarkId,
@@ -235,6 +243,13 @@ async function genericOnClick(
       }
       break;
     }
+    case 'highlight-selection': {
+      // Send message to content script to show the highlight toolbox
+      if (tab?.id) {
+        browser.tabs.sendMessage(tab.id, { type: 'SHOW_HIGHLIGHT_TOOLBOX' });
+      }
+      break;
+    }
     default:
       // Handle cases where sync is enabled or not
       if (syncBookmarks) {
@@ -295,6 +310,12 @@ browser.runtime.onInstalled.addListener(function () {
     id: 'save-all-tabs',
     title: 'Save all tabs to Linkwarden',
     contexts: ['page'],
+  });
+  // Highlight selected text context menu
+  browser.contextMenus.create({
+    id: 'highlight-selection',
+    title: 'Highlight with Linkwarden',
+    contexts: ['selection'],
   });
 });
 
@@ -400,3 +421,98 @@ browser.omnibox.onInputEntered.addListener(
     }
   }
 );
+
+// Message handler for content script highlight operations
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+browser.runtime.onMessage.addListener((message: any, _sender: any, sendResponse: any) => {
+  handleContentScriptMessage(message, sendResponse);
+  return true; // Keep message channel open for async response
+});
+
+async function handleContentScriptMessage(
+  message: { type: string; data?: unknown },
+  sendResponse: (response: unknown) => void
+): Promise<void> {
+  try {
+    const configured = await isConfigured();
+    const config = await getConfig();
+
+    switch (message.type) {
+      case 'CHECK_CONFIG': {
+        sendResponse({ success: true, data: { configured } });
+        break;
+      }
+
+      case 'GET_LINK_WITH_HIGHLIGHTS': {
+        if (!configured) {
+          sendResponse({ success: false, error: 'Extension not configured' });
+          break;
+        }
+
+        const { url } = message.data as { url: string };
+        const link = await getLinkByUrl(config.baseUrl, url, config.apiKey);
+
+        if (link) {
+          const highlights = await getLinkHighlights(config.baseUrl, link.id, config.apiKey);
+          sendResponse({ success: true, data: { link, highlights } });
+        } else {
+          sendResponse({ success: true, data: { link: null, highlights: [] } });
+        }
+        break;
+      }
+
+      case 'CREATE_LINK': {
+        if (!configured) {
+          sendResponse({ success: false, error: 'Extension not configured' });
+          break;
+        }
+
+        const { url, title } = message.data as { url: string; title: string };
+        const link = await createLinkForHighlight(config.baseUrl, url, title, config.apiKey);
+
+        if (link) {
+          sendResponse({ success: true, data: { link } });
+        } else {
+          sendResponse({ success: false, error: 'Failed to create link' });
+        }
+        break;
+      }
+
+      case 'CREATE_HIGHLIGHT': {
+        if (!configured) {
+          sendResponse({ success: false, error: 'Extension not configured' });
+          break;
+        }
+
+        const highlightData = message.data as HighlightCreateData;
+        const highlight = await postHighlight(config.baseUrl, highlightData, config.apiKey);
+
+        if (highlight) {
+          sendResponse({ success: true, data: { highlight } });
+        } else {
+          sendResponse({ success: false, error: 'Failed to create highlight' });
+        }
+        break;
+      }
+
+      case 'DELETE_HIGHLIGHT': {
+        if (!configured) {
+          sendResponse({ success: false, error: 'Extension not configured' });
+          break;
+        }
+
+        const { highlightId } = message.data as { highlightId: number };
+        const success = await deleteHighlight(config.baseUrl, highlightId, config.apiKey);
+
+        sendResponse({ success });
+        break;
+      }
+
+      default:
+        sendResponse({ success: false, error: 'Unknown message type' });
+    }
+  } catch (error) {
+    console.error('[Linkwarden Background] Error handling message:', error);
+    sendResponse({ success: false, error: String(error) });
+  }
+}

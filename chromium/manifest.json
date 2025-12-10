@@ -37,6 +37,14 @@
     "service_worker": "./background.js",
     "type": "module"
   },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["./contentScript.js"],
+      "css": ["./contentScript.css"],
+      "run_at": "document_idle"
+    }
+  ],
   "omnibox": {
     "keyword": "lk"
   },

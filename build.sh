@@ -6,6 +6,9 @@ npm install
 # Build
 npm run build
 
+# Copy content script CSS to dist
+cp src/pages/ContentScript/contentScript.css dist/contentScript.css
+
 # Check if --firefox argument was passed
 if [ "$1" = "--firefox" ]; then
    # Copy to firefox/manifest.json
@@ -19,3 +22,4 @@ fi
 
 # Done (for now...)
 echo "Done! ✅"
+

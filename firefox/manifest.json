@@ -46,10 +46,26 @@
     "keyword": "lk"
   },
   "background": {
-    "scripts": ["background.js"],
+    "scripts": [
+      "background.js"
+    ],
     "persistent": false,
     "type": "module"
   },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "./contentScript.js"
+      ],
+      "css": [
+        "./contentScript.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
   "browser_specific_settings": {
     "gecko": {
       "id": "jordanlinkwarden@gmail.com",
