@@ -16,7 +16,7 @@ import { Input } from './ui/Input.tsx';
 import { Button } from './ui/Button.tsx';
 import { TagInput } from './TagInput.tsx';
 import { Textarea } from './ui/Textarea.tsx';
-import { checkDuplicatedItem, getCurrentTabInfo } from '../lib/utils.ts';
+import { getCurrentLinkItem, getCurrentTabInfo, updateBadge } from '../lib/utils.ts';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { getConfig, isConfigured } from '../lib/config.ts';
@@ -36,13 +36,14 @@ import {
   CommandInput,
   CommandItem,
 } from './ui/Command.tsx';
-import { saveLinksInCache } from '../lib/cache.ts';
+import { bookmarkMetadata, saveLinksInCache } from '../lib/cache.ts';
 import { Checkbox } from './ui/CheckBox.tsx';
 import { Label } from './ui/Label.tsx';
 
 let configured = false;
-let duplicated = false;
+let baseUrl = '';
 const BookmarkForm = () => {
+  const [savedLwItem, setSavedLwItem] = useState<bookmarkMetadata | false | void>(undefined);
   const [openOptions, setOpenOptions] = useState<boolean>(false);
   const [openCollections, setOpenCollections] = useState<boolean>(false);
   const [uploadImage, setUploadImage] = useState<boolean>(false);
@@ -103,6 +104,13 @@ const BookmarkForm = () => {
       return;
     },
     onSuccess: () => {
+      getCurrentLinkItem().then((item) => {
+        setSavedLwItem(item);
+      });
+      // Update badge to show link is saved
+      getCurrentTabInfo().then(({ id }) => {
+        updateBadge(id);
+      });
       setTimeout(() => {
         window.close();
         // I want to show some confirmation before it's closed...
@@ -117,7 +125,8 @@ const BookmarkForm = () => {
   const { handleSubmit, control } = form;
 
   useEffect(() => {
-    getCurrentTabInfo().then(({ url, title }) => {
+    getCurrentTabInfo().then(({ id, url, title }) => {
+      updateBadge(id);
       getConfig().then((config) => {
         form.setValue('url', url ? url : '');
         form.setValue('name', title ? title : '');
@@ -128,7 +137,7 @@ const BookmarkForm = () => {
     });
     const getConfigUse = async () => {
       configured = await isConfigured();
-      duplicated = await checkDuplicatedItem();
+      setSavedLwItem(await getCurrentLinkItem());
     };
     getConfigUse();
   }, [form]);
@@ -136,7 +145,8 @@ const BookmarkForm = () => {
   useEffect(() => {
     const syncBookmarks = async () => {
       try {
-        const { syncBookmarks, baseUrl, defaultCollection } = await getConfig();
+        const { syncBookmarks, baseUrl: configBaseUrl, defaultCollection } = await getConfig();
+        baseUrl = configBaseUrl;
         form.setValue('collection', {
           name: defaultCollection,
         });
@@ -202,7 +212,7 @@ const BookmarkForm = () => {
           <FormField
             control={control}
             name="collection"
-            render={({ field }) => (
+            render={({ field }) => savedLwItem === false ? (
               <FormItem className={`my-2`}>
                 <FormLabel>Collection</FormLabel>
                 <div className="min-w-full inset-x-0">
@@ -332,10 +342,12 @@ const BookmarkForm = () => {
                                     name: string;
                                     id: number;
                                     ownerId: number;
+                                    pathname: string;
                                   }) => (
                                     <CommandItem
                                       value={collection.name}
                                       key={collection.id}
+                                      className="cursor-pointer flex flex-col items-start justify-start"
                                       onSelect={() => {
                                         form.setValue('collection', {
                                           ownerId: collection.ownerId,
@@ -345,7 +357,10 @@ const BookmarkForm = () => {
                                         setOpenCollections(false);
                                       }}
                                     >
-                                      {collection.name}
+                                      <p>{collection.name}</p>
+                                      <p className="text-xs text-neutral-500">
+                                        {collection.pathname}
+                                      </p>
                                     </CommandItem>
                                   )
                                 )
@@ -359,9 +374,9 @@ const BookmarkForm = () => {
                 </div>
                 <FormMessage />
               </FormItem>
-            )}
+            ) : <></>}
           />
-          {openOptions && (
+          {openOptions && savedLwItem === false && (
             <div className="details list-none space-y-5 pt-2">
               {tagsError ? <p>There was an error...</p> : null}
               <FormField
@@ -428,25 +443,36 @@ const BookmarkForm = () => {
               </Label>
             </div>
           )}
-          {duplicated && (
-            <p className="text-muted text-zinc-600 dark:text-zinc-400 mt-2">
-              You already have this link saved.
-            </p>
-          )}
-          <div className="flex justify-between items-center mt-4">
-            <div
-              className="inline-flex select-none items-center justify-center rounded-md text-sm font-medium ring-offset-background
-               transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
-               focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
-               hover:bg-accent hover:text-accent-foreground hover:cursor-pointer p-2"
-              onClick={() => setOpenOptions((prevState) => !prevState)}
-            >
-              {openOptions ? 'Hide' : 'More'} Options
+          {savedLwItem === false ? (
+            <div className="flex justify-between items-center mt-6">
+              <div
+                className="inline-flex select-none items-center justify-center rounded-md text-sm font-medium ring-offset-background
+                transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
+                hover:bg-accent hover:text-accent-foreground hover:cursor-pointer p-2"
+                onClick={() => setOpenOptions((prevState) => !prevState)}
+              >
+                {openOptions ? 'Hide' : 'More'} Options
+              </div>
+              <Button disabled={isLoading} type="submit">
+                Save
+              </Button>
             </div>
-            <Button disabled={isLoading} type="submit">
-              Save
-            </Button>
-          </div>
+          ) : <></> }
+          {savedLwItem ? (
+            <div>
+              <p className="text-muted text-zinc-600 dark:text-zinc-400 mt-4">
+                You already have this link saved.
+              </p>
+              <div className="flex justify-end mt-6">
+                <a href={baseUrl + '/collections/' + savedLwItem?.collectionId}>
+                  <Button type="button" onClick={() => setTimeout(() => window.close(), 1)}>
+                    Show in Collection
+                  </Button>
+                </a>
+              </div>
+            </div>
+          ) : <></> }
         </form>
       </Form>
       <Toaster />
