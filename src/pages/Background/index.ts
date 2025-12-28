@@ -298,7 +298,7 @@ browser.runtime.onInstalled.addListener(function () {
   });
 });
 
-browser.tabs.onActivated.addListener(async ({ tabId }) => {
+async function checkAndUpdateTab(tabId: number) {
   const cachedConfig = await getConfig();
   const linkExists = await checkLinkExists(
     cachedConfig.baseUrl,
@@ -307,12 +307,12 @@ browser.tabs.onActivated.addListener(async ({ tabId }) => {
   if (linkExists) {
     if (browser.action) {
       browser.action.setBadgeText({ tabId, text: '✓' });
-      browser.action.setBadgeBackgroundColor({ tabId, color: '#4688F1' });
+      browser.action.setBadgeBackgroundColor({ tabId, color: '#98c0ff' });
     } else {
       browser.browserAction.setBadgeText({ tabId, text: '✓' });
       browser.browserAction.setBadgeBackgroundColor({
         tabId,
-        color: '#4688F1',
+        color: '#98c0ff',
       });
     }
   } else {
@@ -322,7 +322,42 @@ browser.tabs.onActivated.addListener(async ({ tabId }) => {
       browser.browserAction.setBadgeText({ tabId, text: '' });
     }
   }
+}
+
+// Listen for tab switches (to update icon for already-loaded tabs)
+browser.tabs.onActivated.addListener(async ({ tabId }) => {
+  try {
+    await checkAndUpdateTab(tabId);
+  } catch (error) {
+    console.error(`Error checking tab ${tabId} on activation:`, error);
+  }
 });
+
+// Listen for URL changes (navigation, page loads)
+browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  try {
+    if (changeInfo.status === 'complete' && tab?.active) {
+      await checkAndUpdateTab(tabId);
+    }
+  } catch (error) {
+    console.error(`Error checking tab ${tabId} on update:`, error);
+  }
+});
+
+// On extension startup - check current tab
+(async () => {
+  try {
+    const [tab] = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+    if (tab?.id) {
+      await checkAndUpdateTab(tab.id);
+    }
+  } catch (error) {
+    console.error(`Error checking tab on startup:`, error);
+  }
+})();
 
 // Omnibox implementation
 
