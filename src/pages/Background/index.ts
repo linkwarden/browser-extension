@@ -312,6 +312,32 @@ browser.tabs.onUpdated.addListener(async (tabId) => {
   await updateBadge(tabId);
 });
 
+// Listen for URL changes (navigation, page loads)
+browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  try {
+    if (changeInfo.status === 'complete' && tab?.active) {
+      await checkAndUpdateTab(tabId);
+    }
+  } catch (error) {
+    console.error(`Error checking tab ${tabId} on update:`, error);
+  }
+});
+
+// On extension startup - check current tab
+(async () => {
+  try {
+    const [tab] = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+    if (tab?.id) {
+      await checkAndUpdateTab(tab.id);
+    }
+  } catch (error) {
+    console.error(`Error checking tab on startup:`, error);
+  }
+})();
+
 // Omnibox implementation
 
 browser.omnibox.onInputStarted.addListener(async () => {
