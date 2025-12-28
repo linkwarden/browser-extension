@@ -15,9 +15,12 @@ export interface TabInfo {
 export async function getCurrentTabInfo(): Promise<{
   id: number | undefined;
   title: string | undefined;
-  url: string | undefined
+  url: string | undefined;
 }> {
-  const tabs = await getBrowser().tabs.query({ active: true, currentWindow: true });
+  const tabs = await getBrowser().tabs.query({
+    active: true,
+    currentWindow: true,
+  });
   const { id, url, title } = tabs[0];
   return { id, url, title };
 }
@@ -73,12 +76,12 @@ export async function updateBadge(tabId: number | undefined) {
   if (linkExists) {
     if (browser.action) {
       browser.action.setBadgeText({ tabId, text: '✓' });
-      browser.action.setBadgeBackgroundColor({ tabId, color: '#4688F1' });
+      browser.action.setBadgeBackgroundColor({ tabId, color: '#98c0ff' });
     } else {
       browser.browserAction.setBadgeText({ tabId, text: '✓' });
       browser.browserAction.setBadgeBackgroundColor({
         tabId,
-        color: '#4688F1',
+        color: '#98c0ff',
       });
     }
   } else {

@@ -1,7 +1,7 @@
 import {
   getBrowser,
   getCurrentTabInfo,
-  updateBadge
+  updateBadge,
 } from '../../@/lib/utils.ts';
 // import BookmarkTreeNode = chrome.bookmarks.BookmarkTreeNode;
 import { getConfig, isConfigured } from '../../@/lib/config.ts';
@@ -305,18 +305,26 @@ browser.runtime.onInstalled.addListener(async function () {
 });
 
 browser.tabs.onActivated.addListener(async ({ tabId }) => {
-  await updateBadge(tabId);
+  try {
+    await updateBadge(tabId);
+  } catch (error) {
+    console.error(`Error checking tab ${tabId} on activation:`, error);
+  }
 });
 
 browser.tabs.onUpdated.addListener(async (tabId) => {
-  await updateBadge(tabId);
+  try {
+    await updateBadge(tabId);
+  } catch (error) {
+    console.error(`Error checking tab ${tabId} on activation:`, error);
+  }
 });
 
 // Listen for URL changes (navigation, page loads)
 browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   try {
     if (changeInfo.status === 'complete' && tab?.active) {
-      await checkAndUpdateTab(tabId);
+      await updateBadge(tabId);
     }
   } catch (error) {
     console.error(`Error checking tab ${tabId} on update:`, error);
@@ -331,7 +339,7 @@ browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       currentWindow: true,
     });
     if (tab?.id) {
-      await checkAndUpdateTab(tab.id);
+      await updateBadge(tab.id);
     }
   } catch (error) {
     console.error(`Error checking tab on startup:`, error);
