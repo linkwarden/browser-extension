@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { getLinksFetch } from './actions/links.ts';
+import { getLinksFetch, checkLinkExists } from './actions/links.ts';
 import { getConfig } from './config.ts';
 
 export function cn(...inputs: ClassValue[]) {
@@ -12,10 +12,17 @@ export interface TabInfo {
   title: string;
 }
 
-export async function getCurrentTabInfo(): Promise<{ title: string | undefined; url: string | undefined }> {
-  const tabs = await getBrowser().tabs.query({ active: true, currentWindow: true });
-  const { url, title } = tabs[0];
-  return { url, title };
+export async function getCurrentTabInfo(): Promise<{
+  id: number | undefined;
+  title: string | undefined;
+  url: string | undefined;
+}> {
+  const tabs = await getBrowser().tabs.query({
+    active: true,
+    currentWindow: true,
+  });
+  const { id, url, title } = tabs[0];
+  return { id, url, title };
 }
 
 export function getBrowser() {
@@ -37,12 +44,12 @@ export async function getStorageItem(key: string) {
   }
 }
 
-export const checkDuplicatedItem = async () => {
+export const getCurrentLinkItem = async () => {
   const config = await getConfig();
   const currentTab = await getCurrentTabInfo();
   const { response } = await getLinksFetch(config.baseUrl, config.apiKey);
-  const formatLinks = response.map((link) => link.url);
-  return formatLinks.includes(currentTab.url ?? '');
+  const itemInfo = response.find((link) => link.url === currentTab.url);
+  return itemInfo || false;
 };
 
 export async function setStorageItem(key: string, value: string) {
@@ -56,4 +63,34 @@ export async function setStorageItem(key: string, value: string) {
 
 export function openOptions() {
   getBrowser().runtime.openOptionsPage();
+}
+
+export async function updateBadge(tabId: number | undefined) {
+  if (!tabId) return;
+
+  const browser = getBrowser();
+
+  const cachedConfig = await getConfig();
+  const linkExists = await checkLinkExists(
+    cachedConfig.baseUrl,
+    cachedConfig.apiKey
+  );
+  if (linkExists) {
+    if (browser.action) {
+      browser.action.setBadgeText({ tabId, text: '✓' });
+      browser.action.setBadgeBackgroundColor({ tabId, color: '#98c0ff' });
+    } else {
+      browser.browserAction.setBadgeText({ tabId, text: '✓' });
+      browser.browserAction.setBadgeBackgroundColor({
+        tabId,
+        color: '#98c0ff',
+      });
+    }
+  } else {
+    if (browser.action) {
+      browser.action.setBadgeText({ tabId, text: '' });
+    } else {
+      browser.browserAction.setBadgeText({ tabId, text: '' });
+    }
+  }
 }

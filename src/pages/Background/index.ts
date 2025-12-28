@@ -1,8 +1,11 @@
-import { getBrowser, getCurrentTabInfo } from '../../@/lib/utils.ts';
+import {
+  getBrowser,
+  getCurrentTabInfo,
+  updateBadge,
+} from '../../@/lib/utils.ts';
 // import BookmarkTreeNode = chrome.bookmarks.BookmarkTreeNode;
 import { getConfig, isConfigured } from '../../@/lib/config.ts';
 import {
-  checkLinkExists,
   // deleteLinkFetch,
   // updateLinkFetch,
   postLinkFetch,
@@ -272,7 +275,7 @@ async function genericOnClick(
       }
   }
 }
-browser.runtime.onInstalled.addListener(function () {
+browser.runtime.onInstalled.addListener(async function () {
   // Create one test item for each context type.
   const contexts: ContextType[] = [
     'page',
@@ -296,33 +299,52 @@ browser.runtime.onInstalled.addListener(function () {
     title: 'Save all tabs to Linkwarden',
     contexts: ['page'],
   });
+
+  const { id: tabId } = await getCurrentTabInfo();
+  await updateBadge(tabId);
 });
 
 browser.tabs.onActivated.addListener(async ({ tabId }) => {
-  const cachedConfig = await getConfig();
-  const linkExists = await checkLinkExists(
-    cachedConfig.baseUrl,
-    cachedConfig.apiKey
-  );
-  if (linkExists) {
-    if (browser.action) {
-      browser.action.setBadgeText({ tabId, text: '✓' });
-      browser.action.setBadgeBackgroundColor({ tabId, color: '#4688F1' });
-    } else {
-      browser.browserAction.setBadgeText({ tabId, text: '✓' });
-      browser.browserAction.setBadgeBackgroundColor({
-        tabId,
-        color: '#4688F1',
-      });
-    }
-  } else {
-    if (browser.action) {
-      browser.action.setBadgeText({ tabId, text: '' });
-    } else {
-      browser.browserAction.setBadgeText({ tabId, text: '' });
-    }
+  try {
+    await updateBadge(tabId);
+  } catch (error) {
+    console.error(`Error checking tab ${tabId} on activation:`, error);
   }
 });
+
+browser.tabs.onUpdated.addListener(async (tabId) => {
+  try {
+    await updateBadge(tabId);
+  } catch (error) {
+    console.error(`Error checking tab ${tabId} on activation:`, error);
+  }
+});
+
+// Listen for URL changes (navigation, page loads)
+browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  try {
+    if (changeInfo.status === 'complete' && tab?.active) {
+      await updateBadge(tabId);
+    }
+  } catch (error) {
+    console.error(`Error checking tab ${tabId} on update:`, error);
+  }
+});
+
+// On extension startup - check current tab
+(async () => {
+  try {
+    const [tab] = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+    if (tab?.id) {
+      await updateBadge(tab.id);
+    }
+  } catch (error) {
+    console.error(`Error checking tab on startup:`, error);
+  }
+})();
 
 // Omnibox implementation
 
