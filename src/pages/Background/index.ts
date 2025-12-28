@@ -307,12 +307,12 @@ async function checkAndUpdateTab(tabId: number) {
   if (linkExists) {
     if (browser.action) {
       browser.action.setBadgeText({ tabId, text: '✓' });
-      browser.action.setBadgeBackgroundColor({ tabId, color: '#4688F1' });
+      browser.action.setBadgeBackgroundColor({ tabId, color: '#98c0ff' });
     } else {
       browser.browserAction.setBadgeText({ tabId, text: '✓' });
       browser.browserAction.setBadgeBackgroundColor({
         tabId,
-        color: '#4688F1',
+        color: '#98c0ff',
       });
     }
   } else {
@@ -347,7 +347,10 @@ browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 // On extension startup - check current tab
 (async () => {
   try {
-    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+    const [tab] = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
     if (tab?.id) {
       await checkAndUpdateTab(tab.id);
     }
