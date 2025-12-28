@@ -68,6 +68,8 @@ export function openOptions() {
 export async function updateBadge(tabId: number | undefined) {
   if (!tabId) return;
 
+  const browser = getBrowser();
+
   const cachedConfig = await getConfig();
   const linkExists = await checkLinkExists(
     cachedConfig.baseUrl,
