@@ -1,6 +1,9 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { getLinksFetch, checkLinkExists } from './actions/links.ts';
+import {
+  getLinksFetch,
+  // checkLinkExists
+} from './actions/links.ts';
 import { getConfig } from './config.ts';
 
 export function cn(...inputs: ClassValue[]) {
@@ -44,12 +47,12 @@ export async function getStorageItem(key: string) {
   }
 }
 
-export const getCurrentLinkItem = async () => {
+export const checkDuplicatedItem = async () => {
   const config = await getConfig();
   const currentTab = await getCurrentTabInfo();
   const { response } = await getLinksFetch(config.baseUrl, config.apiKey);
-  const itemInfo = response.find((link) => link.url === currentTab.url);
-  return itemInfo || false;
+  const formatLinks = response.map((link) => link.url);
+  return formatLinks.includes(currentTab.url ?? '');
 };
 
 export async function setStorageItem(key: string, value: string) {
@@ -68,29 +71,29 @@ export function openOptions() {
 export async function updateBadge(tabId: number | undefined) {
   if (!tabId) return;
 
-  const browser = getBrowser();
-
-  const cachedConfig = await getConfig();
-  const linkExists = await checkLinkExists(
-    cachedConfig.baseUrl,
-    cachedConfig.apiKey
-  );
-  if (linkExists) {
-    if (browser.action) {
-      browser.action.setBadgeText({ tabId, text: '✓' });
-      browser.action.setBadgeBackgroundColor({ tabId, color: '#98c0ff' });
-    } else {
-      browser.browserAction.setBadgeText({ tabId, text: '✓' });
-      browser.browserAction.setBadgeBackgroundColor({
-        tabId,
-        color: '#98c0ff',
-      });
-    }
-  } else {
-    if (browser.action) {
-      browser.action.setBadgeText({ tabId, text: '' });
-    } else {
-      browser.browserAction.setBadgeText({ tabId, text: '' });
-    }
-  }
+  // TODO: add url check endpoint for precise matching (instead of fuzzy search)
+  // const browser = getBrowser();
+  // const cachedConfig = await getConfig();
+  // const linkExists = await checkLinkExists(
+  //   cachedConfig.baseUrl,
+  //   cachedConfig.apiKey
+  // );
+  // if (linkExists) {
+  //   if (browser.action) {
+  //     browser.action.setBadgeText({ tabId, text: '✓' });
+  //     browser.action.setBadgeBackgroundColor({ tabId, color: '#98c0ff' });
+  //   } else {
+  //     browser.browserAction.setBadgeText({ tabId, text: '✓' });
+  //     browser.browserAction.setBadgeBackgroundColor({
+  //       tabId,
+  //       color: '#98c0ff',
+  //     });
+  //   }
+  // } else {
+  //   if (browser.action) {
+  //     browser.action.setBadgeText({ tabId, text: '' });
+  //   } else {
+  //     browser.browserAction.setBadgeText({ tabId, text: '' });
+  //   }
+  // }
 }
