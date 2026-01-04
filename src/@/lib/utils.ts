@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { getLinksFetch, checkLinkExists } from './actions/links.ts';
+import { checkLinkExists } from './actions/links.ts';
 import { getConfig } from './config.ts';
 
 export function cn(...inputs: ClassValue[]) {
@@ -44,14 +44,6 @@ export async function getStorageItem(key: string) {
   }
 }
 
-export const getCurrentLinkItem = async () => {
-  const config = await getConfig();
-  const currentTab = await getCurrentTabInfo();
-  const { response } = await getLinksFetch(config.baseUrl, config.apiKey);
-  const itemInfo = response.find((link) => link.url === currentTab.url);
-  return itemInfo || false;
-};
-
 export async function setStorageItem(key: string, value: string) {
   if (getChromeStorage()) {
     return await chrome.storage.local.set({ [key]: value });
@@ -69,7 +61,6 @@ export async function updateBadge(tabId: number | undefined) {
   if (!tabId) return;
 
   const browser = getBrowser();
-
   const cachedConfig = await getConfig();
   const linkExists = await checkLinkExists(
     cachedConfig.baseUrl,
