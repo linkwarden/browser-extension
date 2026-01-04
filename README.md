@@ -50,7 +50,8 @@ cd browser-extension
 And run:
 
 ```
-chmod +x ./build.sh && ./build.sh
+npm install
+npm run build
 ```
 
 After the above command, use the `/dist` folder as an unpacked extension in your browser.

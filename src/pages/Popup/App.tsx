@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import { getConfig, isConfigured } from '../../@/lib/config.ts';
 import NotConfigured from '../../@/components/NotConfigured.tsx';
 import { ModeToggle } from '../../@/components/ModeToggle.tsx';
+import { Button } from '@/@/components/ui/Button.tsx';
+import { Settings } from 'lucide-react';
 
 function App() {
   const [isAllConfigured, setIsAllConfigured] = useState<boolean>();
@@ -45,12 +47,14 @@ function App() {
           </div>
           <div className="flex items-center justify-center space-x-2">
             <ModeToggle />
-            <p
-              className="text-blue-500 text-xs cursor-pointer hover:opacity-80 duration-200 ease-in-out w-fit"
+            <Button
+              variant="ghost"
+              size="icon"
+              className="ring-0 focus:ring-0 outline-none focus:outline-none ring-offset-0 focus:ring-offset-0 focus-visible:ring-offset-0 focus-visible:ring-0 focus-visible:outline-none"
               onClick={openOptions}
             >
-              Config
-            </p>
+              <Settings className="h-[1.2rem] w-[1.2rem] transition-colors" />
+            </Button>
           </div>
         </div>
         <BookmarkForm />

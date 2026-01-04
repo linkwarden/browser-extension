@@ -26,7 +26,7 @@ import { toast } from '../../hooks/use-toast.ts';
 import { Toaster } from './ui/Toaster.tsx';
 import { getCollections } from '../lib/actions/collections.ts';
 import { getTags } from '../lib/actions/tags.ts';
-import { X } from 'lucide-react';
+import { ExternalLink, X } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/Popover.tsx';
 import { CaretSortIcon } from '@radix-ui/react-icons';
 import {
@@ -47,6 +47,18 @@ const BookmarkForm = () => {
 
   const [isConfigured, setIsConfigured] = useState(false);
   const [isDuplicate, setIsDuplicate] = useState(false);
+
+  const [config, setConfig] = useState<{
+    baseUrl: string;
+    defaultCollection: string;
+    apiKey: string;
+    syncBookmarks: boolean;
+  }>();
+  const [tabInfo, setTabInfo] = useState<{
+    id: number | undefined;
+    title: string | undefined;
+    url: string | undefined;
+  }>();
 
   const handleCheckedChange = (s: boolean | 'indeterminate') => {
     if (s === 'indeterminate') return;
@@ -70,14 +82,12 @@ const BookmarkForm = () => {
 
   const { mutate: onSubmit, isLoading } = useMutation({
     mutationFn: async (values: bookmarkFormValues) => {
-      const config = await getConfig();
-
       await postLink(
-        config.baseUrl,
+        config?.baseUrl as string,
         uploadImage,
         values,
         setState,
-        config.apiKey
+        config?.apiKey as string
       );
 
       return;
@@ -118,28 +128,32 @@ const BookmarkForm = () => {
     },
   });
 
-  const { handleSubmit, control } = form;
-
   useEffect(() => {
-    getCurrentTabInfo().then(({ id, url, title }) => {
-      updateBadge(id);
-      getConfig().then((config) => {
-        form.setValue('url', url ? url : '');
-        form.setValue('name', title ? title : '');
-        form.setValue('collection', {
-          name: config.defaultCollection,
-        });
+    const setTabInformation = async () => {
+      const t = await getCurrentTabInfo();
+      const c = await getConfig();
+
+      setTabInfo(t);
+      setConfig(c);
+
+      updateBadge(t.id);
+
+      form.setValue('url', t.url ? t.url : '');
+      form.setValue('name', t.title ? t.title : '');
+      form.setValue('collection', {
+        name: c.defaultCollection,
       });
-    });
-    const getConfigUse = async () => {
-      const config = await getConfig();
+
       const configured = await getIsConfigured();
-      const duplicate = await checkLinkExists(config.baseUrl, config.apiKey);
+      const duplicate = await checkLinkExists(c.baseUrl, c.apiKey);
       setIsDuplicate(duplicate);
       setIsConfigured(configured);
     };
-    getConfigUse();
-  }, [form]);
+
+    setTabInformation();
+  }, []);
+
+  const { handleSubmit, control } = form;
 
   // useEffect(() => {
   //   const syncBookmarks = async () => {
@@ -169,9 +183,10 @@ const BookmarkForm = () => {
   } = useQuery({
     queryKey: ['collections'],
     queryFn: async () => {
-      const config = await getConfig();
-
-      const response = await getCollections(config.baseUrl, config.apiKey);
+      const response = await getCollections(
+        config?.baseUrl as string,
+        config?.apiKey as string
+      );
 
       return response.data.response.sort((a, b) => {
         return a.pathname.localeCompare(b.pathname);
@@ -187,9 +202,10 @@ const BookmarkForm = () => {
   } = useQuery({
     queryKey: ['tags'],
     queryFn: async () => {
-      const config = await getConfig();
-
-      const response = await getTags(config.baseUrl, config.apiKey);
+      const response = await getTags(
+        config?.baseUrl as string,
+        config?.apiKey as string
+      );
 
       return response.data.response.sort((a, b) => {
         return a.name.localeCompare(b.name);
@@ -201,7 +217,10 @@ const BookmarkForm = () => {
   return (
     <div>
       <Form {...form}>
-        <form onSubmit={handleSubmit((e) => onSubmit(e))} className="py-1">
+        <form
+          onSubmit={handleSubmit((e) => onSubmit(e))}
+          className="py-1 space-y-5"
+        >
           {collectionError ? (
             <p className="text-red-600">
               There was an error, please make sure the website is available.
@@ -229,7 +248,7 @@ const BookmarkForm = () => {
                           }
                         >
                           {loadingCollections
-                            ? 'Loading'
+                            ? 'Unorganized'
                             : field.value?.name
                             ? collections?.find(
                                 (collection: { name: string }) =>
@@ -260,52 +279,61 @@ const BookmarkForm = () => {
                             className="min-w-[280px]"
                             placeholder="Search Collection..."
                           />
-                          <CommandEmpty>No Collection found.</CommandEmpty>
-                          {Array.isArray(collections) && (
-                            <CommandGroup className="w-full overflow-y-auto">
-                              {isLoading ? (
-                                <CommandItem
-                                  value="Getting collections..."
-                                  key="Getting collections..."
-                                  onSelect={() => {
-                                    form.setValue('collection', {
-                                      name: 'Unorganized',
-                                    });
-                                    setOpenCollections(false);
-                                  }}
-                                >
-                                  Unorganized
-                                </CommandItem>
-                              ) : (
-                                collections?.map(
-                                  (collection: {
-                                    name: string;
-                                    id: number;
-                                    ownerId: number;
-                                    pathname: string;
-                                  }) => (
+
+                          {loadingCollections ? (
+                            <p className="w-full text-center my-auto">
+                              Loading...
+                            </p>
+                          ) : (
+                            <>
+                              <CommandEmpty>No Collection found.</CommandEmpty>
+                              {Array.isArray(collections) && (
+                                <CommandGroup className="w-full overflow-y-auto">
+                                  {isLoading ? (
                                     <CommandItem
-                                      value={collection.name}
-                                      key={collection.id}
-                                      className="cursor-pointer flex flex-col items-start justify-start"
+                                      value="Loading collections..."
+                                      key="Loading collections..."
                                       onSelect={() => {
                                         form.setValue('collection', {
-                                          ownerId: collection.ownerId,
-                                          id: collection.id,
-                                          name: collection.name,
+                                          name: 'Unorganized',
                                         });
                                         setOpenCollections(false);
                                       }}
                                     >
-                                      <p>{collection.name}</p>
-                                      <p className="text-xs text-neutral-500">
-                                        {collection.pathname}
-                                      </p>
+                                      Unorganized
                                     </CommandItem>
-                                  )
-                                )
+                                  ) : (
+                                    collections?.map(
+                                      (collection: {
+                                        name: string;
+                                        id: number;
+                                        ownerId: number;
+                                        pathname: string;
+                                      }) => (
+                                        <CommandItem
+                                          value={collection.name}
+                                          key={collection.id}
+                                          className="cursor-pointer flex flex-col items-start justify-start"
+                                          onSelect={() => {
+                                            form.setValue('collection', {
+                                              ownerId: collection.ownerId,
+                                              id: collection.id,
+                                              name: collection.name,
+                                            });
+                                            setOpenCollections(false);
+                                          }}
+                                        >
+                                          <p>{collection.name}</p>
+                                          <p className="text-xs text-neutral-500">
+                                            {collection.pathname}
+                                          </p>
+                                        </CommandItem>
+                                      )
+                                    )
+                                  )}
+                                </CommandGroup>
                               )}
-                            </CommandGroup>
+                            </>
                           )}
                         </Command>
                       </div>
@@ -323,8 +351,8 @@ const BookmarkForm = () => {
                             <CommandGroup className="w-full">
                               {isLoading ? (
                                 <CommandItem
-                                  value="Getting collections..."
-                                  key="Getting collections..."
+                                  value="Loading collections..."
+                                  key="Loading collections..."
                                   onSelect={() => {
                                     form.setValue('collection', {
                                       name: 'Unorganized',
@@ -374,8 +402,19 @@ const BookmarkForm = () => {
               </FormItem>
             )}
           />
+
+          {!openOptions && (
+            <Label className="flex items-center gap-2 w-fit cursor-pointer">
+              <Checkbox
+                checked={uploadImage}
+                onCheckedChange={handleCheckedChange}
+              />
+              Upload image from browser
+            </Label>
+          )}
+
           {openOptions && (
-            <div className="details list-none space-y-5 pt-2">
+            <>
               {tagsError ? <p>There was an error...</p> : null}
               <FormField
                 control={control}
@@ -386,8 +425,8 @@ const BookmarkForm = () => {
                     {loadingTags ? (
                       <TagInput
                         onChange={field.onChange}
-                        value={[{ name: 'Getting tags...' }]}
-                        tags={[{ id: 1, name: 'Getting tags...' }]}
+                        value={[{ name: 'Loading tags...' }]}
+                        tags={[{ id: 1, name: 'Loading tags...' }]}
                       />
                     ) : tagsError ? (
                       <TagInput
@@ -426,40 +465,63 @@ const BookmarkForm = () => {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Description..." {...field} />
+                      <Textarea
+                        placeholder="Description..."
+                        className="resize-none"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Label className="flex items-center gap-2 w-fit cursor-pointer">
-                <Checkbox
-                  checked={uploadImage}
-                  onCheckedChange={handleCheckedChange}
-                />
-                Upload image from browser
-              </Label>
-            </div>
+
+              {openOptions && (
+                <Label className="flex items-center gap-2 w-fit cursor-pointer">
+                  <Checkbox
+                    checked={uploadImage}
+                    onCheckedChange={handleCheckedChange}
+                  />
+                  Upload image from browser
+                </Label>
+              )}
+            </>
           )}
-          {isDuplicate && (
-            <p className="text-muted text-zinc-600 dark:text-zinc-400 mt-2">
-              You already saved this link.
-            </p>
-          )}
-          <div className="flex justify-between items-center mt-4">
-            <div
-              className="inline-flex select-none items-center justify-center rounded-md text-sm font-medium ring-offset-background
-               transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
-               focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50
-               hover:bg-accent hover:text-accent-foreground hover:cursor-pointer p-2"
+
+          <div className="flex justify-between items-center">
+            <Button
+              variant="ghost"
+              type="button"
               onClick={() => setOpenOptions((prevState) => !prevState)}
             >
               {openOptions ? 'Hide' : 'More'} Options
-            </div>
+            </Button>
+
             <Button disabled={isLoading} type="submit">
               Save
             </Button>
           </div>
+
+          {isDuplicate && (
+            <div className="w-fit ml-auto">
+              <a
+                className="text-muted text-xs font-bold text-zinc-600 dark:text-zinc-400 hover:underline cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.open(
+                    config?.baseUrl +
+                      '/search?q=' +
+                      encodeURIComponent(`url:${tabInfo?.url}`),
+                    '_blank'
+                  );
+                  window.close();
+                }}
+              >
+                Note: You've already saved this link{' '}
+                <ExternalLink size={16} className="inline-block mb-1" />
+              </a>
+            </div>
+          )}
         </form>
       </Form>
       <Toaster />

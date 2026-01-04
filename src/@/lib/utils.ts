@@ -60,7 +60,6 @@ export function openOptions() {
 export async function updateBadge(tabId: number | undefined) {
   if (!tabId) return;
 
-  // TODO: add url check endpoint for precise matching (instead of fuzzy search)
   const browser = getBrowser();
   const cachedConfig = await getConfig();
   const linkExists = await checkLinkExists(
