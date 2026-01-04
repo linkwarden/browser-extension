@@ -1,7 +1,7 @@
 import captureScreenshot from '../screenshot.ts';
 import { bookmarkFormValues } from '../validators/bookmarkForm.ts';
 import axios from 'axios';
-import { bookmarkMetadata } from '../cache.ts';
+// import { bookmarkMetadata } from '../cache.ts';
 import { getCurrentTabInfo } from '../utils.ts';
 
 export async function postLink(
@@ -100,18 +100,18 @@ export async function deleteLinkFetch(
   });
 }
 
-export async function getLinksFetch(
-  baseUrl: string,
-  apiKey: string
-): Promise<{ response: bookmarkMetadata[] }> {
-  const url = `${baseUrl}/api/v1/links`;
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-    },
-  });
-  return await response.json();
-}
+// export async function getLinksFetch(
+//   baseUrl: string,
+//   apiKey: string
+// ): Promise<{ response: bookmarkMetadata[] }> {
+//   const url = `${baseUrl}/api/v1/links`;
+//   const response = await fetch(url, {
+//     headers: {
+//       Authorization: `Bearer ${apiKey}`,
+//     },
+//   });
+//   return await response.json();
+// }
 
 export async function checkLinkExists(
   baseUrl: string,
@@ -124,8 +124,8 @@ export async function checkLinkExists(
   }
 
   const url =
-    `${baseUrl}/api/v1/links?cursor=0&sort=0&searchQueryString=` +
-    encodeURIComponent(`${tabInfo.url}`);
+    `${baseUrl}/api/v1/search?sort=0&searchQueryString=` +
+    encodeURIComponent(`url:${tabInfo.url}`);
 
   const response = await fetch(url, {
     headers: {
@@ -133,9 +133,9 @@ export async function checkLinkExists(
     },
   });
 
-  const data = await response.json();
+  const { data } = await response.json();
 
-  const exists = data.response.length > 0;
+  const exists = !!data && data.links?.length > 0;
 
   return exists;
 }

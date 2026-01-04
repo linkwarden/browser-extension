@@ -16,15 +16,11 @@ import { Input } from './ui/Input.tsx';
 import { Button } from './ui/Button.tsx';
 import { TagInput } from './TagInput.tsx';
 import { Textarea } from './ui/Textarea.tsx';
-import {
-  checkDuplicatedItem,
-  getCurrentTabInfo,
-  updateBadge,
-} from '../lib/utils.ts';
+import { getCurrentTabInfo, updateBadge } from '../lib/utils.ts';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { getConfig, isConfigured } from '../lib/config.ts';
-import { postLink } from '../lib/actions/links.ts';
+import { getConfig, isConfigured as getIsConfigured } from '../lib/config.ts';
+import { checkLinkExists, postLink } from '../lib/actions/links.ts';
 import { AxiosError } from 'axios';
 import { toast } from '../../hooks/use-toast.ts';
 import { Toaster } from './ui/Toaster.tsx';
@@ -40,17 +36,17 @@ import {
   CommandInput,
   CommandItem,
 } from './ui/Command.tsx';
-import { saveLinksInCache } from '../lib/cache.ts';
 import { Checkbox } from './ui/CheckBox.tsx';
 import { Label } from './ui/Label.tsx';
 
-let configured = false;
-let duplicated = false;
 const BookmarkForm = () => {
   const [openOptions, setOpenOptions] = useState<boolean>(false);
   const [openCollections, setOpenCollections] = useState<boolean>(false);
   const [uploadImage, setUploadImage] = useState<boolean>(false);
   const [state, setState] = useState<'capturing' | 'uploading' | null>(null);
+
+  const [isConfigured, setIsConfigured] = useState(false);
+  const [isDuplicate, setIsDuplicate] = useState(false);
 
   const handleCheckedChange = (s: boolean | 'indeterminate') => {
     if (s === 'indeterminate') return;
@@ -136,32 +132,35 @@ const BookmarkForm = () => {
       });
     });
     const getConfigUse = async () => {
-      configured = await isConfigured();
-      duplicated = await checkDuplicatedItem();
+      const config = await getConfig();
+      const configured = await getIsConfigured();
+      const duplicate = await checkLinkExists(config.baseUrl, config.apiKey);
+      setIsDuplicate(duplicate);
+      setIsConfigured(configured);
     };
     getConfigUse();
   }, [form]);
 
-  useEffect(() => {
-    const syncBookmarks = async () => {
-      try {
-        const { syncBookmarks, baseUrl, defaultCollection } = await getConfig();
-        form.setValue('collection', {
-          name: defaultCollection,
-        });
-        if (!syncBookmarks) {
-          return;
-        }
-        if (await isConfigured()) {
-          await saveLinksInCache(baseUrl);
-          //await syncLocalBookmarks(baseUrl);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    syncBookmarks();
-  }, [form]);
+  // useEffect(() => {
+  //   const syncBookmarks = async () => {
+  //     try {
+  //       const { syncBookmarks, baseUrl, defaultCollection } = await getConfig();
+  //       form.setValue('collection', {
+  //         name: defaultCollection,
+  //       });
+  //       if (!syncBookmarks) {
+  //         return;
+  //       }
+  //       if (await isConfigured()) {
+  //         await saveLinksInCache(baseUrl);
+  //         await syncLocalBookmarks(baseUrl);
+  //       }
+  //     } catch (error) {
+  //       console.error(error);
+  //     }
+  //   };
+  //   syncBookmarks();
+  // }, [form]);
 
   const {
     isLoading: loadingCollections,
@@ -178,7 +177,7 @@ const BookmarkForm = () => {
         return a.pathname.localeCompare(b.pathname);
       });
     },
-    enabled: configured,
+    enabled: isConfigured,
   });
 
   const {
@@ -196,7 +195,7 @@ const BookmarkForm = () => {
         return a.name.localeCompare(b.name);
       });
     },
-    enabled: configured,
+    enabled: isConfigured,
   });
 
   return (
@@ -442,9 +441,9 @@ const BookmarkForm = () => {
               </Label>
             </div>
           )}
-          {duplicated && (
+          {isDuplicate && (
             <p className="text-muted text-zinc-600 dark:text-zinc-400 mt-2">
-              You already have this link saved.
+              You already saved this link.
             </p>
           )}
           <div className="flex justify-between items-center mt-4">
