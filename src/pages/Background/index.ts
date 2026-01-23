@@ -200,7 +200,7 @@ async function genericOnClick(
   info: OnClickData,
   tab: chrome.tabs.Tab | undefined
 ) {
-  const { syncBookmarks, baseUrl } = await getConfig();
+  const { syncBookmarks } = await getConfig();
   const configured = await isConfigured();
   if (!tab?.url || !tab?.title || !configured) {
     return;
@@ -251,11 +251,11 @@ async function genericOnClick(
 
         try {
           const newLink = await postLinkFetch(
-            baseUrl,
+            config.baseUrl,
             {
               url: tab.url,
               collection: {
-                name: 'Unorganized',
+                name: config.defaultCollection,
               },
               tags: [],
               name: tab.title,
@@ -395,7 +395,10 @@ browser.omnibox.onInputEntered.addListener(
     }
 
     const isUrl = /^http(s)?:\/\//.test(content);
-    const url = isUrl ? content : `lk`;
+    const config = await getConfig();
+    const url = isUrl
+      ? content
+      : `${config.baseUrl}/search?q=${encodeURIComponent(content)}`;
 
     // Edge doesn't allow updating the New Tab Page (tested with version 117).
     // Trying to do so will throw: "Error: Cannot update NTP tab."
