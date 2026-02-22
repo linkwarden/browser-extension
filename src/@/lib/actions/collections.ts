@@ -60,3 +60,26 @@ export async function getCollections(baseUrl: string, apiKey: string) {
     },
   };
 }
+
+export async function createCollection(
+  baseUrl: string,
+  apiKey: string,
+  name: string
+) {
+  const url = `${baseUrl}/api/v1/collections`;
+
+  const response = await axios.post<
+    { response: ResponseCollections }
+  >(
+    url,
+    { name },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+    }
+  );
+
+  return response;
+}
