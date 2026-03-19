@@ -17,8 +17,8 @@ import { Button } from './ui/Button.tsx';
 import { TagInput } from './TagInput.tsx';
 import { Textarea } from './ui/Textarea.tsx';
 import { getCurrentTabInfo, updateBadge } from '../lib/utils.ts';
-import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { getConfig, isConfigured as getIsConfigured } from '../lib/config.ts';
 import { checkLinkExists, postLink } from '../lib/actions/links.ts';
 import { AxiosError } from 'axios';
@@ -197,22 +197,33 @@ const BookmarkForm = () => {
 
   const {
     isLoading: loadingTags,
-    data: tags,
+    data: tagsData,
     error: tagsError,
-  } = useQuery({
-    queryKey: ['tags'],
-    queryFn: async () => {
-      const response = await getTags(
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery(
+    ['tags', config?.baseUrl, config?.apiKey],
+    async ({ pageParam = 0 }) => {
+      return await getTags(
         config?.baseUrl as string,
-        config?.apiKey as string
+        config?.apiKey as string,
+        pageParam
       );
-
-      return response.data.response.sort((a, b) => {
-        return a.name.localeCompare(b.name);
-      });
     },
-    enabled: isConfigured,
-  });
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+      enabled: isConfigured && openOptions,
+    }
+  );
+
+  const tags = useMemo(() => {
+    return (
+      tagsData?.pages
+        .flatMap((page) => page.tags)
+        .sort((a, b) => a.name.localeCompare(b.name)) ?? []
+    );
+  }, [tagsData]);
 
   return (
     <div>
@@ -427,18 +438,28 @@ const BookmarkForm = () => {
                         onChange={field.onChange}
                         value={[{ name: 'Loading tags...' }]}
                         tags={[{ id: 1, name: 'Loading tags...' }]}
+                        hasNextPage={false}
+                        isFetchingNextPage={false}
                       />
                     ) : tagsError ? (
                       <TagInput
                         onChange={field.onChange}
                         value={[{ name: 'Not found' }]}
                         tags={[{ id: 1, name: 'Not found' }]}
+                        hasNextPage={false}
+                        isFetchingNextPage={false}
                       />
                     ) : (
                       <TagInput
                         onChange={field.onChange}
                         value={field.value ?? []}
                         tags={tags}
+                        hasNextPage={hasNextPage}
+                        isFetchingNextPage={isFetchingNextPage}
+                        onReachEnd={() => {
+                          if (!hasNextPage || isFetchingNextPage) return;
+                          void fetchNextPage();
+                        }}
                       />
                     )}
                     <FormMessage />
