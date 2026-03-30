@@ -366,23 +366,51 @@ browser.omnibox.onInputChanged.addListener(
   ) => {
     const configured = await isConfigured();
 
-    if (!configured) {
+    if (!configured || text.length < 2) {
       return;
     }
 
+    // Search local cache (fast, works offline)
     const currentBookmarks = await getBookmarksMetadata();
-
-    const searchedBookmarks = currentBookmarks.filter((bookmark) => {
+    const cachedResults = currentBookmarks.filter((bookmark) => {
       return bookmark.name?.includes(text) || bookmark.url.includes(text);
     });
 
-    const bookmarkSuggestions = searchedBookmarks.map((bookmark) => {
-      return {
-        content: bookmark.url,
-        description: bookmark.name || bookmark.url,
-      };
-    });
-    suggest(bookmarkSuggestions);
+    // Also query the server for full library coverage
+    try {
+      const config = await getConfig();
+      const response = await fetch(
+        `${config.baseUrl}/api/v1/search?sort=0&searchQueryString=${encodeURIComponent(text)}`,
+        { headers: { Authorization: `Bearer ${config.apiKey}` } }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const serverLinks: { url: string; name?: string }[] =
+          data.response ?? [];
+
+        // Merge cache + server results, dedupe by URL
+        const seenUrls = new Set(cachedResults.map((b) => b.url));
+        const combined = [
+          ...cachedResults.map((b) => ({
+            content: b.url,
+            description: b.name || b.url,
+          })),
+          ...serverLinks
+            .filter((l) => l.url && !seenUrls.has(l.url))
+            .map((l) => ({ content: l.url, description: l.name || l.url })),
+        ];
+        suggest(combined);
+        return;
+      }
+    } catch {
+      // Server unreachable — fall through to cache-only results
+    }
+
+    // Fallback: cache-only results
+    suggest(
+      cachedResults.map((b) => ({ content: b.url, description: b.name || b.url }))
+    );
   }
 );
 
