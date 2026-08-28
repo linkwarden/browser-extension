@@ -8,13 +8,9 @@ const Dialog = DialogPrimitive.Root;
 
 const DialogTrigger = DialogPrimitive.Trigger;
 
-const DialogPortal = ({
-                        className,
-                        ...props
-                      }: DialogPrimitive.DialogPortalProps) => (
-  <DialogPrimitive.Portal className={cn(className)} {...props} />
-);
-DialogPortal.displayName = DialogPrimitive.Portal.displayName;
+// Radix 1.1 dropped `className` from Portal (it renders no element of its own),
+// and the wrapper never passed one, so forward the primitive directly.
+const DialogPortal = DialogPrimitive.Portal;
 
 const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,

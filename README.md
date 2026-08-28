@@ -26,8 +26,8 @@ We decided to keep the issues and feature requests in the main repository to kee
 
 ### Requirements
 
-- LTS NodeJS 18.x.x
-- NPM Version 9.x.x
+- NodeJS 20.19.x or later
+- NPM Version 10.x.x
 - Bash
 - Git
 
@@ -55,3 +55,42 @@ npm run build
 ```
 
 After the above command, use the `/dist` folder as an unpacked extension in your browser.
+
+## Development
+
+For live reload in Chrome or Firefox:
+
+```
+npm run dev:chrome
+npm run dev:firefox
+```
+
+Either command builds the extension, launches the browser with it already installed,
+and reloads it whenever a file under `src/` changes. Both run off the same
+`manifest.json` and `dist/` folder, so there is nothing else to set up. Firefox
+reports that `background.service_worker` is ignored, which is expected: it uses
+`background.scripts` from that same manifest.
+
+The browser starts from a temporary profile, so your Linkwarden server settings are
+gone on the next start. Add `--keep-profile-changes --chromium-profile ./.profile`
+(or `--firefox-profile`) to the relevant script if you would rather keep them.
+
+To load the extension into a browser yourself, `npm run dev` runs only the watching
+build and keeps `dist/` up to date.
+
+## Safari
+
+Safari is built through the Xcode project in `safari/`, which is committed to this
+repository and maintained by hand.
+
+```
+npm run build:safari
+open safari/Linkwarden/Linkwarden.xcodeproj
+```
+
+Then Product → Archive in Xcode.
+
+The Xcode project references `dist-safari/` directly rather than holding its own copy
+of the extension, so `npm run build:safari` has to run first or you will archive a
+stale build. There is no conversion step: running `safari-web-extension-converter`
+against `safari/` would replace the committed project and its signing configuration.

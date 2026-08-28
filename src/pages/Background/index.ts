@@ -20,9 +20,12 @@ import {
   getBookmarksMetadata,
   saveBookmarkMetadata,
 } from '../../@/lib/cache.ts';
-import ContextType = chrome.contextMenus.ContextType;
 import OnClickData = chrome.contextMenus.OnClickData;
-import OnInputEnteredDisposition = chrome.omnibox.OnInputEnteredDisposition;
+
+// @types/chrome models these as TS enums, but the runtime APIs take and hand
+// back plain strings, so use the string form of each enum.
+type ContextType = `${chrome.contextMenus.ContextType}`;
+type OnInputEnteredDisposition = `${chrome.omnibox.OnInputEnteredDisposition}`;
 // import {
 //   getCsrfTokenFetch,
 //   getSessionFetch,
