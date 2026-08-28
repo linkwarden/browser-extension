@@ -8,6 +8,15 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+
+# yarn (node-modules linker, per .yarnrc.yml)
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+.pnp.*
+
 dist
 dist-ssr
 dist-safari
