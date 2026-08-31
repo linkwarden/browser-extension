@@ -123,6 +123,10 @@ export async function checkLinkExists(
     return false;
   }
 
+  if (!/^https?:\/\//.test(tabInfo.url)) {
+    return false;
+  }
+
   const url =
     `${baseUrl}/api/v1/search?sort=0&searchQueryString=` +
     encodeURIComponent(`url:${tabInfo.url}`);

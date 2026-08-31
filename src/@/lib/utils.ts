@@ -1,7 +1,5 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { checkLinkExists } from './actions/links.ts';
-import { getConfig } from './config.ts';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -75,15 +73,10 @@ export function hasAPI(api: string): boolean {
   return true;
 }
 
-export async function updateBadge(tabId: number | undefined) {
+export function setBadge(tabId: number | undefined, linkExists: boolean) {
   if (!tabId) return;
 
   const browser = getBrowser();
-  const cachedConfig = await getConfig();
-  const linkExists = await checkLinkExists(
-    cachedConfig.baseUrl,
-    cachedConfig.apiKey
-  );
   if (linkExists) {
     if (browser.action) {
       browser.action.setBadgeText({ tabId, text: '✓' });

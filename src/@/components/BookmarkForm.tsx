@@ -16,7 +16,7 @@ import { Input } from './ui/Input.tsx';
 import { Button } from './ui/Button.tsx';
 import { TagInput } from './TagInput.tsx';
 import { Textarea } from './ui/Textarea.tsx';
-import { getCurrentTabInfo, updateBadge } from '../lib/utils.ts';
+import { getCurrentTabInfo, setBadge } from '../lib/utils.ts';
 import { useEffect, useMemo, useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { getConfig, isConfigured as getIsConfigured } from '../lib/config.ts';
@@ -114,10 +114,7 @@ const BookmarkForm = () => {
       return;
     },
     onSuccess: () => {
-      // Update badge to show link is saved
-      getCurrentTabInfo().then(({ id }) => {
-        updateBadge(id);
-      });
+      setBadge(tabInfo?.id, true);
       setTimeout(() => {
         window.close();
         // I want to show some confirmation before it's closed...
@@ -137,8 +134,6 @@ const BookmarkForm = () => {
       setTabInfo(t);
       setConfig(c);
 
-      updateBadge(t.id);
-
       form.setValue('url', t.url ? t.url : '');
       form.setValue('name', t.title ? t.title : '');
       form.setValue('collection', {
@@ -149,6 +144,7 @@ const BookmarkForm = () => {
       const duplicate = await checkLinkExists(c.baseUrl, c.apiKey);
       setIsDuplicate(duplicate);
       setIsConfigured(configured);
+      setBadge(t.id, duplicate);
     };
 
     setTabInformation();

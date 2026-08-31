@@ -3,7 +3,7 @@ import {
   getCurrentTabInfo,
   hasAPI,
   isSafari,
-  updateBadge,
+  setBadge,
 } from '../../@/lib/utils.ts';
 // import BookmarkTreeNode = chrome.bookmarks.BookmarkTreeNode;
 import { getConfig, isConfigured } from '../../@/lib/config.ts';
@@ -295,52 +295,13 @@ browser.runtime.onInstalled.addListener(async function () {
     title: 'Save all tabs to Linkwarden',
     contexts: ['page'],
   });
-
-  const { id: tabId } = await getCurrentTabInfo();
-  await updateBadge(tabId);
 });
 
-browser.tabs.onActivated.addListener(async ({ tabId }) => {
-  try {
-    await updateBadge(tabId);
-  } catch (error) {
-    console.error(`Error checking tab ${tabId} on activation:`, error);
+browser.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (changeInfo.url) {
+    setBadge(tabId, false);
   }
 });
-
-browser.tabs.onUpdated.addListener(async (tabId) => {
-  try {
-    await updateBadge(tabId);
-  } catch (error) {
-    console.error(`Error checking tab ${tabId} on activation:`, error);
-  }
-});
-
-// Listen for URL changes (navigation, page loads)
-browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  try {
-    if (changeInfo.status === 'complete' && tab?.active) {
-      await updateBadge(tabId);
-    }
-  } catch (error) {
-    console.error(`Error checking tab ${tabId} on update:`, error);
-  }
-});
-
-// On extension startup - check current tab
-(async () => {
-  try {
-    const [tab] = await browser.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
-    if (tab?.id) {
-      await updateBadge(tab.id);
-    }
-  } catch (error) {
-    console.error(`Error checking tab on startup:`, error);
-  }
-})();
 
 // Omnibox implementation (not available in Safari)
 
