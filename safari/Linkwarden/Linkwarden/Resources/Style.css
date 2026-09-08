@@ -28,6 +28,23 @@ body {
     text-align: center;
 }
 
+h1 {
+    margin: 0;
+    font: -apple-system-title1;
+}
+
+p {
+    margin: 0;
+}
+
+.description {
+    max-width: 460px;
+}
+
+.state-error {
+    color: #d70015;
+}
+
 body:not(.state-on, .state-off) :is(.state-on, .state-off) {
     display: none;
 }

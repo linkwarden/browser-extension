@@ -12,3 +12,8 @@ export const optionsFormSchema = z.object({
 });
 
 export type optionsFormValues = z.infer<typeof optionsFormSchema>;
+
+// Zod 4 distinguishes the schema's input from its output: fields with
+// `.default()` are optional going in and guaranteed coming out. react-hook-form
+// needs both, so `useForm` is parameterised with the input and the output.
+export type optionsFormInput = z.input<typeof optionsFormSchema>;

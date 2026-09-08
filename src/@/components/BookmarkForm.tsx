@@ -81,7 +81,7 @@ const BookmarkForm = () => {
     },
   });
 
-  const { mutate: onSubmit, isLoading } = useMutation({
+  const { mutate: onSubmit, isPending } = useMutation({
     mutationFn: async (values: bookmarkFormValues) => {
       await postLink(
         config?.baseUrl as string,
@@ -213,9 +213,9 @@ const BookmarkForm = () => {
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
-  } = useInfiniteQuery(
-    ['tags', config?.baseUrl, config?.apiKey, effectiveTagSearch],
-    async ({ pageParam = 0 }) => {
+  } = useInfiniteQuery({
+    queryKey: ['tags', config?.baseUrl, config?.apiKey, effectiveTagSearch],
+    queryFn: async ({ pageParam }) => {
       return await getTags(
         config?.baseUrl as string,
         config?.apiKey as string,
@@ -223,11 +223,10 @@ const BookmarkForm = () => {
         effectiveTagSearch
       );
     },
-    {
-      getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-      enabled: isConfigured && openOptions,
-    }
-  );
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: isConfigured && openOptions,
+  });
 
   const tags = useMemo(() => {
     return (
@@ -273,11 +272,11 @@ const BookmarkForm = () => {
                           {loadingCollections
                             ? 'Unorganized'
                             : field.value?.name
-                            ? collections?.find(
-                                (collection: { name: string }) =>
-                                  collection.name === field.value?.name
-                              )?.name || form.getValues('collection')?.name
-                            : 'Select a collection...'}
+                              ? collections?.find(
+                                  (collection: { name: string }) =>
+                                    collection.name === field.value?.name
+                                )?.name || form.getValues('collection')?.name
+                              : 'Select a collection...'}
                           <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </FormControl>
@@ -312,7 +311,7 @@ const BookmarkForm = () => {
                               <CommandEmpty>No Collection found.</CommandEmpty>
                               {Array.isArray(collections) && (
                                 <CommandGroup className="w-full overflow-y-auto">
-                                  {isLoading ? (
+                                  {isPending ? (
                                     <CommandItem
                                       value="Loading collections..."
                                       key="Loading collections..."
@@ -372,7 +371,7 @@ const BookmarkForm = () => {
                           <CommandEmpty>No Collection found.</CommandEmpty>
                           {Array.isArray(collections) && (
                             <CommandGroup className="w-full">
-                              {isLoading ? (
+                              {isPending ? (
                                 <CommandItem
                                   value="Loading collections..."
                                   key="Loading collections..."
@@ -531,7 +530,7 @@ const BookmarkForm = () => {
               {openOptions ? 'Hide' : 'More'} Options
             </Button>
 
-            <Button disabled={isLoading} type="submit">
+            <Button disabled={isPending} type="submit">
               Save
             </Button>
           </div>

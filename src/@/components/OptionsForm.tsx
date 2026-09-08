@@ -12,6 +12,7 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
+  optionsFormInput,
   optionsFormSchema,
   optionsFormValues,
 } from '../lib/validators/optionsForm.ts';
@@ -39,7 +40,7 @@ import {
 } from './ui/Select.tsx'; // Import the Select component
 
 const OptionsForm = () => {
-  const form = useForm<optionsFormValues>({
+  const form = useForm<optionsFormInput, unknown, optionsFormValues>({
     resolver: zodResolver(optionsFormSchema),
     defaultValues: {
       baseUrl: 'https://cloud.linkwarden.app',
@@ -52,7 +53,7 @@ const OptionsForm = () => {
     },
   });
 
-  const { mutate: onReset, isLoading: resetLoading } = useMutation({
+  const { mutate: onReset, isPending: resetLoading } = useMutation({
     mutationFn: async () => {
       const configured = await isConfigured();
 
@@ -88,7 +89,7 @@ const OptionsForm = () => {
     },
   });
 
-  const { mutate: onSubmit, isLoading } = useMutation({
+  const { mutate: onSubmit, isPending } = useMutation({
     mutationFn: async (values: optionsFormValues) => {
       values.baseUrl = values.baseUrl.replace(/\/$/, '');
       // Do API call to test the connection and save the values
@@ -358,7 +359,7 @@ const OptionsForm = () => {
                 Reset
               </Button>
             </div>
-            <Button disabled={isLoading} type="submit">
+            <Button disabled={isPending} type="submit">
               Save
             </Button>
           </div>

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Linkwarden",
-  "description": "The browser extension for Linkwarden.",
+  "description": "Save webpages, capture screenshots, and organize links in your Linkwarden collections.",
   "homepage_url": "https://linkwarden.app/",
   "version": "1.5.4",
   "action": {

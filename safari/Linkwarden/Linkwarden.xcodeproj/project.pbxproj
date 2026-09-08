@@ -55,7 +55,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		65E051C92F9AFEE100628D48 /* Linkwarden.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Linkwarden.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		65E051C92F9AFEE100628D48 /* Linkwarden for Safari.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Linkwarden for Safari.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		65E051CC2F9AFEE100628D48 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		65E051D02F9AFEE100628D48 /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
 		65E051D22F9AFEE200628D48 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
@@ -111,7 +111,7 @@
 		65E051CA2F9AFEE100628D48 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				65E051C92F9AFEE100628D48 /* Linkwarden.app */,
+				65E051C92F9AFEE100628D48 /* Linkwarden for Safari.app */,
 				65E051E42F9AFEE300628D48 /* Linkwarden Extension.appex */,
 			);
 			name = Products;
@@ -173,9 +173,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		65E051C82F9AFEE100628D48 /* Linkwarden */ = {
+		65E051C82F9AFEE100628D48 /* Linkwarden for Safari */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 65E051F22F9AFEE300628D48 /* Build configuration list for PBXNativeTarget "Linkwarden" */;
+			buildConfigurationList = 65E051F22F9AFEE300628D48 /* Build configuration list for PBXNativeTarget "Linkwarden for Safari" */;
 			buildPhases = (
 				65E051C52F9AFEE100628D48 /* Sources */,
 				65E051C62F9AFEE100628D48 /* Frameworks */,
@@ -187,11 +187,11 @@
 			dependencies = (
 				65E051E72F9AFEE300628D48 /* PBXTargetDependency */,
 			);
-			name = Linkwarden;
+			name = "Linkwarden for Safari";
 			packageProductDependencies = (
 			);
 			productName = Linkwarden;
-			productReference = 65E051C92F9AFEE100628D48 /* Linkwarden.app */;
+			productReference = 65E051C92F9AFEE100628D48 /* Linkwarden for Safari.app */;
 			productType = "com.apple.product-type.application";
 		};
 		65E051E32F9AFEE300628D48 /* Linkwarden Extension */ = {
@@ -245,7 +245,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				65E051C82F9AFEE100628D48 /* Linkwarden */,
+				65E051C82F9AFEE100628D48 /* Linkwarden for Safari */,
 				65E051E32F9AFEE300628D48 /* Linkwarden Extension */,
 			);
 		};
@@ -462,7 +462,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Linkwarden Extension/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Linkwarden Extension";
+				INFOPLIST_KEY_CFBundleDisplayName = "Linkwarden for Safari";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -470,7 +470,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.5.3;
+				MARKETING_VERSION = 1.5.4;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -497,7 +497,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Linkwarden Extension/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "Linkwarden Extension";
+				INFOPLIST_KEY_CFBundleDisplayName = "Linkwarden for Safari";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				"INFOPLIST_KEY_NSHumanReadableCopyright[sdk=*]" = "Copyright © 2026 Linkwarden. All rights reserved.";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -506,7 +506,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.5.3;
+				MARKETING_VERSION = 1.5.4;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -538,7 +538,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Linkwarden/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Linkwarden;
+				INFOPLIST_KEY_CFBundleDisplayName = "Linkwarden for Safari";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = Main;
@@ -547,7 +547,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.3;
+				MARKETING_VERSION = 1.5.4;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -582,7 +582,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Linkwarden/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Linkwarden;
+				INFOPLIST_KEY_CFBundleDisplayName = "Linkwarden for Safari";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				"INFOPLIST_KEY_NSHumanReadableCopyright[sdk=*]" = "Copyright © 2026 Linkwarden. All rights reserved.";
@@ -592,7 +592,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.5.3;
+				MARKETING_VERSION = 1.5.4;
 				OTHER_LDFLAGS = (
 					"-framework",
 					SafariServices,
@@ -632,7 +632,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		65E051F22F9AFEE300628D48 /* Build configuration list for PBXNativeTarget "Linkwarden" */ = {
+		65E051F22F9AFEE300628D48 /* Build configuration list for PBXNativeTarget "Linkwarden for Safari" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				65E051F32F9AFEE300628D48 /* Debug */,

@@ -9,11 +9,41 @@ import Cocoa
 import SafariServices
 import WebKit
 
-let extensionBundleIdentifier = "app.linkwarden.safari-extension.Extension"
+private let safariWebExtensionPointIdentifier = "com.apple.Safari.web-extension"
+private let fallbackExtensionBundleIdentifier = "app.linkwarden.extension.safari"
+
+private func resolveExtensionBundleIdentifier() -> String {
+    guard let builtInPlugInsURL = Bundle.main.builtInPlugInsURL,
+          let pluginURLs = try? FileManager.default.contentsOfDirectory(at: builtInPlugInsURL, includingPropertiesForKeys: nil) else {
+        return fallbackExtensionBundleIdentifier
+    }
+
+    for pluginURL in pluginURLs where pluginURL.pathExtension == "appex" {
+        guard let bundle = Bundle(url: pluginURL),
+              let bundleIdentifier = bundle.bundleIdentifier,
+              let extensionInfo = bundle.infoDictionary?["NSExtension"] as? [String: Any],
+              let extensionPointIdentifier = extensionInfo["NSExtensionPointIdentifier"] as? String,
+              extensionPointIdentifier == safariWebExtensionPointIdentifier else {
+            continue
+        }
+
+        return bundleIdentifier
+    }
+
+    return fallbackExtensionBundleIdentifier
+}
 
 class ViewController: NSViewController, WKNavigationDelegate, WKScriptMessageHandler {
 
     @IBOutlet var webView: WKWebView!
+    private let extensionBundleIdentifier = resolveExtensionBundleIdentifier()
+    private var useSettingsInsteadOfPreferences: Bool {
+        if #available(macOS 13, *) {
+            return true
+        }
+
+        return false
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,16 +57,12 @@ class ViewController: NSViewController, WKNavigationDelegate, WKScriptMessageHan
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         SFSafariExtensionManager.getStateOfSafariExtension(withIdentifier: extensionBundleIdentifier) { (state, error) in
-            guard let state = state, error == nil else {
-                // Insert code to inform the user that something went wrong.
-                return
-            }
-
             DispatchQueue.main.async {
-                if #available(macOS 13, *) {
-                    webView.evaluateJavaScript("show(\(state.isEnabled), true)")
+                if let state = state, error == nil {
+                    webView.evaluateJavaScript("show(\(state.isEnabled), \(self.useSettingsInsteadOfPreferences))")
                 } else {
-                    webView.evaluateJavaScript("show(\(state.isEnabled), false)")
+                    NSLog("Failed to get Safari extension state: \(error?.localizedDescription ?? "Unknown error")")
+                    webView.evaluateJavaScript("show(null, \(self.useSettingsInsteadOfPreferences))")
                 }
             }
         }
@@ -49,6 +75,12 @@ class ViewController: NSViewController, WKNavigationDelegate, WKScriptMessageHan
 
         SFSafariApplication.showPreferencesForExtension(withIdentifier: extensionBundleIdentifier) { error in
             DispatchQueue.main.async {
+                if let error = error {
+                    NSLog("Failed to open Safari extension settings: \(error.localizedDescription)")
+                    self.webView.evaluateJavaScript("showPreferencesError()")
+                    return
+                }
+
                 NSApplication.shared.terminate(nil)
             }
         }

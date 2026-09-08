@@ -25,7 +25,11 @@ export async function getCurrentTabInfo(): Promise<{
   return { id, url, title };
 }
 
-export function getBrowser() {
+// Firefox exposes `browser`, Chromium exposes `chrome`. The two are API
+// compatible for everything used here, and the rest of the codebase already
+// refers to the `chrome.*` type namespace, so pin the return type to it rather
+// than leaking a `chrome | browser` union that no call site can narrow.
+export function getBrowser(): typeof chrome {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   //@ts-ignore
   return typeof browser !== 'undefined' ? browser : chrome;
@@ -35,12 +39,13 @@ export function getChromeStorage() {
   return typeof chrome !== 'undefined' && !!chrome.storage;
 }
 
-export async function getStorageItem(key: string) {
+export async function getStorageItem(key: string): Promise<string | undefined> {
   if (getChromeStorage()) {
     const result = await getBrowser().storage.local.get([key]);
-    return result[key];
+    return result[key] as string | undefined;
   } else {
-    return getBrowser().storage.local.get(key);
+    const result = await getBrowser().storage.local.get(key);
+    return result[key] as string | undefined;
   }
 }
 

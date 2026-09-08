@@ -16,8 +16,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "65E051C82F9AFEE100628D48"
-               BuildableName = "Linkwarden.app"
-               BlueprintName = "Linkwarden"
+               BuildableName = "Linkwarden for Safari.app"
+               BlueprintName = "Linkwarden for Safari"
                ReferencedContainer = "container:Linkwarden.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -45,8 +45,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "65E051C82F9AFEE100628D48"
-            BuildableName = "Linkwarden.app"
-            BlueprintName = "Linkwarden"
+            BuildableName = "Linkwarden for Safari.app"
+            BlueprintName = "Linkwarden for Safari"
             ReferencedContainer = "container:Linkwarden.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -62,8 +62,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "65E051C82F9AFEE100628D48"
-            BuildableName = "Linkwarden.app"
-            BlueprintName = "Linkwarden"
+            BuildableName = "Linkwarden for Safari.app"
+            BlueprintName = "Linkwarden for Safari"
             ReferencedContainer = "container:Linkwarden.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
